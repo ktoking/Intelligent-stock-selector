@@ -32,6 +32,80 @@ from agents.analysis_deep import (
 from config.tickers import get_report_tickers, DEFAULT_REPORT_TOP_N, MARKET_US, MARKET_CN, MARKET_HK
 from report.build_html import build_report_html
 
+
+def _normalize_interval(interval: str) -> str:
+    """yfinance 无 10m，用 15m 代替；展示时仍可写 10 分钟 K。"""
+    if (interval or "").strip().lower() == "10m":
+        return "15m"
+    return (interval or "1d").strip().lower()
+
+
+def _run_report_impl(
+    ticker_list: List[str],
+    interval: str,
+    deep: int,
+    market: str,
+    prepost: int,
+) -> tuple:
+    """内部：跑报告循环，返回 (cards, title, html_content)。interval 可为 10m（内部用 15m）。"""
+    interval_internal = _normalize_interval(interval)
+    total = len(ticker_list)
+    with _report_progress_lock:
+        _report_progress["running"] = True
+        _report_progress["total"] = total
+        _report_progress["current_index"] = 0
+        _report_progress["current_ticker"] = ""
+        _report_progress["done_count"] = 0
+        _report_progress["errors"] = []
+    print(f"[Report] 开始: 共 {total} 只", flush=True)
+    cards: List[Dict[str, Any]] = []
+    try:
+        for i, t in enumerate(ticker_list):
+            with _report_progress_lock:
+                _report_progress["current_index"] = i + 1
+                _report_progress["current_ticker"] = t
+            print(f"[Report] [{i + 1}/{total}] 正在处理: {t}", flush=True)
+            try:
+                if deep == 1:
+                    one = run_one_ticker_deep_report(t, include_narrative=True)
+                else:
+                    one = run_full_analysis(t, interval=interval_internal, include_prepost=(prepost == 1))
+                if one:
+                    cards.append(one)
+                    with _report_progress_lock:
+                        _report_progress["done_count"] = len(cards)
+                    print(f"[Report] [{i + 1}/{total}] 完成: {t} (已成功 {len(cards)} 只)", flush=True)
+                else:
+                    print(f"[Report] [{i + 1}/{total}] 跳过: {t} (无数据)", flush=True)
+                    with _report_progress_lock:
+                        _report_progress["errors"].append({"ticker": t, "error": "无数据"})
+            except Exception as e:
+                err_msg = str(e).strip() or type(e).__name__
+                with _report_progress_lock:
+                    _report_progress["errors"].append({"ticker": t, "error": err_msg})
+                print(f"[Report] [{i + 1}/{total}] 失败: {t} - {err_msg[:80]}", flush=True)
+    finally:
+        with _report_progress_lock:
+            _report_progress["running"] = False
+            _report_progress["current_ticker"] = ""
+        n_ok, n_err = len(cards), total - len(cards)
+        print(f"[Report] 结束: 成功 {n_ok} 只, 跳过/失败 {n_err} 只", flush=True)
+
+    market_label = {"us": "美股", "cn": "A股", "hk": "港股"}.get((market or "us").strip().lower(), "美股")
+    if deep == 1:
+        title = f"{market_label}优秀资产分析（含深度分析与对比）"
+    elif (interval or "").strip().lower() != "1d":
+        k_label = {"5m": "5分钟K", "15m": "15分钟K", "10m": "10分钟K", "1m": "1分钟K"}.get(
+            (interval or "").strip().lower(), f"{interval}K"
+        )
+        title = f"{market_label}超短线评分（{k_label}" + ("，含盘前盘后）" if prepost == 1 else "）")
+    else:
+        title = f"{market_label}选股分析"
+    gen_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    html_content = build_report_html(cards, title=title, gen_time=gen_time)
+    return cards, title, html_content
+
+
 app = FastAPI(title="Stock Agent", description="美股基本面分析（默认本地 Ollama）")
 
 
@@ -228,7 +302,7 @@ def report_page(
     tickers: str = Query(None, description="逗号分隔股票代码，不传则按市值+近期增长从 S&P 500 池取前 N 只"),
     limit: int = Query(5, ge=1, le=200, description="当不传 tickers 时取的数量，默认 5（调试快；可传 100 跑全量）"),
     deep: int = Query(0, description="1=每只标的跑深度分析①②③④⑤+与上次对比，形成大方向/近期趋势；0=仅技术+消息+财报+期权"),
-    interval: str = Query("1d", description="K线周期：1d=日K（波段），5m/15m/1m=分K（超短线）"),
+    interval: str = Query("1d", description="K线周期：1d=日K，5m/15m/10m/1m=分K（10m 用 15m 数据）"),
     prepost: int = Query(0, description="是否含盘前盘后：0=否，1=是（分K时常用）"),
     market: str = Query("us", description="市场选股：us=美股，cn=A股，hk=港股（不传 tickers 时生效）"),
 ):
@@ -237,7 +311,7 @@ def report_page(
     deep=0：每只仅做技术面+消息面+财报+期权+一次 LLM 综合（快）。
     deep=1：每只额外跑 ①②③④⑤ 深度分析（仅日K），结合记忆做「与上次对比」。
     market=us/cn/hk：不传 tickers 时从对应市场池取前 limit 只。
-    interval=1d：日K；interval=5m/15m：分K超短线。prepost=1：含盘前盘后。
+    interval=1d：日K；interval=5m/15m/10m/1m：分K超短线（10m 以 15m 数据代替）。prepost=1：含盘前盘后。
     进度可轮询 GET /report/progress。
     """
     if tickers:
@@ -246,60 +320,7 @@ def report_page(
         ticker_list = get_report_tickers(limit=limit, market=market or MARKET_US)
     if not ticker_list:
         raise HTTPException(status_code=400, detail="请提供 tickers 或使用默认列表（limit>0）")
-
-    total = len(ticker_list)
-    with _report_progress_lock:
-        _report_progress["running"] = True
-        _report_progress["total"] = total
-        _report_progress["current_index"] = 0
-        _report_progress["current_ticker"] = ""
-        _report_progress["done_count"] = 0
-        _report_progress["errors"] = []
-
-    print(f"[Report] 开始: 共 {total} 只", flush=True)
-    cards: List[Dict[str, Any]] = []
-    try:
-        for i, t in enumerate(ticker_list):
-            with _report_progress_lock:
-                _report_progress["current_index"] = i + 1
-                _report_progress["current_ticker"] = t
-            print(f"[Report] [{i + 1}/{total}] 正在处理: {t}", flush=True)
-            try:
-                if deep == 1:
-                    one = run_one_ticker_deep_report(t, include_narrative=True)
-                else:
-                    one = run_full_analysis(t, interval=interval, include_prepost=(prepost == 1))
-                if one:
-                    cards.append(one)
-                    with _report_progress_lock:
-                        _report_progress["done_count"] = len(cards)
-                    print(f"[Report] [{i + 1}/{total}] 完成: {t} (已成功 {len(cards)} 只)", flush=True)
-                else:
-                    print(f"[Report] [{i + 1}/{total}] 跳过: {t} (无数据)", flush=True)
-                    with _report_progress_lock:
-                        _report_progress["errors"].append({"ticker": t, "error": "无数据"})
-            except Exception as e:
-                err_msg = str(e).strip() or type(e).__name__
-                with _report_progress_lock:
-                    _report_progress["errors"].append({"ticker": t, "error": err_msg})
-                print(f"[Report] [{i + 1}/{total}] 失败: {t} - {err_msg[:80]}", flush=True)
-    finally:
-        with _report_progress_lock:
-            _report_progress["running"] = False
-            _report_progress["current_ticker"] = ""
-        n_ok, n_err = len(cards), total - len(cards)
-        print(f"[Report] 结束: 成功 {n_ok} 只, 跳过/失败 {n_err} 只", flush=True)
-
-    market_label = {"us": "美股", "cn": "A股", "hk": "港股"}.get((market or "us").strip().lower(), "美股")
-    if deep == 1:
-        title = f"{market_label}优秀资产分析（含深度分析与对比）"
-    elif interval != "1d":
-        k_label = {"5m": "5分钟K", "15m": "15分钟K", "1m": "1分钟K"}.get(interval, f"{interval}K")
-        title = f"{market_label}超短线评分（{k_label}" + ("，含盘前盘后）" if prepost == 1 else "）")
-    else:
-        title = f"{market_label}选股分析"
-    gen_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    html_content = build_report_html(cards, title=title, gen_time=gen_time)
+    cards, title, html_content = _run_report_impl(ticker_list, interval, deep, market, prepost)
     return HTMLResponse(content=html_content)
 
 
