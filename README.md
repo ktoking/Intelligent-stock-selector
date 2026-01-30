@@ -1,3 +1,10 @@
+**筛选器**
+<img width="3160" height="1828" alt="image" src="https://github.com/user-attachments/assets/021529d0-9271-425b-b8fc-1ec35d008c09" />
+**整体分析**
+<img width="1584" height="1918" alt="image" src="https://github.com/user-attachments/assets/b3cc99a8-43a3-4db6-92ef-927d22478cae" />
+
+
+
 # Stock Agent 使用说明
 
 ## 一、本地是否已启动
