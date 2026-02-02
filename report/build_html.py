@@ -88,11 +88,20 @@ def _score_interpretation(score: Any) -> str:
         return "—"
 
 
-def build_report_html(cards: List[Dict[str, Any]], title: str = None, gen_time: str = None) -> str:
+def build_report_html(
+    cards: List[Dict[str, Any]],
+    title: str = None,
+    gen_time: str = None,
+    report_summary: str = None,
+) -> str:
     if not cards:
         cards = []
     title = title or "美股优秀资产分析"
     gen_time = gen_time or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    summary_block = ""
+    if report_summary and str(report_summary).strip():
+        summary_escaped = _escape(str(report_summary).strip()).replace("\n", "<br>\n")
+        summary_block = f'<div class="report-summary"><div class="report-summary-title">报告总览</div><div class="report-summary-content">{summary_escaped}</div></div>'
 
     # 收集筛选选项（交易动作已归一为 买入/观察/离场）
     scores = sorted(set(_score_display(c.get("score")) for c in cards), reverse=True)
@@ -160,6 +169,7 @@ def build_report_html(cards: List[Dict[str, Any]], title: str = None, gen_time: 
         put_call = _escape(c.get("put_call"))
         core_conclusion = _escape(c.get("core_conclusion"))
         score_label = _score_interpretation(c.get("score"))
+        score_reason = _escape(c.get("score_reason") or "—")
         last_date = _escape(c.get("last_date"))
         week52_high = c.get("week52_high")
         week52_low = c.get("week52_low")
@@ -250,6 +260,7 @@ def build_report_html(cards: List[Dict[str, Any]], title: str = None, gen_time: 
                     <div class="score-badge-wrap">
                         <div class="score-badge">{score_str}</div>
                         <div class="score-interpretation">{score_label}</div>
+                        {f'<div class="score-reason">{score_reason}</div>' if score_reason and score_reason != "—" else ''}
                     </div>
                 </div>
                 {core_block}
@@ -368,6 +379,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .header { background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 16px; padding: 35px 40px; margin-bottom: 25px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); border: 1px solid rgba(255, 255, 255, 0.8); }
 .header h1 { color: #1a1a1a; font-size: 32px; margin-bottom: 12px; font-weight: 700; letter-spacing: -0.5px; }
 .header-info { color: #6c757d; font-size: 15px; line-height: 1.8; }
+.report-summary { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border-radius: 16px; padding: 22px 28px; margin-bottom: 25px; border-left: 5px solid #667eea; box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15); }
+.report-summary-title { font-size: 15px; font-weight: 700; color: #3730a3; margin-bottom: 12px; letter-spacing: 0.3px; }
+.report-summary-content { font-size: 15px; color: #4a5568; line-height: 1.75; }
 .controls { background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 16px; padding: 25px 30px; margin-bottom: 25px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); border: 1px solid rgba(255, 255, 255, 0.8); display: flex; flex-wrap: wrap; gap: 25px; align-items: flex-start; }
 .control-group { display: flex; flex-direction: column; gap: 10px; min-width: 200px; }
 .control-group label { font-weight: 700; color: #2d3748; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -398,6 +412,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .score-badge-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
 .score-badge { width: 60px; height: 60px; background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: white; box-shadow: 0 4px 12px rgba(246, 211, 101, 0.4); }
 .score-interpretation { font-size: 12px; font-weight: 600; color: #667eea; letter-spacing: 0.5px; }
+.score-reason { font-size: 11px; color: #6b7280; max-width: 180px; margin-top: 4px; line-height: 1.35; }
 .card-core-conclusion { margin-bottom: 16px; padding: 12px 14px; background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border-radius: 10px; font-size: 14px; color: #3730a3; line-height: 1.5; border-left: 4px solid #667eea; }
 .card-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
 .info-item { display: flex; flex-direction: column; padding: 12px; background: #f7fafc; border-radius: 10px; transition: all 0.3s; }
@@ -479,6 +494,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
                 <div>生成时间: {_escape(gen_time)}</div>
             </div>
         </div>
+        {summary_block}
         <div class="controls">
             <div class="control-group">
                 <label>排序方式</label>

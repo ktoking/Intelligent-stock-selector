@@ -8,8 +8,8 @@ import yfinance as yf
 from llm import ask_llm
 
 from agents.technical import get_technical_summary
-from agents.news import get_news_summary
-from agents.fundamental import get_fundamental_data
+from agents.news import get_news_summary, get_news_summary_llm
+from agents.fundamental import get_fundamental_data, get_financials_interpretation
 from agents.options import get_put_call_summary
 from config.tickers import TICKER_ZH_NAMES
 
@@ -43,6 +43,8 @@ def _build_prompt(
     options_summary: dict,
     interval: str = "1d",
     include_prepost: bool = False,
+    news_llm_summary: str = "",
+    financials_interpretation: str = "",
 ) -> str:
     tech_text = "无数据"
     tech_levels = technical.get("tech_levels") or {}
@@ -74,10 +76,14 @@ K: {ks.get('k')}  D: {ks.get('d')}  J: {ks.get('j')}
 
     news_text = "无"
     if news.get("news"):
-        news_text = "\n".join(
+        raw_titles = "\n".join(
             f"- {n.get('title', '')} ({n.get('published', '')})"
             for n in news["news"][:5]
         )
+        if news_llm_summary and news_llm_summary.strip():
+            news_text = f"新闻摘要：{news_llm_summary.strip()}\n近期标题：\n{raw_titles}"
+        else:
+            news_text = raw_titles
 
     fund = fundamental
     pe_str = fund.get("pe") or "—"
@@ -85,13 +91,17 @@ K: {ks.get('k')}  D: {ks.get('d')}  J: {ks.get('j')}
     opt_ratio = options_summary.get("ratio")
     opt_str = f"{opt_desc}" + (f" (put/call={opt_ratio})" if opt_ratio is not None else "")
 
+    fund_intro = ""
+    if financials_interpretation and financials_interpretation.strip():
+        fund_intro = f"财报解读：{financials_interpretation.strip()}\n"
+    fund_raw = (fund.get("financials_str") or "")[:600]
     fund_text = f"""
 公司: {fund.get('short_name')} ({fund.get('ticker')})
 行业: {fund.get('industry')}  板块: {fund.get('sector')}
 市值: {fund.get('market_cap')}  当前价: {fund.get('current_price')}  涨跌幅: {fund.get('change_pct')}%
 市盈率PE: {pe_str}
 近日多空期权: {opt_str}
-财报摘要: {fund.get('financials_str', '')[:800]}...
+{fund_intro}财报原始摘要(参考): {fund_raw}...
 """
 
     is_intraday = interval != "1d"
@@ -101,7 +111,7 @@ K: {ks.get('k')}  D: {ks.get('d')}  J: {ks.get('j')}
     trend_hint = "日K均线排列与趋势，是否多头排列" if not is_intraday else "分K均线排列与短线趋势"
 
     return f"""
-你是一位{role}。请以{time_scope}，根据下面【技术面】【消息面】【财报/估值/期权】数据，用中文输出以下 9 项，每项单独一行，格式严格如下（不要多写其他内容）：
+你是一位{role}。请以{time_scope}，根据下面【技术面】【消息面】【财报/估值/期权】数据，用中文输出以下 10 项，每项单独一行，格式严格如下（不要多写其他内容）：
 
 核心结论：<一句话总结该标的当前是否值得关注及主要理由>
 趋势结构：<一句话描述{trend_hint}>
@@ -109,6 +119,7 @@ MACD状态：<一句话描述MACD位置与金叉死叉>
 KDJ状态：<一句话描述超买超卖与钝化>
 分析原因：<2-4句综合结论，可结合PE、期权多空、均线排列>
 评分：<10-1的数字，仅数字，10=最强 1=最弱>
+评分理由：<一句话说明为何给该评分，如 均线多头+PE合理+期权偏多 或 技术承压+估值偏高>
 交易动作：<仅填其一：买入 / 观察 / 离场。偏多或可加仓填「买入」，偏空或减仓填「离场」，不确定填「观察」。>
 加仓价格：<尽量根据上方【技术面入场/离场参考】给出具体价位数字，如 185.50；仅当确实无参考或无法给出时填“—”—>
 减仓价格：<尽量根据上方离场参考（跌破MA20/MA60等）给出具体价位数字；仅当确实无参考时填“—”—>
@@ -132,6 +143,7 @@ def _parse_llm_output(text: str) -> Dict[str, Any]:
         "kdj_status": "",
         "analysis_reason": "",
         "score": 5,
+        "score_reason": "",
         "action": "观察",
         "add_price": "—",
         "reduce_price": "—",
@@ -155,6 +167,8 @@ def _parse_llm_output(text: str) -> Dict[str, Any]:
                 out["score"] = max(1, min(10, raw))  # 10-1 分制，超出则截断
             except Exception:
                 out["score"] = 5
+        elif line.startswith("评分理由："):
+            out["score_reason"] = line.replace("评分理由：", "").strip()
         elif line.startswith("交易动作："):
             raw_action = line.replace("交易动作：", "").strip() or "观察"
             out["action"] = _normalize_action(raw_action)
@@ -194,15 +208,21 @@ def run_full_analysis(
     interval = (interval or "1d").strip().lower()
     technical = get_technical_summary(ticker, interval=interval, prepost=include_prepost)
     news = get_news_summary(ticker)
+    news_llm = get_news_summary_llm(ticker, news.get("news") or []) if news.get("news") else ""
     # 日 K 且勾选盘前/盘后时，涨跌幅与当前价使用盘前/盘后数据
     fundamental = get_fundamental_data(ticker, use_prepost=(interval == "1d" and include_prepost))
+    financials_interpretation = get_financials_interpretation(ticker, fundamental.get("financials_str") or "")
     options_summary = get_put_call_summary(ticker)
 
-    prompt = _build_prompt(ticker, technical, news, fundamental, options_summary, interval=interval, include_prepost=include_prepost)
+    prompt = _build_prompt(
+        ticker, technical, news, fundamental, options_summary,
+        interval=interval, include_prepost=include_prepost,
+        news_llm_summary=news_llm, financials_interpretation=financials_interpretation,
+    )
     try:
         print(f"[Report] {ticker} LLM 综合评分开始（等待 Ollama/API）…", flush=True)
         raw = ask_llm(
-            system="你是美股多维度分析师。请严格按用户要求的 9 项格式输出，每行一项，不要遗漏。",
+            system="你是美股多维度分析师。请严格按用户要求的 10 项格式输出，每行一项，不要遗漏。",
             user=prompt,
         )
         print(f"[Report] {ticker} LLM 综合评分完成", flush=True)
@@ -231,6 +251,7 @@ def run_full_analysis(
         "name": name,
         "core_conclusion": parsed["core_conclusion"] or "—",
         "score": parsed["score"],
+        "score_reason": parsed.get("score_reason") or "—",
         "action": parsed["action"],
         "sector": fundamental.get("industry") or fundamental.get("sector") or "—",
         "current_price": price_str,

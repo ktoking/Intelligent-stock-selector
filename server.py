@@ -42,6 +42,7 @@ from config.tickers import (
     POOL_SMALL_CN,
 )
 from report.build_html import build_report_html
+from llm import ask_llm
 
 
 def _normalize_interval(interval: str) -> str:
@@ -124,7 +125,28 @@ def _run_report_impl(
     else:
         title = f"{prefix}选股分析"
     gen_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    html_content = build_report_html(cards, title=title, gen_time=gen_time)
+    report_summary = None
+    if cards:
+        lines = []
+        for c in cards:
+            ticker = c.get("ticker") or ""
+            name = c.get("name") or ticker
+            score = c.get("score", 5)
+            action = (c.get("action") or "观察").strip()
+            core = (c.get("core_conclusion") or "").strip() or "—"
+            lines.append(f"{name}({ticker}) 评分{score} {action}：{core[:120]}")
+        text = "\n".join(lines)
+        try:
+            report_summary = ask_llm(
+                user=f"""以下是本期报告各标的的核心结论、评分、交易动作（每行一只）。请用 3-5 句话概括本期要点，并指出优先关注的 1-3 只标的及简要理由。直接输出总览正文，不要标题或列表编号。
+
+{text}"""
+            )
+            if report_summary:
+                report_summary = report_summary.strip()
+        except Exception as e:
+            print(f"[Report] 报告总览 LLM 调用失败: {e}", flush=True)
+    html_content = build_report_html(cards, title=title, gen_time=gen_time, report_summary=report_summary)
     return cards, title, html_content
 
 

@@ -212,6 +212,25 @@ def get_fundamental_data(ticker: str, use_prepost: bool = False) -> Dict[str, An
     }
 
 
+def get_financials_interpretation(ticker: str, financials_str: str, max_chars: int = 1200) -> str:
+    """
+    用 LLM 对财报摘要做 2-3 句话解读：收入/利润/现金流趋势 + 1 个主要风险或关注点。
+    无数据或调用失败时返回空字符串。
+    """
+    if not financials_str or (financials_str or "").strip() in ("", "无"):
+        return ""
+    text = (financials_str or "")[:max_chars]
+    try:
+        out = ask_llm(
+            user=f"""以下为 {ticker} 的财报摘要（部分）。请用 2-3 句话概括：收入与利润趋势、现金流情况；并指出 1 个主要风险或关注点。直接输出解读，不要标题或编号。
+
+{text}"""
+        )
+        return (out or "").strip()
+    except Exception:
+        return ""
+
+
 def analyze_fundamental(ticker: str):
     """原有接口：仅基本面 LLM 分析文案。"""
     stock = yf.Ticker(ticker)
