@@ -3,9 +3,10 @@ from llm import ask_llm
 from typing import Optional, Dict, Any
 
 
-def get_fundamental_data(ticker: str) -> Dict[str, Any]:
+def get_fundamental_data(ticker: str, use_prepost: bool = False) -> Dict[str, Any]:
     """
     拉取财报与行情相关原始数据，供报告卡片和 LLM 综合研判使用。
+    use_prepost: 为 True 时（日 K 且勾选盘前/盘后），当前价与涨跌幅使用盘前/盘后价格。
     """
     stock = yf.Ticker(ticker)
     info = stock.info or {}
@@ -15,21 +16,65 @@ def get_fundamental_data(ticker: str) -> Dict[str, Any]:
         financials_str = financials.to_string() if financials is not None and not financials.empty else "无"
     except Exception:
         financials_str = "无"
+    current = None
+    change_pct = None
     try:
-        hist = stock.history(period="5d")
-        if hist is not None and len(hist) >= 2 and hasattr(hist, "columns") and "Close" in hist.columns:
-            current = float(hist["Close"].iloc[-1])
-            prev = float(hist["Close"].iloc[-2])
-            change_pct = (current - prev) / prev * 100 if prev else 0
+        # 日 K 且盘前/盘后：优先用 info 的盘后/盘前价与涨跌幅
+        if use_prepost:
+            post_price = info.get("postMarketPrice")
+            post_pct = info.get("postMarketChangePercent")
+            pre_price = info.get("preMarketPrice")
+            pre_pct = info.get("preMarketChangePercent")
+            try:
+                if post_price is not None and str(post_price).strip() != "":
+                    current = float(post_price)
+                    change_pct = float(post_pct) if post_pct is not None else None
+                elif pre_price is not None and str(pre_price).strip() != "":
+                    current = float(pre_price)
+                    change_pct = float(pre_pct) if pre_pct is not None else None
+                else:
+                    current = None
+                    change_pct = None
+            except (TypeError, ValueError):
+                current = None
+                change_pct = None
+            if current is not None and change_pct is None:
+                # 有盘前/盘后价但无现成涨跌幅：用昨收推算
+                prev_close = info.get("regularMarketPreviousClose") or info.get("previousClose")
+                if prev_close is not None:
+                    try:
+                        prev = float(prev_close)
+                        change_pct = (current - prev) / prev * 100 if prev else None
+                    except (TypeError, ValueError):
+                        pass
         else:
-            current = info.get("currentPrice") or info.get("regularMarketPrice")
-            current = float(current) if current is not None else None
-            change_pct = info.get("regularMarketChangePercent")
-            change_pct = float(change_pct) if change_pct is not None else None
+            current = None
+            change_pct = None
+
+        if current is None or (not use_prepost):
+            hist = stock.history(period="5d", prepost=use_prepost)
+            if hist is not None and len(hist) >= 2 and hasattr(hist, "columns") and "Close" in hist.columns:
+                current = float(hist["Close"].iloc[-1])
+                prev = float(hist["Close"].iloc[-2])
+                change_pct = (current - prev) / prev * 100 if prev else 0
+            elif not use_prepost:
+                current = info.get("currentPrice") or info.get("regularMarketPrice")
+                current = float(current) if current is not None else None
+                change_pct = info.get("regularMarketChangePercent")
+                change_pct = float(change_pct) if change_pct is not None else None
     except Exception:
-        current = info.get("currentPrice") or info.get("regularMarketPrice")
-        current = float(current) if current is not None else None
-        change_pct = None
+        if current is None:
+            current = info.get("currentPrice") or info.get("regularMarketPrice")
+            try:
+                current = float(current) if current is not None else None
+            except (TypeError, ValueError):
+                current = None
+        if change_pct is None:
+            pct = info.get("regularMarketChangePercent")
+            try:
+                change_pct = float(pct) if pct is not None else None
+            except (TypeError, ValueError):
+                change_pct = None
 
     # 52周高低
     week52_high = info.get("fiftyTwoWeekHigh")
@@ -77,7 +122,10 @@ def get_fundamental_data(ticker: str) -> Dict[str, Any]:
         recommendation = None
 
     # 下次财报日（calendar 中 Earnings Date 为日期列表；若无则用 get_earnings_dates）
+    # A股/港股 Yahoo 常无财报日历，且 get_earnings_dates 会打 "may be delisted" 误导；仅美股调 get_earnings_dates
     next_earnings = None
+    ticker_upper = (ticker or "").upper()
+    is_cn_hk = ".SS" in ticker_upper or ".SZ" in ticker_upper or ".HK" in ticker_upper
     try:
         from datetime import date
         cal = getattr(stock, "calendar", None) or getattr(stock, "get_calendar", lambda: None)()
@@ -95,7 +143,7 @@ def get_fundamental_data(ticker: str) -> Dict[str, Any]:
                 next_earnings = ed_list.strftime("%Y-%m-%d")
             else:
                 next_earnings = str(ed_list)[:10]
-        if not next_earnings:
+        if not next_earnings and not is_cn_hk:
             edf = stock.get_earnings_dates(limit=4)
             if edf is not None and not edf.empty and len(edf.index) > 0:
                 for idx in list(edf.index)[:4]:

@@ -20,6 +20,9 @@ build/
 .env.local
 *.key
 
+# Report 自动保存的 HTML（带时间戳）
+report/output/
+
 # OS
 .DS_Store
 Thumbs.db

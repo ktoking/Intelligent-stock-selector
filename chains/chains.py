@@ -1,10 +1,17 @@
 """
 多步骤推理编排：LCEL 风格链（外部数据 → Prompt 填充 → LLM → 输出），可选长期上下文存储与检索。
+深度分析 ①②③④⑤ 可并行执行以缩短总耗时。环境变量 DEEP_PARALLEL=0 可关闭并行。
 """
 import json
+import os
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from typing import Any, Dict, Optional
+
+# 深度分析是否并行：默认 True；设为 0 则顺序执行（单实例 Ollama 排队时可用）
+_DEEP_PARALLEL = os.environ.get("DEEP_PARALLEL", "1").strip().lower() not in ("0", "false", "no")
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from chains.llm_factory import get_llm
@@ -94,29 +101,66 @@ def chain_thesis(inputs: dict) -> str:
     return out
 
 
-def chain_full_deep(ticker: str, peers: str = None, include_narrative: bool = False, use_memory: bool = True) -> Dict[str, str]:
+def _run_one_deep_step(label: str, chain_fn, inputs: dict, ticker: str, step_names: dict) -> tuple:
+    """单步深度分析，返回 (label, result)，内部打印耗时。供并行调用。"""
+    t0 = time.time()
+    try:
+        result = chain_fn(inputs)
+    except Exception as e:
+        result = f"[分析异常] {e}"
+    elapsed = time.time() - t0
+    print(f"[Report] {ticker} {step_names[label]} 耗时 {elapsed:.1f}s", flush=True)
+    return (label, result)
+
+
+def chain_full_deep(ticker: str, peers: str = None, include_narrative: bool = False, use_memory: bool = True, parallel: bool = None) -> Dict[str, str]:
     """
-    实战组合：①→②→③→④（可选⑤），多步骤顺序执行；分析结果自动写入长期上下文。
+    实战组合：①②③④（可选⑤）。parallel=True 时五步并行执行，总耗时约等于最慢一步；否则顺序执行。
+    parallel 默认跟随环境变量 DEEP_PARALLEL（1=并行，0=顺序）。单实例 Ollama 若内部排队，可设 DEEP_PARALLEL=0。
     use_memory=True 时结果会保存，后续可通过 memory_store.retrieve 做「上次分析」对比。
     """
+    if parallel is None:
+        parallel = _DEEP_PARALLEL
     ticker = (ticker or "").upper().strip()
     inputs = {"ticker": ticker, "peers": peers}
     results = {}
-    for label, chain_fn in [
+    step_names = {
+        "1_基本面深度": "①基本面深度",
+        "2_护城河与竞争优势": "②护城河",
+        "3_同行业横向对比": "③同行对比",
+        "4_空头视角": "④空头视角",
+        "5_财报与叙事变化": "⑤叙事变化",
+    }
+    steps = [
         ("1_基本面深度", chain_fundamental_deep),
         ("2_护城河与竞争优势", chain_moat),
         ("3_同行业横向对比", chain_peers),
         ("4_空头视角", chain_short),
-    ]:
-        try:
-            results[label] = chain_fn(inputs)
-        except Exception as e:
-            results[label] = f"[分析异常] {e}"
+    ]
     if include_narrative:
-        try:
-            results["5_财报与叙事变化"] = chain_narrative(inputs)
-        except Exception as e:
-            results["5_财报与叙事变化"] = f"[分析异常] {e}"
+        steps.append(("5_财报与叙事变化", chain_narrative))
+
+    if parallel and len(steps) > 1:
+        t_parallel = time.time()
+        with ThreadPoolExecutor(max_workers=min(5, len(steps))) as executor:
+            futures = {
+                executor.submit(_run_one_deep_step, label, fn, inputs, ticker, step_names): label
+                for label, fn in steps
+            }
+            for fut in as_completed(futures):
+                label, result = fut.result()
+                results[label] = result
+        print(f"[Report] {ticker} 深度分析（并行）总耗时 {time.time() - t_parallel:.1f}s", flush=True)
+    else:
+        for label, chain_fn in steps:
+            t0 = time.time()
+            try:
+                results[label] = chain_fn(inputs)
+            except Exception as e:
+                results[label] = f"[分析异常] {e}"
+            elapsed = time.time() - t0
+            print(f"[Report] {ticker} {step_names[label]} 耗时 {elapsed:.1f}s", flush=True)
+
     # 整次深度分析结果存为 full_deep_run，供 report 时「与上次对比」
     try:
         blob = json.dumps({"ts": datetime.now().isoformat(), **results}, ensure_ascii=False)

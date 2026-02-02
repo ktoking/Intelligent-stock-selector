@@ -3,140 +3,142 @@
 **整体分析**
 <img width="1584" height="1918" alt="image" src="https://github.com/user-attachments/assets/b3cc99a8-43a3-4db6-92ef-927d22478cae" />
 
+---
 
+# Stock Agent
 
-# Stock Agent 使用说明
+多市场股票分析服务：技术面 + 消息面 + 财报 + 期权 + LLM 综合评分，支持美股 / A股 / 港股，可选深度分析（基本面深度、护城河、同行对比、空头视角、叙事变化）与「与上次对比」。默认本地 Ollama，无需 API Key。
 
-## 一、本地是否已启动
+---
 
-- 服务在 **8000 端口**。在项目目录下执行：
-  ```bash
-  curl -s http://127.0.0.1:8000/health
-  ```
-  若返回 `{"status":"ok"}` 说明已启动；否则需要先启动（见下文「如何启动」）。
+## 快速开始
 
-## 二、访问什么可以拿到结果
+```bash
+# 安装依赖
+pip install -r requirements.txt
 
-| 用途 | 地址 | 说明 |
+# 本地模型（需先安装 Ollama 并拉取模型）
+ollama pull qwen2.5:3b
+python server.py
+```
+
+服务默认在 **http://127.0.0.1:8000**。健康检查：`curl http://127.0.0.1:8000/health`；接口文档：http://127.0.0.1:8000/docs 。
+
+---
+
+## Report 接口（核心）
+
+**GET /report** 生成多只标的的 HTML 报告，支持大盘/小盘、多市场、日 K/分 K、深度分析。
+
+### 参数一览
+
+| 参数 | 说明 | 默认 |
 |------|------|------|
-| 健康检查 | http://127.0.0.1:8000/health | 确认服务是否存活 |
-| 接口文档 | http://127.0.0.1:8000/docs | Swagger 文档，可在线试调 |
-| 单只基本面分析（文本） | http://127.0.0.1:8000/analyze?ticker=AAPL | 返回该股票基本面分析文案 |
-| **多只优秀资产报告（HTML）** | http://127.0.0.1:8000/report | 默认按市值+近期增长取 **100 只**，日 K 技术+消息+财报+期权 |
-| **深度报告（含①②③④⑤+与上次对比）** | http://127.0.0.1:8000/report?deep=1&limit=5 | 每只跑深度分析+记忆对比，输出大方向是否一致、近期趋势，可筛「仅显示大方向不变」 |
-| 指定只数 | http://127.0.0.1:8000/report?limit=20 | 取前 20 只 |
-| 指定股票 | http://127.0.0.1:8000/report?tickers=AAPL,MSFT,NVDA | 只分析这几只 |
+| **tickers** | 逗号分隔股票代码；不传则按 market+pool 取池 | — |
+| **limit** | 不传 tickers 时取的数量 | 5 |
+| **market** | 市场：`us` 美股 / `cn` A股 / `hk` 港股 | us |
+| **pool** | 选股池：不传或 `sp500` 大盘；`russell2000` 美股小盘（罗素2000）；`csi2000` A股小盘（中证2000） | — |
+| **deep** | 1=每只跑深度分析①②③④⑤+与上次对比；0=仅技术+消息+财报+期权+综合评分 | 0 |
+| **interval** | K 线：`1d` 日 K；`5m`/`15m`/`10m`/`1m` 分 K（10m 内部用 15m） | 1d |
+| **prepost** | 1=含盘前盘后（日 K 时涨跌幅为盘前/盘后价） | 0 |
 
-**拿到结果的方式**：浏览器直接打开上述 URL；报告页可「另存为」保存为 HTML 文件。
+### 股票代码格式
 
-### 6 类深度分析（融合标准 Prompt，可横向对比）
+- **美股**：直接写代码，如 `AAPL,MSFT,NVDA`。
+- **A 股**：可传 6 位数字，自动补交易所后缀：  
+  `001317,603767` → `001317.SZ`（深圳）、`603767.SS`（上海）。  
+  也可直接写 `600519.SS,000858.SZ`。
+- **港股**：可传 4 位数字，自动补 `.HK`：`0700` → `0700.HK`。
 
-| 分析类型 | 地址 / 方法 | 说明 |
-|----------|-------------|------|
-| ① 基本面深度 | GET /analyze/deep?ticker=AAPL | 收入与增长质量、盈利能力、现金流、商业模式、中长期风险（标准模板） |
-| ② 护城河 | GET /analyze/moat?ticker=AAPL | 技术/切换成本/网络/规模/品牌壁垒，强/中/弱/无及削弱路径 |
-| ③ 同行对比 | GET /analyze/peers?ticker=AAPL&peers=MSFT,GOOGL | 增速/盈利/商业模式/估值差异，高估/合理/低估及市场可能看错之处 |
-| ④ 空头视角 | GET /analyze/short?ticker=AAPL | 增长可持续性、替代风险、依赖度、估值、下跌触发点 |
-| ⑤ 叙事变化 | GET /analyze/narrative?ticker=AAPL | 财报与管理层话术变化、正面/警惕信号 |
-| ⑥ 假设拆解 | POST /analyze/thesis，body: `{"ticker":"AAPL","hypothesis":"你的假设"}` | 关键前提、最易证伪前提、失败最可能原因 |
-| **组合（①②③④）** | GET /analyze/full?ticker=AAPL | 一次返回 4 段分析（JSON） |
-| **组合+⑤** | GET /analyze/full?ticker=AAPL&narrative=1 | 含 ⑤ 财报与叙事变化 |
+### 常用示例
 
-## 三、如何切换模型（Ollama）
+| 用途 | URL |
+|------|-----|
+| 美股大盘前 20 只（日 K） | `/report?market=us&limit=20` |
+| 美股小盘（罗素2000 风格）前 10 只 | `/report?market=us&pool=russell2000&limit=10` |
+| A股小盘（中证2000 风格）前 10 只 | `/report?market=cn&pool=csi2000&limit=10` |
+| 指定 A 股（6 位自动补 .SS/.SZ） | `/report?tickers=001317,603767,600882` |
+| 深度报告（含①②③④⑤+与上次对比） | `/report?deep=1&limit=5` |
+| 分 K 超短线（15 分钟 K） | `/report?interval=15m&limit=10` |
+| 日 K + 盘前盘后涨跌幅 | `/report?interval=1d&prepost=1&limit=5` |
 
-当前默认使用 **qwen2.5:3b**。要换模型有两种方式。
+### 报告行为说明
 
-### 方式 1：环境变量（推荐）
+- **自动保存**：每次生成后会将 HTML 写入 `report/output/report-MMDD-HHMM.html`（如 `report-0130-1432.html`），无需手动下载。
+- **进度**：生成时可轮询 **GET /report/progress** 查看当前第几只、成功数、失败列表。
+- **评分**：10～1 分制（10 最强）；交易动作为「买入 / 观察 / 离场」；所属板块展示为中文（美股常见行业已映射）。
+- **深度模式**（`deep=1`）：依赖 LangChain（`langchain-core`、`langchain-openai`）；会跑 ①②③④⑤ 并做「与上次对比」，且对综合评分做一次轻量 LLM 微调。深度分析默认并行执行以缩短耗时；可设 `DEEP_PARALLEL=0` 改为顺序。
 
-启动服务**之前**设置：
+---
 
-```bash
-export OLLAMA_MODEL=qwen2.5:7b
-./venv/bin/python server.py
-```
+## 其他接口
 
-或一行：
+| 用途 | 方法 | 说明 |
+|------|------|------|
+| 单只基本面（文本） | GET /analyze?ticker=AAPL | 简短基本面分析文案 |
+| ① 基本面深度 | GET /analyze/deep?ticker=AAPL | 收入与增长、盈利、现金流、商业模式、风险 |
+| ② 护城河 | GET /analyze/moat?ticker=AAPL | 技术/切换成本/网络/规模/品牌壁垒 |
+| ③ 同行对比 | GET /analyze/peers?ticker=AAPL&peers=MSFT,GOOGL | 增速/盈利/估值差异 |
+| ④ 空头视角 | GET /analyze/short?ticker=AAPL | 增长可持续性、替代风险、估值、下跌触发点 |
+| ⑤ 叙事变化 | GET /analyze/narrative?ticker=AAPL | 财报与话术变化 |
+| ⑥ 假设拆解 | POST /analyze/thesis，body: `{"ticker":"AAPL","hypothesis":"假设"}` | 关键前提、证伪点、失败原因 |
+| 组合 ①②③④⑤ | GET /analyze/full?ticker=AAPL&narrative=1 | 一次返回多段分析（JSON） |
+| 长期记忆检索 | GET /memory?ticker=AAPL&analysis_type=fundamental_deep | 历史分析记录 |
+| 上次分析摘要 | GET /memory/context?ticker=AAPL&analysis_type=fundamental_deep | 用于对比的摘要文本 |
 
-```bash
-OLLAMA_MODEL=qwen2.5:7b ./venv/bin/python server.py
-```
+---
 
-### 方式 2：改代码默认值
+## 模型与后端
 
-编辑 `llm.py`，找到使用 Ollama 时的 `DEFAULT_MODEL` 那一行，把 `"qwen2.5:3b"` 改成你要的模型名，例如 `"qwen2.5:7b"`。
+- **默认**：本地 Ollama，模型名由环境变量 `OLLAMA_MODEL` 控制（默认 `qwen2.5:3b`）。
+- **切换模型**：`export OLLAMA_MODEL=qwen2.5:7b` 后启动；或 `ollama pull qwen2.5:7b` 再设环境变量。
+- **云端**：设置 `DEEPSEEK_API_KEY` 或 `OPENAI_API_KEY`，可选 `LLM_BACKEND=deepseek` / `openai`，详见 `llm.py` 注释。
 
-### 使用新模型前需先拉取
+---
 
-```bash
-ollama pull qwen2.5:7b    # 或 qwen2.5:14b、llama3.2 等
-```
-
-切换模型后需**重启**本服务（或重新运行 `python server.py`）才会生效。
-
-## 四、如何启动 / 停止服务
-
-**启动：**
-
-```bash
-cd /Users/kaiyi.wang/PycharmProjects/stock-agent
-./venv/bin/python server.py
-```
-
-或指定模型后启动：
-
-```bash
-OLLAMA_MODEL=qwen2.5:7b ./venv/bin/python server.py
-```
-
-**停止：** 在运行服务的终端里按 `Ctrl+C`。
-
-**后台运行示例：**
+## 启动与停止
 
 ```bash
-nohup ./venv/bin/python server.py > server.log 2>&1 &
+# 前台
+python server.py
+
+# 指定模型
+OLLAMA_MODEL=qwen2.5:7b python server.py
+
+# 后台
+nohup python server.py > server.log 2>&1 &
 ```
 
-## 五、AI Agent 调优（模型参数、关键字、Prompt）
+停止：前台运行时 `Ctrl+C`。
 
-可从**模型参数**、**关键字/输出约束**、**Prompt 与角色**三方面调优，使报告更稳定或更贴合风格。
+---
 
-### 5.1 模型参数（环境变量）
+## AI 与报告调优
 
-| 变量 | 含义 | 推荐/默认 |
-|------|------|-----------|
-| `LLM_TEMPERATURE` | 采样温度，0~2；越低输出越稳定，适合分析 | `0.2`（结构化分析建议保持较低） |
-| `LLM_MAX_TOKENS` | 单次回复最大 token 数；不设则用模型默认 | 不设（若回复过长可设如 `2048`） |
-| `OLLAMA_MODEL` | Ollama 模型名 | `qwen2.5:3b`，可改为 `qwen2.5:7b` 等 |
-| `LLM_BACKEND` | 后端：`ollama` / `deepseek` / `openai` | 有 API Key 时自动或显式指定 |
-| `LLM_TIMEOUT` | 单次请求超时（秒） | `120` |
+### 环境变量（模型与行为）
 
-示例：
+| 变量 | 含义 | 默认 |
+|------|------|------|
+| `LLM_TEMPERATURE` | 采样温度，越低越稳定 | 0.3 |
+| `LLM_MAX_TOKENS` | 单次回复最大 token | 不设 |
+| `OLLAMA_MODEL` | Ollama 模型名 | qwen2.5:3b |
+| `LLM_BACKEND` | ollama / deepseek / openai | 按 Key 推断 |
+| `LLM_TIMEOUT` | 请求超时（秒） | 120 |
+| `DEEP_PARALLEL` | 深度分析是否并行，0=顺序 | 1 |
 
-```bash
-LLM_TEMPERATURE=0.1 LLM_MAX_TOKENS=2048 OLLAMA_MODEL=qwen2.5:7b ./venv/bin/python server.py
-```
-
-以上参数在 `llm.ask_llm` 与 `chains/llm_factory` 中统一生效（配置来自 `config/llm_config.py`）。
-
-### 5.2 关键字与输出约束
-
-- **Report 交易动作校验（可选）**：环境变量 `REPORT_ACTION_KEYWORDS` 可设为逗号分隔的关键词列表，用于自检或过滤「交易动作」是否落在预期集合内；不设则不校验。配置在 `config/llm_config.py`。
-- **新闻**：当前直接使用 yfinance 返回的新闻列表，未做关键词过滤；若需只保留「财报/业绩/收购/诉讼」等，可在 `agents/news.py` 中按标题或摘要做关键词过滤或打标。
-- **加仓/减仓价格**：Prompt 中已要求结合技术面入场/离场参考给出数字或「—」；若希望更严格，可在 `agents/full_analysis.py` 的 `_parse_llm_output` 后增加校验（如必须为数字或「—」）。
-
-### 5.3 Prompt 与角色
-
-- **Report 综合（9 项输出）**：`agents/full_analysis.py` 中 `_build_prompt` 构造用户 Prompt，`ask_llm` 的 `system` 为「美股多维度分析师，严格按 9 项格式输出」。若希望语气更保守/激进，可改 system 或在该文件中增加「保守/中性/激进」分支，后续可与 `config/llm_config.py` 的 `PROMPT_TONE` 联动。
-- **6 类深度分析**：`agents/prompts.py` 中为 ① 基本面深度、② 护城河、③ 同行、④ 空头、⑤ 叙事、⑥ 假设拆解的模板；`agents/analysis_deep.py` 中每条调用配有独立 system 描述。调优时可直接改对应模板或 system 字符串（如强调「不给出买卖建议」「只列有逻辑链条的风险」等）。
-- **基本面简短分析**：`agents/fundamental.py` 中构造 prompt 并传入 system「长期价值投资取向、避免情绪化和炒作」。可按需要微调措辞。
-
-### 5.4 可编辑文件速查
+### 可编辑文件速查
 
 | 目的 | 文件 |
 |------|------|
-| 温度、max_tokens、动作关键词、PROMPT_TONE | `config/llm_config.py` |
-| 模型/后端/超时 | `llm.py`（及环境变量） |
-| Report 9 项格式与角色 | `agents/full_analysis.py`（`_build_prompt` + `ask_llm` 的 system） |
-| 6 类深度分析模板 | `agents/prompts.py` |
-| 6 类深度 system 描述 | `agents/analysis_deep.py` |
-| 新闻条数/来源 | `agents/news.py` |
+| 温度、max_tokens、PROMPT_TONE | `config/llm_config.py` |
+| 模型/后端/超时 | `llm.py` |
+| Report 9 项格式与综合 Prompt | `agents/full_analysis.py` |
+| 深度分析 ①②③④⑤ 模板 | `agents/prompts.py`、`chains/chains.py` |
+| 选股池、A股/港股代码规范化 | `config/tickers.py` |
+| 报告 HTML 与筛选逻辑 | `report/build_html.py` |
+
+---
+
+## 免责声明
+
+本报告仅供参考，不构成任何投资建议。数据来源于公开信息，可能存在延迟或误差。投资有风险，决策需谨慎。

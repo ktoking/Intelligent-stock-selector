@@ -1,16 +1,56 @@
 """
 根据综合分析结果列表，生成与参考同风格的 HTML 报告（技术面/消息面/财报、筛选、排序）。
 """
-import html
+import re
+import html as html_module
 from datetime import datetime
 from typing import List, Dict, Any
 
 
+def _markdown_to_html(s: str) -> str:
+    """将深度摘要中的简单 markdown（###、**、换行）转为 HTML，先转义防 XSS。"""
+    if not s or not str(s).strip():
+        return ""
+    s = str(s).strip()
+    s = html_module.escape(s)
+    s = s.replace("\n", "<br>\n")
+    # **粗体** -> <b>粗体</b>
+    s = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", s)
+    # ### 标题 -> <h4>标题</h4>
+    s = re.sub(r"(?m)^###\s*(.+)$", r"<h4 class=\"deep-heading\">\1</h4>", s)
+    return s
+
+
+# 板块英文→中文（yfinance sector/industry 常见值），未收录的保持原样
+SECTOR_ZH = {
+    "Technology": "科技",
+    "Consumer Cyclical": "可选消费",
+    "Consumer Defensive": "必选消费",
+    "Healthcare": "医疗保健",
+    "Financial Services": "金融",
+    "Communication Services": "通信",
+    "Industrials": "工业",
+    "Basic Materials": "基础材料",
+    "Energy": "能源",
+    "Real Estate": "房地产",
+    "Utilities": "公用事业",
+}
+
+
+def _sector_zh(s: str) -> str:
+    """板块显示为中文，未收录则返回原值。"""
+    if not s or not str(s).strip():
+        return "—"
+    key = (s or "").strip()
+    return SECTOR_ZH.get(key, key)
+
+
 def _action_class(action: str) -> str:
+    """交易动作样式：买入=long，观察=hold，离场=short；兼容旧值多头/空头/观望等。"""
     a = (action or "").strip()
-    if "多头" in a or "加仓" in a:
+    if a == "买入" or "多头" in a or "加仓" in a or "轻仓" in a:
         return "long"
-    if "空头" in a or "减仓" in a or "禁止" in a:
+    if a == "离场" or "空头" in a or "减仓" in a or "禁止" in a:
         return "short"
     return "hold"
 
@@ -18,7 +58,7 @@ def _action_class(action: str) -> str:
 def _escape(s: Any) -> str:
     if s is None:
         return ""
-    return html.escape(str(s).strip())
+    return html_module.escape(str(s).strip())
 
 
 def _score_display(score: Any) -> str:
@@ -32,18 +72,18 @@ def _score_display(score: Any) -> str:
 
 
 def _score_interpretation(score: Any) -> str:
-    """将 1-5 评分映射为定性解读：观望/关注/可配置/偏多/强烈看好"""
+    """将 10-1 评分映射为定性解读：10 最强、1 最弱"""
     try:
         f = float(score)
-        if f < 1.5:
-            return "观望"
-        if f < 2.5:
-            return "关注"
-        if f < 3.5:
-            return "可配置"
-        if f < 4.5:
+        if f >= 9:
+            return "强烈看好"
+        if f >= 7:
             return "偏多"
-        return "强烈看好"
+        if f >= 5:
+            return "可配置"
+        if f >= 3:
+            return "关注"
+        return "观望"
     except Exception:
         return "—"
 
@@ -54,9 +94,9 @@ def build_report_html(cards: List[Dict[str, Any]], title: str = None, gen_time: 
     title = title or "美股优秀资产分析"
     gen_time = gen_time or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # 收集筛选选项
+    # 收集筛选选项（交易动作已归一为 买入/观察/离场）
     scores = sorted(set(_score_display(c.get("score")) for c in cards), reverse=True)
-    actions = sorted(set((c.get("action") or "观望").strip() for c in cards))
+    actions = sorted(set((c.get("action") or "观察").strip() for c in cards))
     markets = sorted(set((c.get("market") or "美股").strip() for c in cards)) or ["美股"]
 
     score_options = "".join(
@@ -85,8 +125,10 @@ def build_report_html(cards: List[Dict[str, Any]], title: str = None, gen_time: 
     card_html_list = []
     for c in cards:
         score_str = _score_display(c.get("score"))
-        action = (c.get("action") or "观望").strip()
+        action = (c.get("action") or "观察").strip()
         market = (c.get("market") or "美股").strip()
+        sector_raw = c.get("sector")
+        sector_zh = _sector_zh(sector_raw)
         name = _escape(c.get("name") or c.get("ticker"))
         code = _escape(c.get("ticker"))
         price = _escape(c.get("current_price"))
@@ -103,7 +145,7 @@ def build_report_html(cards: List[Dict[str, Any]], title: str = None, gen_time: 
         else:
             change_span = _escape(change_pct)
         mcap = _escape(c.get("market_cap"))
-        sector = _escape(c.get("sector"))
+        sector = _escape(sector_zh)
         add_price = _escape(c.get("add_price"))
         reduce_price = _escape(c.get("reduce_price"))
         tech_entry_note = _escape(c.get("tech_entry_note") or "—")
@@ -143,12 +185,17 @@ def build_report_html(cards: List[Dict[str, Any]], title: str = None, gen_time: 
         data_direction = "true" if direction_unchanged else "false"
         comp_reason = _escape(c.get("comparison_reason"))
         recent_trend = _escape(c.get("recent_trend"))
-        fd_summary = _escape(c.get("fundamental_deep_summary"))
-        moat_summary = _escape(c.get("moat_summary"))
-        peers_summary = _escape(c.get("peers_summary"))
-        short_summary = _escape(c.get("short_summary"))
-        narrative_summary = _escape(c.get("narrative_summary"))
-        has_deep = fd_summary or moat_summary or comp_reason or recent_trend
+        fd_summary = _markdown_to_html(c.get("fundamental_deep_summary") or "")
+        moat_summary = _markdown_to_html(c.get("moat_summary") or "")
+        peers_summary = _markdown_to_html(c.get("peers_summary") or "")
+        short_summary = _markdown_to_html(c.get("short_summary") or "")
+        narrative_summary = _markdown_to_html(c.get("narrative_summary") or "")
+        deep_disabled_reason = _escape(c.get("deep_disabled_reason"))
+        deep_error = _escape(c.get("deep_error"))
+        comp_reason_raw = (c.get("comparison_reason") or "").strip()
+        recent_trend_raw = (c.get("recent_trend") or "").strip()
+        no_history_note = (comp_reason_raw == "无历史对比" and (not recent_trend_raw or recent_trend_raw == "—"))
+        has_deep = fd_summary or moat_summary or peers_summary or short_summary or narrative_summary or comp_reason or recent_trend or deep_disabled_reason or deep_error
 
         action_escaped = _escape(action)
         core_block = f'<div class="card-core-conclusion">{core_conclusion}</div>' if (core_conclusion and core_conclusion != "—") else ""
@@ -157,7 +204,13 @@ def build_report_html(cards: List[Dict[str, Any]], title: str = None, gen_time: 
         next_earn_val = next_earnings or "—"
         deep_block = ""
         if has_deep:
+            deep_hint = ""
+            if deep_disabled_reason:
+                deep_hint = f'<div class="card-section-content" style="background:#fff3cd;padding:8px 12px;border-radius:8px;margin-bottom:12px;">⚠️ 深度摘要未生成：{deep_disabled_reason}。请安装 <code>langchain-core</code>、<code>langchain-openai</code> 并配置 LLM 后使用 <code>?deep=1</code>。</div>'
+            elif deep_error:
+                deep_hint = f'<div class="card-section-content" style="background:#f8d7da;padding:8px 12px;border-radius:8px;margin-bottom:12px;">⚠️ 深度分析执行失败：{deep_error}</div>'
             deep_block = f"""
+                {deep_hint}
                 <div class="card-section">
                     <div class="card-section-title">基本面深度摘要</div>
                     <div class="card-section-content">{fd_summary}</div>
@@ -180,7 +233,7 @@ def build_report_html(cards: List[Dict[str, Any]], title: str = None, gen_time: 
                 </div>
                 <div class="card-section">
                     <div class="card-section-title">与上次对比（大方向）</div>
-                    <div class="card-section-content">{comp_reason}</div>
+                    <div class="card-section-content">{'<p class="deep-history-note" style="color:#6c757d;font-size:0.9em;margin-bottom:8px;">首次运行或尚无历史记录，再次运行 <code>?deep=1</code> 后将显示与上次对比。</p>' if no_history_note else ''}{comp_reason}</div>
                 </div>
                 <div class="card-section">
                     <div class="card-section-title">近期对比趋势</div>
@@ -360,6 +413,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .card-section { margin-top: 18px; padding-top: 18px; border-top: 1px solid #e2e8f0; }
 .card-section-title { font-size: 13px; font-weight: 700; color: #2d3748; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
 .card-section-content { font-size: 14px; color: #4a5568; line-height: 1.7; background: #f7fafc; padding: 12px; border-radius: 8px; }
+.card-section-content .deep-heading { font-size: 13px; font-weight: 700; color: #2d3748; margin: 12px 0 6px; display: block; }
+.card-section-content .deep-heading:first-child { margin-top: 0; }
 .no-results { text-align: center; padding: 80px 20px; color: #718096; font-size: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); font-weight: 500; }
 .report-disclaimer { margin-top: 30px; padding: 20px 25px; background: rgba(255,255,255,0.9); border-radius: 12px; font-size: 13px; color: #6b7280; line-height: 1.6; text-align: center; border: 1px solid rgba(0,0,0,0.06); }"""
 

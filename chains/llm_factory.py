@@ -3,6 +3,8 @@ LangChain ChatModel 工厂：根据环境变量构建 Ollama / DeepSeek / OpenAI
 温度与 max_tokens 从 config.llm_config 读取，便于与 llm.ask_llm 统一调优。
 """
 import os
+from typing import Optional
+
 from langchain_openai import ChatOpenAI
 from langchain_core.language_models.chat_models import BaseChatModel
 
@@ -13,7 +15,7 @@ _deepseek_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
 _openai_key = os.environ.get("OPENAI_API_KEY", "").strip()
 
 _default_model = "gpt-4o-mini"
-_llm_instance: BaseChatModel | None = None
+_llm_instance: Optional[BaseChatModel] = None
 
 
 def _common_kwargs():

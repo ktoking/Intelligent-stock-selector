@@ -6,7 +6,7 @@ import os
 
 # ---------- 模型参数 ----------
 # 采样温度：0~2，越低越确定、越适合结构化分析；略高可增加表述多样性
-LLM_TEMPERATURE = float(os.environ.get("LLM_TEMPERATURE", "0.2"))
+LLM_TEMPERATURE = float(os.environ.get("LLM_TEMPERATURE", "0.3"))
 
 # 单次回复最大 token 数：不设则用模型默认；设小可避免冗长、加快响应
 LLM_MAX_TOKENS = os.environ.get("LLM_MAX_TOKENS", "")
