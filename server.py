@@ -38,6 +38,7 @@ from config.tickers import (
     MARKET_US,
     MARKET_CN,
     MARKET_HK,
+    POOL_NASDAQ100,
     POOL_SMALL_US,
     POOL_SMALL_CN,
 )
@@ -110,7 +111,9 @@ def _run_report_impl(
     market_label = {"us": "美股", "cn": "A股", "hk": "港股"}.get((market or "us").strip().lower(), "美股")
     pool = (pool or "").strip().lower()
     pool_label = ""
-    if pool == POOL_SMALL_US:
+    if pool == POOL_NASDAQ100:
+        pool_label = "纳斯达克100"
+    elif pool == POOL_SMALL_US:
         pool_label = "小盘/潜力股（罗素2000）"
     elif pool == POOL_SMALL_CN:
         pool_label = "小盘/潜力股（中证2000）"
@@ -147,6 +150,14 @@ def _run_report_impl(
         except Exception as e:
             print(f"[Report] 报告总览 LLM 调用失败: {e}", flush=True)
     html_content = build_report_html(cards, title=title, gen_time=gen_time, report_summary=report_summary)
+    # 可选：将本期报告卡片同步写入 RAG 向量库
+    try:
+        from rag.config import RAG_SYNC_CARDS
+        from rag.build_index import build_index_from_cards
+        if RAG_SYNC_CARDS and cards:
+            build_index_from_cards(cards)
+    except Exception as e:
+        print(f"[Report] RAG 同步卡片失败: {e}", flush=True)
     return cards, title, html_content
 
 
@@ -167,7 +178,7 @@ def root():
         "docs": "/docs",
         "health": "/health",
         "analyze": "/analyze?ticker=AAPL",
-        "report": "/report?limit=5&market=us（美股）或 market=cn（A股）或 market=hk（港股）；pool=russell2000（美股小盘）或 pool=csi2000（A股小盘）；?tickers=600519.SS,0700.HK 可混用",
+        "report": "/report?limit=5&market=us（美股）或 market=cn（A股）或 market=hk（港股）；pool=nasdaq100（纳斯达克100）/ russell2000（美股小盘）/ csi2000（A股小盘）；?tickers=600519.SS,0700.HK 可混用",
         "report_progress": "GET /report/progress 轮询查看报告生成进度（当前第几只、成功数、失败列表）",
         "深度分析（6 类）": {
             "1_基本面深度": "GET /analyze/deep?ticker=AAPL",
@@ -356,14 +367,14 @@ def report_page(
     interval: str = Query("1d", description="K线周期：1d=日K，5m/15m/10m/1m=分K（10m 用 15m 数据）"),
     prepost: int = Query(0, description="是否含盘前盘后：0=否，1=是（分K时常用）"),
     market: str = Query("us", description="市场选股：us=美股，cn=A股，hk=港股（不传 tickers 时生效）"),
-    pool: str = Query("", description="选股池：不传或 sp500=大盘；russell2000=美股小盘（罗素2000）；csi2000=A股小盘/潜力（中证2000），不传 tickers 时生效"),
+    pool: str = Query("", description="选股池：不传或 sp500=大盘；nasdaq100=纳斯达克100；russell2000=美股小盘（罗素2000）；csi2000=A股小盘/潜力（中证2000），不传 tickers 时生效"),
 ):
     """
     多市场选股报告：美股（S&P 500 / 罗素2000）/ A股（龙头 / 中证2000）/ 港股。
     deep=0：每只仅做技术面+消息面+财报+期权+一次 LLM 综合（快）。
     deep=1：每只额外跑 ①②③④⑤ 深度分析（仅日K），结合记忆做「与上次对比」。
     market=us/cn/hk：不传 tickers 时从对应市场池取前 limit 只。
-    pool=sp500（默认）/ russell2000（美股小盘）/ csi2000（A股小盘）：不传 tickers 时生效。
+    pool=sp500（默认）/ nasdaq100（纳斯达克100）/ russell2000（美股小盘）/ csi2000（A股小盘）：不传 tickers 时生效。
     interval=1d：日K；interval=5m/15m/10m/1m：分K超短线（10m 以 15m 数据代替）。prepost=1：含盘前盘后。
     进度可轮询 GET /report/progress。
     """

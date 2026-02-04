@@ -23,6 +23,9 @@ build/
 # Report 自动保存的 HTML（带时间戳）
 report/output/
 
+# RAG 向量库（本地 Chroma 持久化）
+data/rag_chroma/
+
 # OS
 .DS_Store
 Thumbs.db

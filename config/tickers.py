@@ -38,10 +38,24 @@ MARKET_CN = "cn"
 MARKET_HK = "hk"
 MARKETS = [MARKET_US, MARKET_CN, MARKET_HK]
 
-# 选股池枚举：大盘=默认（S&P500/沪深龙头），小盘/潜力=罗素2000/中证2000
+# 选股池枚举：大盘=默认（S&P500/沪深龙头），小盘/潜力=罗素2000/中证2000，纳斯达克100
 POOL_LARGE = "sp500"       # 美股默认；A股为沪深龙头
+POOL_NASDAQ100 = "nasdaq100"    # 美股纳斯达克100（科技/成长大盘）
 POOL_SMALL_US = "russell2000"   # 美股小盘（罗素2000 风格）
 POOL_SMALL_CN = "csi2000"       # A股小盘/潜力（中证2000 风格）
+
+# 美股纳斯达克100：科技/成长大盘（yfinance 代码），常见成分股静态列表
+NASDAQ_100_TICKERS_FALLBACK = [
+    "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "NVDA", "META", "TSLA", "AVGO", "COST",
+    "PEP", "ADBE", "NFLX", "CSCO", "AMD", "INTC", "QCOM", "TXN", "INTU", "AMGN",
+    "AMAT", "SBUX", "MDLZ", "ISRG", "GILD", "VRTX", "REGN", "PANW", "ADP", "BKNG",
+    "LRCX", "KLAC", "SNPS", "CDNS", "ASML", "CRWD", "MRVL", "ABNB", "WDAY", "DXCM",
+    "MNST", "ORLY", "PCAR", "CTAS", "PAYX", "KDP", "KHC", "MAR", "MELI", "AEP",
+    "CHTR", "CPRT", "FTNT", "ODFL", "FAST", "EXC", "XEL", "FANG", "CCEP", "IDXX",
+    "AZN", "WBD", "EA", "CTSH", "VRSK", "DDOG", "ZS", "TEAM", "ANSS", "MCHP",
+    "BKR", "GEHC", "CDW", "CPT", "ROST", "CSGP", "WBA", "DLTR", "TTD", "NXPI",
+    "MDB", "APP", "SMCI", "ARM", "CEG", "LULU", "HON", "VOD", "GFS",
+]
 
 # 美股：静态列表（多行业，yfinance 代码如 AAPL）
 US_QUALITY_TICKERS_FALLBACK = [
@@ -126,13 +140,16 @@ def get_report_tickers(
     """
     按市场与选股池取前 limit 只。
     market: us=美股，cn=A股，hk=港股。
-    pool: 不传或 sp500=大盘（美股 S&P500 / A股沪深龙头）；russell2000=美股小盘（罗素2000）；csi2000=A股小盘/潜力（中证2000）。
+    pool: 不传或 sp500=大盘（美股 S&P500 / A股沪深龙头）；nasdaq100=美股纳斯达克100；russell2000=美股小盘（罗素2000）；csi2000=A股小盘/潜力（中证2000）。
     limit<=10 时美股大盘用静态列表；美股大盘 limit>10 拉 S&P 500 动态排序；小盘池与 A股/港股均用对应静态池前 limit 只。
     """
     market = (market or MARKET_US).strip().lower()
     pool = (pool or "").strip().lower()
     n = max(1, min(limit, 200))
 
+    # 美股纳斯达克100
+    if market == MARKET_US and pool == POOL_NASDAQ100:
+        return NASDAQ_100_TICKERS_FALLBACK[:n]
     # 美股小盘：罗素2000 风格
     if market == MARKET_US and pool == POOL_SMALL_US:
         return RUSSELL_2000_TICKERS_FALLBACK[:n]

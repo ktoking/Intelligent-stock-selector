@@ -6,3 +6,6 @@ uvicorn[standard]>=0.22.0
 # LangChain：多步骤推理编排、外部数据接入、上下文管理
 langchain-core>=0.3.0
 langchain-openai>=0.2.0
+# RAG：向量库与检索增强（Ollama 回退需 requests）
+chromadb>=0.4.0
+requests>=2.28.0

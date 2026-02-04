@@ -13,6 +13,15 @@ from agents.fundamental import get_fundamental_data, get_financials_interpretati
 from agents.options import get_put_call_summary
 from config.tickers import TICKER_ZH_NAMES
 
+# RAG：可选检索历史分析拼进 Prompt
+def _get_rag_context(ticker: str) -> str:
+    try:
+        from rag.retrieve import retrieve_for_prompt, format_rag_context
+        records = retrieve_for_prompt(ticker=ticker)
+        return format_rag_context(records)
+    except Exception:
+        return ""
+
 
 def _market_from_ticker(ticker: str) -> str:
     """根据 ticker 后缀识别市场：.HK=港股，.SZ/.SS=A股，否则美股。"""
@@ -45,6 +54,7 @@ def _build_prompt(
     include_prepost: bool = False,
     news_llm_summary: str = "",
     financials_interpretation: str = "",
+    rag_context: str = "",
 ) -> str:
     tech_text = "无数据"
     tech_levels = technical.get("tech_levels") or {}
@@ -124,7 +134,7 @@ KDJ状态：<一句话描述超买超卖与钝化>
 加仓价格：<尽量根据上方【技术面入场/离场参考】给出具体价位数字，如 185.50；仅当确实无参考或无法给出时填“—”—>
 减仓价格：<尽量根据上方离场参考（跌破MA20/MA60等）给出具体价位数字；仅当确实无参考时填“—”—>
 
-【技术面】
+{rag_context + chr(10) + chr(10) if rag_context and rag_context.strip() else ""}【技术面】
 {tech_text}
 
 【消息面】
@@ -214,10 +224,12 @@ def run_full_analysis(
     financials_interpretation = get_financials_interpretation(ticker, fundamental.get("financials_str") or "")
     options_summary = get_put_call_summary(ticker)
 
+    rag_context = _get_rag_context(ticker)
     prompt = _build_prompt(
         ticker, technical, news, fundamental, options_summary,
         interval=interval, include_prepost=include_prepost,
         news_llm_summary=news_llm, financials_interpretation=financials_interpretation,
+        rag_context=rag_context,
     )
     try:
         print(f"[Report] {ticker} LLM 综合评分开始（等待 Ollama/API）…", flush=True)

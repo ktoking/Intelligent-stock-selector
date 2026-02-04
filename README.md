@@ -37,7 +37,7 @@ python server.py
 | **tickers** | 逗号分隔股票代码；不传则按 market+pool 取池 | — |
 | **limit** | 不传 tickers 时取的数量 | 5 |
 | **market** | 市场：`us` 美股 / `cn` A股 / `hk` 港股 | us |
-| **pool** | 选股池：不传或 `sp500` 大盘；`russell2000` 美股小盘（罗素2000）；`csi2000` A股小盘（中证2000） | — |
+| **pool** | 选股池：不传或 `sp500` 大盘；`nasdaq100` 纳斯达克100；`russell2000` 美股小盘（罗素2000）；`csi2000` A股小盘（中证2000） | — |
 | **deep** | 1=每只跑深度分析①②③④⑤+与上次对比；0=仅技术+消息+财报+期权+综合评分 | 0 |
 | **interval** | K 线：`1d` 日 K；`5m`/`15m`/`10m`/`1m` 分 K（10m 内部用 15m） | 1d |
 | **prepost** | 1=含盘前盘后（日 K 时涨跌幅为盘前/盘后价） | 0 |
@@ -55,6 +55,7 @@ python server.py
 | 用途 | URL |
 |------|-----|
 | 美股大盘前 20 只（日 K） | `/report?market=us&limit=20` |
+| 美股纳斯达克100 前 20 只 | `/report?market=us&pool=nasdaq100&limit=20` |
 | 美股小盘（罗素2000 风格）前 10 只 | `/report?market=us&pool=russell2000&limit=10` |
 | A股小盘（中证2000 风格）前 10 只 | `/report?market=cn&pool=csi2000&limit=10` |
 | 指定 A 股（6 位自动补 .SS/.SZ） | `/report?tickers=001317,603767,600882` |
