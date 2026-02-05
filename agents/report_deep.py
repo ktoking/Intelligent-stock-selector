@@ -2,6 +2,7 @@
 Report 深度模式：对单只标的跑「技术+消息+财报+期权」卡片 + 「①②③④⑤ 深度分析」+ 「与上次对比」。
 返回一张「富卡片」dict，含原有卡片字段 + 深度摘要 + 大方向是否一致、近期趋势。
 深度开启时，会基于五段深度摘要对 full_analysis 的评分做一次轻量 LLM 微调。
+评分微调优先使用 LangChain with_structured_output(ScoreAdjustment)，失败则回退到正则解析。
 """
 import json
 import re
@@ -23,6 +24,17 @@ except Exception as _e:
     retrieve = None
     _CHAINS_IMPORT_ERROR = str(_e)[:150]
 
+# 可选：评分微调结构化输出
+try:
+    from langchain_core.messages import SystemMessage, HumanMessage
+    from chains.llm_factory import get_llm
+    from agents.schemas import ScoreAdjustment
+    _SCORE_ADJ_STRUCTURED_AVAILABLE = True
+except Exception:
+    _SCORE_ADJ_STRUCTURED_AVAILABLE = False
+    get_llm = None
+    ScoreAdjustment = None
+
 
 # 深度摘要展示长度：卡片内展示用，便于在报告里看全结构（###、** 等）
 DEEP_SUMMARY_MAX_LEN = 800
@@ -40,9 +52,30 @@ def _short_summary(text: str, max_len: int = 120) -> str:
     return s
 
 
+def _parse_score_adjustment_fallback(raw: str, orig: float) -> Optional[float]:
+    """回退：从文本中解析「最终评分：N」或「调整：±1」。"""
+    raw = (raw or "").strip()
+    m = re.search(r"最终评分[：:]\s*(\d+)", raw)
+    if m:
+        try:
+            n = int(m.group(1))
+            return max(1, min(10, n))
+        except (ValueError, IndexError):
+            pass
+    m = re.search(r"调整[：:]\s*([+-]?\d+)", raw)
+    if m:
+        try:
+            delta = int(m.group(1))
+            return max(1, min(10, orig + delta))
+        except (ValueError, IndexError):
+            pass
+    return None
+
+
 def _adjust_score_by_deep(ticker: str, original_score: float, deep_results: Dict[str, Any]) -> Optional[float]:
     """
     基于五段深度摘要，用一次轻量 LLM 对评分做微调（10=最强，1=最弱）。
+    优先使用 LangChain with_structured_output(ScoreAdjustment)，失败则回退到正则解析。
     返回微调后的分数 [1, 10]，失败或无深度内容时返回 None（调用方保留原分）。
     """
     if not deep_results:
@@ -69,28 +102,27 @@ def _adjust_score_by_deep(ticker: str, original_score: float, deep_results: Dict
         orig = 5
     system = "你是股票分析师。根据下面五段深度摘要，对「当前评分」做微调。只输出一行，且仅以下两种格式之一：\n最终评分：N（N为1-10的整数）\n或\n调整：+1 或 调整：0 或 调整：-1"
     user = f"标的：{ticker}\n当前评分：{orig}（10=最强，1=最弱）\n\n请根据以下深度摘要微调评分（风险明显则下调，机会/护城河突出可上调）：\n\n{text}"
+
+    if _SCORE_ADJ_STRUCTURED_AVAILABLE and get_llm is not None and ScoreAdjustment is not None:
+        try:
+            structured_llm = get_llm().with_structured_output(ScoreAdjustment)
+            result = structured_llm.invoke([
+                SystemMessage(content=system),
+                HumanMessage(content=user),
+            ])
+            if result is not None:
+                if result.final_score is not None:
+                    return max(1, min(10, result.final_score))
+                if result.adjustment is not None:
+                    return max(1, min(10, orig + result.adjustment))
+        except Exception:
+            pass
+
     try:
         raw = ask_llm(system=system, user=user, max_tokens=80)
     except Exception:
         return None
-    raw = (raw or "").strip()
-    # 解析「最终评分：N」
-    m = re.search(r"最终评分[：:]\s*(\d+)", raw)
-    if m:
-        try:
-            n = int(m.group(1))
-            return max(1, min(10, n))
-        except (ValueError, IndexError):
-            pass
-    # 解析「调整：+1 / 0 / -1」
-    m = re.search(r"调整[：:]\s*([+-]?\d+)", raw)
-    if m:
-        try:
-            delta = int(m.group(1))
-            return max(1, min(10, orig + delta))
-        except (ValueError, IndexError):
-            pass
-    return None
+    return _parse_score_adjustment_fallback(raw, orig)
 
 
 def run_one_ticker_deep_report(

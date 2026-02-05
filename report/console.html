@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>选股报告 · Stock Agent</title>
+    <style>
+        :root { --bg: #0f1419; --card: #1a2332; --border: #2d3a4d; --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff; --success: #3fb950; --error: #f85149; }
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif; margin: 0; padding: 24px; background: var(--bg); color: var(--text); line-height: 1.5; }
+        .container { max-width: 960px; margin: 0 auto; }
+        h1 { font-size: 1.5rem; margin-bottom: 8px; }
+        .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 12px; }
+        .form-row:last-child { margin-bottom: 0; }
+        label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.9rem; }
+        input, select { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; }
+        input[type="number"] { width: 72px; }
+        input[name="tickers"] { min-width: 200px; flex: 1; }
+        button { background: var(--accent); color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+        button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        #progress { display: none; margin-top: 16px; }
+        #progress.show { display: block; }
+        .progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+        .progress-bar .fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+        .progress-text { font-size: 0.9rem; color: var(--muted); }
+        .progress-text strong { color: var(--text); }
+        .progress-errors { margin-top: 8px; font-size: 0.85rem; color: var(--error); }
+        #report-result { display: none; margin-top: 24px; }
+        #report-result.show { display: block; }
+        #report-result iframe { width: 100%; min-height: 80vh; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
+        .result-actions { margin-bottom: 12px; }
+        .result-actions a { color: var(--accent); margin-right: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>选股报告</h1>
+        <p class="sub">选择市场与数量后点击「生成报告」，页面会显示当前进度；完成后报告直接展示在下方，无需另开或复制。</p>
+
+        <div class="card">
+            <form id="report-form">
+                <div class="form-row">
+                    <label>市场</label>
+                    <select name="market">
+                        <option value="us">美股</option>
+                        <option value="cn">A股</option>
+                        <option value="hk">港股</option>
+                    </select>
+                    <label>选股池</label>
+                    <select name="pool">
+                        <option value="">大盘（默认）</option>
+                        <option value="nasdaq100">纳斯达克100</option>
+                        <option value="russell2000">美股小盘（罗素2000）</option>
+                        <option value="csi2000">A股小盘（中证2000）</option>
+                    </select>
+                    <label>数量</label>
+                    <input type="number" name="limit" value="5" min="1" max="200">
+                </div>
+                <div class="form-row">
+                    <label>深度分析</label>
+                    <select name="deep">
+                        <option value="0">否（仅技术+消息+财报+期权）</option>
+                        <option value="1">是（含①②③④⑤深度+与上次对比）</option>
+                    </select>
+                    <label>K线</label>
+                    <select name="interval">
+                        <option value="1d">日K</option>
+                        <option value="5m">5分钟</option>
+                        <option value="15m">15分钟</option>
+                        <option value="10m">10分钟</option>
+                        <option value="1m">1分钟</option>
+                    </select>
+                    <label>盘前盘后</label>
+                    <select name="prepost">
+                        <option value="0">否</option>
+                        <option value="1">是</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>指定代码（可选，逗号分隔）</label>
+                    <input type="text" name="tickers" placeholder="如 AAPL,MSFT 或 600519.SS,0700.HK">
+                </div>
+                <div class="form-row" style="margin-top: 16px;">
+                    <button type="submit" id="btn-submit">生成报告</button>
+                </div>
+            </form>
+            <div id="progress" class="progress-area">
+                <div class="progress-bar"><div class="fill" id="progress-fill"></div></div>
+                <div class="progress-text" id="progress-text">正在准备…</div>
+                <div class="progress-errors" id="progress-errors"></div>
+            </div>
+        </div>
+
+        <div id="report-result" class="card">
+            <div class="result-actions">
+                <a href="#" id="link-open-new" target="_blank" rel="noopener" style="display:none;">在新标签页打开当前报告</a>
+            </div>
+            <iframe id="report-iframe" title="报告内容" sandbox="allow-same-origin"></iframe>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var form = document.getElementById('report-form');
+            var btn = document.getElementById('btn-submit');
+            var progressEl = document.getElementById('progress');
+            var progressFill = document.getElementById('progress-fill');
+            var progressText = document.getElementById('progress-text');
+            var progressErrors = document.getElementById('progress-errors');
+            var resultEl = document.getElementById('report-result');
+            var iframe = document.getElementById('report-iframe');
+            var linkOpenNew = document.getElementById('link-open-new');
+            var progressTimer = null;
+            var lastReportHtml = '';
+
+            function buildReportUrl() {
+                var fd = new FormData(form);
+                var params = new URLSearchParams();
+                if (fd.get('tickers') && fd.get('tickers').trim()) {
+                    params.set('tickers', fd.get('tickers').trim());
+                } else {
+                    params.set('limit', fd.get('limit') || '5');
+                    params.set('market', fd.get('market') || 'us');
+                    params.set('pool', fd.get('pool') || '');
+                }
+                params.set('deep', fd.get('deep') || '0');
+                params.set('interval', fd.get('interval') || '1d');
+                params.set('prepost', fd.get('prepost') || '0');
+                params.set('save_output', '0');  /* 前端页面触发不落盘，减轻代理压力 */
+                return '/report?' + params.toString();
+            }
+
+            function updateProgress() {
+                fetch('/report/progress')
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        var total = d.total || 0;
+                        var idx = d.current_index || 0;
+                        var ticker = d.current_ticker || '';
+                        var done = d.done_count || 0;
+                        var errs = d.errors || [];
+                        if (d.running) {
+                            var pct = total ? Math.round((idx / total) * 100) : 0;
+                            progressFill.style.width = pct + '%';
+                            progressText.innerHTML = '当前第 <strong>' + idx + '/' + total + '</strong> 只：<strong>' + ticker + '</strong>（已完成 ' + done + ' 只）';
+                        }
+                        if (errs.length) {
+                            progressErrors.textContent = '失败：' + errs.map(function (e) { return e.ticker + ': ' + e.error; }).join('； ');
+                        } else {
+                            progressErrors.textContent = '';
+                        }
+                    })
+                    .catch(function () {});
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var url = buildReportUrl();
+                btn.disabled = true;
+                progressEl.classList.add('show');
+                resultEl.classList.remove('show');
+                progressFill.style.width = '0%';
+                progressText.textContent = '正在生成报告…';
+                progressErrors.textContent = '';
+                progressTimer = setInterval(updateProgress, 3500);  /* 3.5s 轮询，避免 Cloudflare 等代理不稳定 */
+
+                fetch(url)
+                    .then(function (res) {
+                        if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+                        return res.text();
+                    })
+                    .then(function (html) {
+                        clearInterval(progressTimer);
+                        progressTimer = null;
+                        progressFill.style.width = '100%';
+                        progressText.textContent = '报告已生成，正在展示…';
+                        resultEl.classList.add('show');
+                        lastReportHtml = html;
+                        iframe.srcdoc = html;
+                        linkOpenNew.href = '#';
+                        linkOpenNew.style.display = 'inline';
+                    })
+                    .catch(function (err) {
+                        clearInterval(progressTimer);
+                        progressTimer = null;
+                        progressText.innerHTML = '生成失败：<strong>' + (err.message || '网络或服务异常') + '</strong>';
+                        progressErrors.textContent = '请检查后端是否已启动（python server.py），或稍后重试。';
+                    })
+                    .finally(function () {
+                        btn.disabled = false;
+                    });
+            });
+
+            linkOpenNew.addEventListener('click', function (e) {
+                if (!lastReportHtml) return;
+                e.preventDefault();
+                var w = window.open('', '_blank');
+                w.document.write(lastReportHtml);
+                w.document.close();
+            });
+        })();
+    </script>
+</body>
+</html>

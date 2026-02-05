@@ -1,5 +1,6 @@
 """
 单标的综合分析：技术面 + 消息面 + 财报，调用 LLM 输出趋势结构、MACD、KDJ、分析原因、评分、交易动作、加仓/减仓价。
+优先使用 LangChain with_structured_output(Pydantic)，失败时回退到 ask_llm + 按行解析。
 """
 import re
 from typing import Dict, Any, Optional
@@ -8,6 +9,17 @@ import yfinance as yf
 from llm import ask_llm
 
 from agents.technical import get_technical_summary
+
+# 可选：LangChain 结构化输出，减少 _parse_llm_output 脆弱性
+try:
+    from langchain_core.messages import SystemMessage, HumanMessage
+    from chains.llm_factory import get_llm
+    from agents.schemas import FullAnalysisOutput
+    _STRUCTURED_AVAILABLE = True
+except Exception:
+    _STRUCTURED_AVAILABLE = False
+    get_llm = None
+    FullAnalysisOutput = None
 from agents.news import get_news_summary, get_news_summary_llm
 from agents.fundamental import get_fundamental_data, get_financials_interpretation
 from agents.options import get_put_call_summary
@@ -203,6 +215,41 @@ def _normalize_action(raw: str) -> str:
     return "观察"
 
 
+def _structured_to_parsed(obj: Any) -> Dict[str, Any]:
+    """将 Pydantic 结构化结果转为与 _parse_llm_output 一致的 dict。"""
+    add = (obj.add_price or "").strip()
+    reduce_val = (obj.reduce_price or "").strip()
+    return {
+        "core_conclusion": (obj.core_conclusion or "").strip(),
+        "trend_structure": (obj.trend_structure or "").strip(),
+        "macd_status": (obj.macd_status or "").strip(),
+        "kdj_status": (obj.kdj_status or "").strip(),
+        "analysis_reason": (obj.analysis_reason or "").strip(),
+        "score": max(1, min(10, int(obj.score))) if obj.score is not None else 5,
+        "score_reason": (obj.score_reason or "").strip(),
+        "action": _normalize_action(obj.action or "观察"),
+        "add_price": add if add and add not in ("—", "-") else "—",
+        "reduce_price": reduce_val if reduce_val and reduce_val not in ("—", "-") else "—",
+    }
+
+
+def _run_llm_and_parse(system: str, prompt: str) -> Dict[str, Any]:
+    """优先用 LangChain 结构化输出，失败则回退到 ask_llm + 按行解析。"""
+    if _STRUCTURED_AVAILABLE and get_llm is not None and FullAnalysisOutput is not None:
+        try:
+            structured_llm = get_llm().with_structured_output(FullAnalysisOutput)
+            result = structured_llm.invoke([
+                SystemMessage(content=system),
+                HumanMessage(content=prompt),
+            ])
+            if result is not None:
+                return _structured_to_parsed(result)
+        except Exception:
+            pass
+    raw = ask_llm(system=system, user=prompt)
+    return _parse_llm_output(raw)
+
+
 def run_full_analysis(
     ticker: str,
     interval: str = "1d",
@@ -231,17 +278,14 @@ def run_full_analysis(
         news_llm_summary=news_llm, financials_interpretation=financials_interpretation,
         rag_context=rag_context,
     )
+    system = "你是美股多维度分析师。请严格按用户要求的 10 项格式输出，每行一项，不要遗漏。"
     try:
         print(f"[Report] {ticker} LLM 综合评分开始（等待 Ollama/API）…", flush=True)
-        raw = ask_llm(
-            system="你是美股多维度分析师。请严格按用户要求的 10 项格式输出，每行一项，不要遗漏。",
-            user=prompt,
-        )
+        parsed = _run_llm_and_parse(system, prompt)
         print(f"[Report] {ticker} LLM 综合评分完成", flush=True)
     except Exception as e:
         print(f"[Report] {ticker} LLM 综合评分异常: {e}", flush=True)
-        raw = ""
-    parsed = _parse_llm_output(raw)
+        parsed = _parse_llm_output("")
 
     price = fundamental.get("current_price")
     change_pct = fundamental.get("change_pct")

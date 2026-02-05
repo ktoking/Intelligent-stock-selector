@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 from fastapi import FastAPI, HTTPException, Query, Body, WebSocket
-from fastapi.responses import PlainTextResponse, HTMLResponse
+from fastapi.responses import PlainTextResponse, HTMLResponse, FileResponse
 
 # Report 进度：单次运行期间可被 GET /report/progress 轮询
 _report_progress: Dict[str, Any] = {"running": False, "current_index": 0, "total": 0, "current_ticker": "", "done_count": 0, "errors": []}
@@ -177,6 +177,7 @@ def root():
         "service": "stock-agent",
         "docs": "/docs",
         "health": "/health",
+        "report_page": "GET /report/page 报告在线页：打开后点「生成报告」即可在此页看到进度与结果，无需复制到浏览器",
         "analyze": "/analyze?ticker=AAPL",
         "report": "/report?limit=5&market=us（美股）或 market=cn（A股）或 market=hk（港股）；pool=nasdaq100（纳斯达克100）/ russell2000（美股小盘）/ csi2000（A股小盘）；?tickers=600519.SS,0700.HK 可混用",
         "report_progress": "GET /report/progress 轮询查看报告生成进度（当前第几只、成功数、失败列表）",
@@ -349,6 +350,18 @@ def memory_context(
         return "（无历史分析）"
 
 
+@app.get("/report/page", response_class=HTMLResponse)
+def report_console_page():
+    """
+    报告在线页：打开此页后选择参数点击「生成报告」，页面会轮询进度并在此页直接展示报告 HTML，
+    无需手动复制到浏览器。后续可部署到 Cloudflare 等。
+    """
+    console_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report", "console.html")
+    if os.path.isfile(console_path):
+        return FileResponse(console_path, media_type="text/html; charset=utf-8")
+    raise HTTPException(status_code=404, detail="report/console.html not found")
+
+
 @app.get("/report/progress")
 def report_progress():
     """
@@ -368,6 +381,7 @@ def report_page(
     prepost: int = Query(0, description="是否含盘前盘后：0=否，1=是（分K时常用）"),
     market: str = Query("us", description="市场选股：us=美股，cn=A股，hk=港股（不传 tickers 时生效）"),
     pool: str = Query("", description="选股池：不传或 sp500=大盘；nasdaq100=纳斯达克100；russell2000=美股小盘（罗素2000）；csi2000=A股小盘/潜力（中证2000），不传 tickers 时生效"),
+    save_output: int = Query(1, description="1=将报告 HTML 保存到 report/output/；0=不保存（前端页面触发时传 0）"),
 ):
     """
     多市场选股报告：美股（S&P 500 / 罗素2000）/ A股（龙头 / 中证2000）/ 港股。
@@ -385,17 +399,18 @@ def report_page(
     if not ticker_list:
         raise HTTPException(status_code=400, detail="请提供 tickers 或使用默认列表（limit>0）")
     cards, title, html_content = _run_report_impl(ticker_list, interval, deep, market, prepost, pool=pool or "")
-    # 自动保存 HTML 到 report/output/，文件名带时间戳（如 report-0130-1132.html）
-    out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report", "output")
-    os.makedirs(out_dir, exist_ok=True)
-    ts = datetime.now().strftime("%m%d-%H%M")
-    out_path = os.path.join(out_dir, f"report-{ts}.html")
-    try:
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write(html_content)
-        print(f"[Report] 已保存: {out_path}", flush=True)
-    except Exception as e:
-        print(f"[Report] 保存文件失败: {e}", flush=True)
+    # 仅当 save_output=1 时保存到 report/output/（前端页面触发时传 save_output=0 不写盘）
+    if save_output == 1:
+        out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report", "output")
+        os.makedirs(out_dir, exist_ok=True)
+        ts = datetime.now().strftime("%m%d-%H%M")
+        out_path = os.path.join(out_dir, f"report-{ts}.html")
+        try:
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+            print(f"[Report] 已保存: {out_path}", flush=True)
+        except Exception as e:
+            print(f"[Report] 保存文件失败: {e}", flush=True)
     return HTMLResponse(content=html_content)
 
 
