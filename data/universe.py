@@ -1,11 +1,230 @@
 """
 动态股票池：从市值、近期增长等维度拉取美股优质标的（默认 S&P 500 池内取 top N）。
+并支持从线上拉取纳斯达克100、恒生指数、沪深300 等成分股，便于全量分析。
 """
 import time
 from typing import List, Optional
 
 import pandas as pd
 import yfinance as yf
+
+
+# ---------- 线上成分股拉取（Wikipedia 等），失败则返回 None，由调用方回退静态列表 ----------
+
+def get_nasdaq100_tickers_from_web() -> Optional[List[str]]:
+    """从 Wikipedia 拉取纳斯达克100 成分股，失败返回 None。"""
+    try:
+        url = "https://en.wikipedia.org/wiki/Nasdaq-100"
+        tables = pd.read_html(url)
+        for df in tables:
+            if df is None or df.empty:
+                continue
+            cols = [c for c in df.columns if isinstance(c, str)]
+            if "Ticker" in cols:
+                symbols = df["Ticker"].astype(str).str.strip().str.replace(".", "-", regex=False)
+                out = [s for s in symbols.tolist() if s and len(s) <= 6 and s != "Ticker"]
+                if len(out) >= 50:
+                    return out
+            if "Symbol" in cols:
+                symbols = df["Symbol"].astype(str).str.strip().str.replace(".", "-", regex=False)
+                out = [s for s in symbols.tolist() if s and len(s) <= 6 and s != "Symbol"]
+                if len(out) >= 50:
+                    return out
+    except Exception:
+        pass
+    return None
+
+
+def get_hangseng_tickers_from_web() -> Optional[List[str]]:
+    """从 Wikipedia 拉取恒生指数成分股（yfinance 格式带 .HK），失败返回 None。"""
+    try:
+        url = "https://en.wikipedia.org/wiki/Hang_Seng_Index"
+        tables = pd.read_html(url)
+        for df in tables:
+            if df is None or df.empty:
+                continue
+            # 常见列名：Stock code, Code, 代號 等
+            for code_col in ["Stock code", "Code", "Symbol", "代號", "Stock Code"]:
+                if code_col in df.columns:
+                    codes = df[code_col].astype(str).str.strip().str.replace(",", "")
+                    out = []
+                    for c in codes.tolist():
+                        if not c or c == "nan" or c == code_col:
+                            continue
+                        # 去掉空格、补成 4 位
+                        c = "".join(c.split())
+                        if c.isdigit() and len(c) <= 4:
+                            c = c.zfill(4) + ".HK"
+                        elif not c.endswith(".HK"):
+                            c = c + ".HK"
+                        out.append(c)
+                    if len(out) >= 10:
+                        return out
+    except Exception:
+        pass
+    return None
+
+
+# ---------- A股选股池：AKShare（可选依赖），失败返回 None ----------
+
+def _akshare_code_to_yfinance(code: str) -> Optional[str]:
+    """将 AKShare 的 6 位代码转为 yfinance 格式（.SS / .SZ）。北交所 8 位暂不转换。"""
+    if not code or not isinstance(code, str):
+        return None
+    c = "".join(str(code).strip().split())
+    if not c.isdigit() or len(c) != 6:
+        return None
+    if c.startswith("60") or c.startswith("68"):
+        return c + ".SS"
+    if c.startswith("00") or c.startswith("30"):
+        return c + ".SZ"
+    return None
+
+
+def get_csi300_tickers_akshare() -> Optional[List[str]]:
+    """用 AKShare 拉取沪深300 成分股（yfinance 格式）。未装 akshare 或接口变更时返回 None。"""
+    try:
+        import akshare as ak
+        # 中证指数成分：symbol 000300 = 沪深300
+        df = ak.index_stock_cons_csindex(symbol="000300")
+        if df is None or df.empty:
+            return None
+        # 列名可能是 "成分券代码" / "品种代码" / "code" 等
+        code_col = None
+        for c in df.columns:
+            if "代码" in str(c) or str(c).lower() in ("code", "symbol"):
+                code_col = c
+                break
+        if code_col is None:
+            return None
+        out = []
+        for _, row in df.iterrows():
+            raw = row.get(code_col) or ""
+            t = _akshare_code_to_yfinance(str(raw).strip())
+            if t:
+                out.append(t)
+        if len(out) >= 50:
+            return out
+    except Exception:
+        pass
+    return None
+
+
+def get_csi2000_tickers_akshare() -> Optional[List[str]]:
+    """用 AKShare 拉取中证2000 成分股（yfinance 格式）。指数代码 932000。未装 akshare 或接口变更时返回 None。"""
+    try:
+        import akshare as ak
+        # 中证2000 指数代码 932000；成份股权重接口含成分券代码
+        df = ak.index_stock_cons_weight_csindex(symbol="932000")
+        if df is None or df.empty:
+            return None
+        code_col = None
+        for c in df.columns:
+            if "代码" in str(c) or str(c).lower() in ("code", "symbol"):
+                code_col = c
+                break
+        if code_col is None:
+            return None
+        out = []
+        for _, row in df.iterrows():
+            raw = row.get(code_col) or ""
+            t = _akshare_code_to_yfinance(str(raw).strip())
+            if t:
+                out.append(t)
+        if len(out) >= 100:
+            return out
+    except Exception:
+        pass
+    return None
+
+
+def get_cn_spot_tickers_akshare(limit: int = 300, sort_by: str = "总市值") -> Optional[List[str]]:
+    """用 AKShare 拉取全 A 实时行情，按 sort_by 排序取前 limit 只（yfinance 格式）。"""
+    try:
+        import akshare as ak
+        df = ak.stock_zh_a_spot_em()
+        if df is None or df.empty:
+            return None
+        if "代码" not in df.columns:
+            return None
+        # 只保留沪深 6 位代码（排除北交所 8 位等）
+        df = df[df["代码"].astype(str).str.match(r"^\d{6}$", na=False)].copy()
+        if sort_by in df.columns:
+            df = df.sort_values(sort_by, ascending=False, na_position="last")
+        out = []
+        for _, row in df.iterrows():
+            t = _akshare_code_to_yfinance(str(row.get("代码", "")).strip())
+            if t and t not in out:
+                out.append(t)
+            if len(out) >= limit:
+                break
+        if len(out) >= 10:
+            return out[:limit]
+    except Exception:
+        pass
+    return None
+
+
+def get_csi300_tickers_from_web() -> Optional[List[str]]:
+    """从 Wikipedia 拉取沪深300 成分股（yfinance 格式 .SS/.SZ），失败返回 None。"""
+    try:
+        # 英文页可能有成分表
+        url = "https://en.wikipedia.org/wiki/CSI_300_Index"
+        tables = pd.read_html(url)
+        for df in tables:
+            if df is None or df.empty:
+                continue
+            cols = [str(c).lower() for c in df.columns]
+            # 找代码列
+            code_col = None
+            for c in df.columns:
+                if "code" in str(c).lower() or "symbol" in str(c).lower() or "ticker" in str(c).lower():
+                    code_col = c
+                    break
+            if code_col is None:
+                continue
+            codes = df[code_col].astype(str).str.strip()
+            out = []
+            for c in codes.tolist():
+                if not c or c == "nan" or len(c) < 6:
+                    continue
+                c = "".join(c.split())
+                if c.isdigit() and len(c) == 6:
+                    if c.startswith("60") or c.startswith("68"):
+                        c = c + ".SS"
+                    elif c.startswith("00") or c.startswith("30"):
+                        c = c + ".SZ"
+                    else:
+                        continue
+                elif ".SS" in c or ".SZ" in c:
+                    pass
+                else:
+                    continue
+                out.append(c)
+            if len(out) >= 50:
+                return out
+    except Exception:
+        pass
+    return None
+
+
+def get_russell2000_tickers_from_web() -> Optional[List[str]]:
+    """罗素2000 完整成分股公开源较少，尝试 Wikipedia 或返回 None 用静态列表。"""
+    try:
+        url = "https://en.wikipedia.org/wiki/Russell_2000_Index"
+        tables = pd.read_html(url)
+        for df in tables:
+            if df is None or df.empty or len(df) < 100:
+                continue
+            for code_col in ["Symbol", "Ticker", "Company"]:
+                if code_col in df.columns:
+                    symbols = df[code_col].astype(str).str.strip().str.replace(".", "-", regex=False)
+                    out = [s for s in symbols.tolist() if s and 1 <= len(s) <= 6 and s != code_col]
+                    if len(out) >= 100:
+                        return out
+    except Exception:
+        pass
+    return None
 
 # 内存缓存：避免每次 /report 都拉 Wikipedia + 批量行情（缓存整份排序列表，取前 n 只）
 _CACHE: Optional[List[str]] = None

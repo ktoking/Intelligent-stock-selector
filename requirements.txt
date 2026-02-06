@@ -10,3 +10,5 @@ langchain-openai>=0.2.0
 # RAG：向量库与检索增强（Ollama 回退需 requests）
 chromadb>=0.4.0
 requests>=2.28.0
+# A股选股池（可选）：沪深300 / 全A按市值
+akshare>=1.12.0

@@ -4,7 +4,16 @@
 """
 from typing import List
 
-from data.universe import get_top_by_market_cap_and_growth
+from data.universe import (
+    get_top_by_market_cap_and_growth,
+    get_nasdaq100_tickers_from_web,
+    get_hangseng_tickers_from_web,
+    get_csi300_tickers_from_web,
+    get_russell2000_tickers_from_web,
+    get_csi300_tickers_akshare,
+    get_csi2000_tickers_akshare,
+    get_cn_spot_tickers_akshare,
+)
 
 
 def normalize_ticker(t: str) -> str:
@@ -138,29 +147,42 @@ def get_report_tickers(
     pool: str = None,
 ) -> List[str]:
     """
-    按市场与选股池取前 limit 只。
+    按市场与选股池取前 limit 只。优先从线上拉取成分股（Wikipedia 等），失败则回退到静态列表，便于全量分析。
     market: us=美股，cn=A股，hk=港股。
     pool: 不传或 sp500=大盘（美股 S&P500 / A股沪深龙头）；nasdaq100=美股纳斯达克100；russell2000=美股小盘（罗素2000）；csi2000=A股小盘/潜力（中证2000）。
-    limit<=10 时美股大盘用静态列表；美股大盘 limit>10 拉 S&P 500 动态排序；小盘池与 A股/港股均用对应静态池前 limit 只。
     """
     market = (market or MARKET_US).strip().lower()
     pool = (pool or "").strip().lower()
-    n = max(1, min(limit, 200))
+    n = max(1, min(limit, 500))
 
-    # 美股纳斯达克100
+    # 美股纳斯达克100：优先线上
     if market == MARKET_US and pool == POOL_NASDAQ100:
-        return NASDAQ_100_TICKERS_FALLBACK[:n]
-    # 美股小盘：罗素2000 风格
+        tickers = get_nasdaq100_tickers_from_web()
+        return (tickers[:n] if tickers else NASDAQ_100_TICKERS_FALLBACK[:n])
+    # 美股小盘：罗素2000，优先线上
     if market == MARKET_US and pool == POOL_SMALL_US:
-        return RUSSELL_2000_TICKERS_FALLBACK[:n]
-    # A股小盘/潜力：中证2000 风格
+        tickers = get_russell2000_tickers_from_web()
+        return (tickers[:n] if tickers else RUSSELL_2000_TICKERS_FALLBACK[:n])
+    # A股小盘/潜力：中证2000，优先 AKShare，失败用静态
     if market == MARKET_CN and pool == POOL_SMALL_CN:
-        return CN_CSI2000_TICKERS_FALLBACK[:n]
+        tickers = get_csi2000_tickers_akshare()
+        return (tickers[:n] if tickers else CN_CSI2000_TICKERS_FALLBACK[:n])
 
+    # A股：优先 AKShare（沪深300 或 全A按市值），再 Wikipedia，再静态
     if market == MARKET_CN:
-        return CN_QUALITY_TICKERS_FALLBACK[:n]
+        tickers = get_csi300_tickers_akshare()
+        if tickers:
+            return tickers[:n]
+        tickers = get_cn_spot_tickers_akshare(limit=n, sort_by="总市值")
+        if tickers:
+            return tickers[:n]
+        tickers = get_csi300_tickers_from_web()
+        return (tickers[:n] if tickers else CN_QUALITY_TICKERS_FALLBACK[:n])
+    # 港股：优先恒生成分线上
     if market == MARKET_HK:
-        return HK_QUALITY_TICKERS_FALLBACK[:n]
+        tickers = get_hangseng_tickers_from_web()
+        return (tickers[:n] if tickers else HK_QUALITY_TICKERS_FALLBACK[:n])
+    # 美股大盘：limit<=10 用静态快；limit>10 拉 S&P 500 线上再按市值+增长排序
     if market == MARKET_US:
         if limit <= 10:
             return US_QUALITY_TICKERS_FALLBACK[:n]

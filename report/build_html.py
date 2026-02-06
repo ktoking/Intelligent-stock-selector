@@ -4,7 +4,7 @@
 import re
 import html as html_module
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 
 def _markdown_to_html(s: str) -> str:
@@ -93,6 +93,8 @@ def build_report_html(
     title: str = None,
     gen_time: str = None,
     report_summary: str = None,
+    backtest_rows: Optional[List[Dict[str, Any]]] = None,
+    backtest_summary: Optional[Dict[str, Any]] = None,
 ) -> str:
     if not cards:
         cards = []
@@ -102,6 +104,88 @@ def build_report_html(
     if report_summary and str(report_summary).strip():
         summary_escaped = _escape(str(report_summary).strip()).replace("\n", "<br>\n")
         summary_block = f'<div class="report-summary"><div class="report-summary-title">报告总览</div><div class="report-summary-content">{summary_escaped}</div></div>'
+
+    # 既往推荐表现（过去 N 天 9/10 分买入 → 多持有期、基准对比、风险指标）
+    backtest_block = ""
+    if backtest_rows and backtest_summary and backtest_summary.get("total_count", 0) > 0:
+        since_days = backtest_summary.get("since_days", 30)
+        total_count = backtest_summary.get("total_count", 0)
+        win_count = backtest_summary.get("win_count", 0)
+        win_rate_pct = backtest_summary.get("win_rate_pct", 0)
+        avg_return_pct = backtest_summary.get("avg_return_pct", 0)
+        # 多持有期
+        total_1w = backtest_summary.get("total_1w", 0)
+        win_rate_1w_pct = backtest_summary.get("win_rate_1w_pct", 0)
+        avg_return_1w_pct = backtest_summary.get("avg_return_1w_pct", 0)
+        total_1m = backtest_summary.get("total_1m", 0)
+        win_rate_1m_pct = backtest_summary.get("win_rate_1m_pct", 0)
+        avg_return_1m_pct = backtest_summary.get("avg_return_1m_pct", 0)
+        # 基准
+        bench_us = backtest_summary.get("benchmark_avg_us_pct")
+        bench_cn = backtest_summary.get("benchmark_avg_cn_pct")
+        bench_hk = backtest_summary.get("benchmark_avg_hk_pct")
+        bench_parts = []
+        if bench_us is not None:
+            bench_parts.append(f"标普500 同期 {bench_us:+.2f}%")
+        if bench_cn is not None:
+            bench_parts.append(f"沪深300 同期 {bench_cn:+.2f}%")
+        if bench_hk is not None:
+            bench_parts.append(f"恒生 同期 {bench_hk:+.2f}%")
+        bench_line = "；".join(bench_parts) if bench_parts else "—"
+        # 风险
+        worst = backtest_summary.get("worst_return_pct")
+        worst_str = f"{worst:+.2f}%" if worst is not None else "—"
+        d_up10 = backtest_summary.get("dist_up_10", 0)
+        d_0_10 = backtest_summary.get("dist_0_10", 0)
+        d_neg10_0 = backtest_summary.get("dist_neg10_0", 0)
+        d_down10 = backtest_summary.get("dist_down_10", 0)
+        dist_line = f"涨&gt;10% {d_up10} 只，0–10% {d_0_10} 只，-10%–0 {d_neg10_0} 只，&lt;-10% {d_down10} 只"
+
+        summary_line = f"过去 {since_days} 天内共 {total_count} 条「9/10 分 买入」记录。<br>至今：上涨 {win_count} 条，胜率 {win_rate_pct}%，平均 {avg_return_pct:+.2f}%。"
+        if total_1w:
+            summary_line += f" 持有1周（{total_1w} 条）：胜率 {win_rate_1w_pct}%，平均 {avg_return_1w_pct:+.2f}%。"
+        if total_1m:
+            summary_line += f" 持有1月（{total_1m} 条）：胜率 {win_rate_1m_pct}%，平均 {avg_return_1m_pct:+.2f}%。"
+        summary_line += f"<br>基准同期：{bench_line}<br>最差单只收益：{worst_str}；收益分布：{dist_line}。"
+
+        rows_html = []
+        for r in backtest_rows[:50]:  # 最多展示 50 条
+            ticker = _escape(r.get("ticker") or "—")
+            name = _escape(r.get("name") or ticker)
+            rd = _escape((r.get("report_date") or "")[:10])
+            score = _score_display(r.get("score"))
+            price_then = r.get("price_at_report")
+            price_now = r.get("current_price")
+            ret = r.get("return_pct")
+            ret_1w = r.get("return_1w_pct")
+            ret_1m = r.get("return_1m_pct")
+            bench_ret = r.get("benchmark_return_pct")
+            days = r.get("holding_days")
+            price_then_str = f"{price_then:.2f}" if price_then is not None else "—"
+            price_now_str = f"{price_now:.2f}" if price_now is not None else "—"
+            def _ret_span(v):
+                if v is None:
+                    return "—"
+                cls = "positive" if v >= 0 else "negative"
+                return f'<span class="info-value {cls}">{v:+.2f}%</span>'
+            ret_str = _ret_span(ret)
+            ret_1w_str = _ret_span(ret_1w)
+            ret_1m_str = _ret_span(ret_1m)
+            bench_str = _ret_span(bench_ret) if bench_ret is not None else "—"
+            days_str = str(days) if days is not None else "—"
+            rows_html.append(
+                f"<tr><td>{name}</td><td>{ticker}</td><td>{rd}</td><td>{score}</td><td>{price_then_str}</td><td>{price_now_str}</td><td>{ret_str}</td><td>{ret_1w_str}</td><td>{ret_1m_str}</td><td>{bench_str}</td><td>{days_str}</td></tr>"
+            )
+        table_body = "\n".join(rows_html)
+        backtest_block = f"""
+        <div class="report-summary report-backtest">
+            <div class="report-summary-title">既往推荐表现（过去 {since_days} 天 9/10 分 买入 → 多持有期、基准、风险）</div>
+            <div class="report-summary-content">{summary_line}</div>
+            <table class="backtest-table">
+                <thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>持有1周</th><th>持有1月</th><th>基准同期</th><th>持有天数</th></tr></thead>
+                <tbody>{table_body}</tbody>
+            </table>
+        </div>"""
 
     # 收集筛选选项（交易动作已归一为 买入/观察/离场）
     scores = sorted(set(_score_display(c.get("score")) for c in cards), reverse=True)
@@ -431,7 +515,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .card-section-content .deep-heading { font-size: 13px; font-weight: 700; color: #2d3748; margin: 12px 0 6px; display: block; }
 .card-section-content .deep-heading:first-child { margin-top: 0; }
 .no-results { text-align: center; padding: 80px 20px; color: #718096; font-size: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); font-weight: 500; }
-.report-disclaimer { margin-top: 30px; padding: 20px 25px; background: rgba(255,255,255,0.9); border-radius: 12px; font-size: 13px; color: #6b7280; line-height: 1.6; text-align: center; border: 1px solid rgba(0,0,0,0.06); }"""
+.report-disclaimer { margin-top: 30px; padding: 20px 25px; background: rgba(255,255,255,0.9); border-radius: 12px; font-size: 13px; color: #6b7280; line-height: 1.6; text-align: center; border: 1px solid rgba(0,0,0,0.06); }
+.report-backtest { border-left-color: #10b981; }
+.backtest-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+.backtest-table th, .backtest-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+.backtest-table th { background: #f7fafc; font-weight: 700; color: #2d3748; }
+.backtest-table .info-value.positive { color: #10b981; }
+.backtest-table .info-value.negative { color: #ef4444; }"""
 
     script = f"""
         const cards = Array.from(document.querySelectorAll('.card'));
@@ -495,6 +585,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
             </div>
         </div>
         {summary_block}
+        {backtest_block}
         <div class="controls">
             <div class="control-group">
                 <label>排序方式</label>

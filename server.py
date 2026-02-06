@@ -149,7 +149,20 @@ def _run_report_impl(
                 report_summary = report_summary.strip()
         except Exception as e:
             print(f"[Report] 报告总览 LLM 调用失败: {e}", flush=True)
-    html_content = build_report_html(cards, title=title, gen_time=gen_time, report_summary=report_summary)
+    # 既往推荐追踪：记录本期 9/10 分且「买入」的标的，并拉取过去 N 天推荐的表现与胜率
+    report_date = gen_time[:10]
+    try:
+        from data.recommendations import save_recommendation, get_past_recommendations_with_returns
+        for c in cards:
+            save_recommendation(c, report_date)
+        backtest_rows, backtest_summary = get_past_recommendations_with_returns(since_days=30)
+    except Exception as e:
+        print(f"[Report] 既往推荐追踪失败: {e}", flush=True)
+        backtest_rows, backtest_summary = [], {}
+    html_content = build_report_html(
+        cards, title=title, gen_time=gen_time, report_summary=report_summary,
+        backtest_rows=backtest_rows, backtest_summary=backtest_summary,
+    )
     # 可选：将本期报告卡片同步写入 RAG 向量库
     try:
         from rag.config import RAG_SYNC_CARDS
