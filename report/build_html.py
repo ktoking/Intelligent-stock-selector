@@ -246,6 +246,9 @@ def build_report_html(
         trend = _escape(c.get("trend_structure"))
         macd = _escape(c.get("macd_status"))
         kdj = _escape(c.get("kdj_status"))
+        tech_status_one_line = _escape(c.get("tech_status_one_line") or "—")
+        atr_pct = c.get("atr_pct")
+        atr_pct_str = f"{atr_pct:.2f}%" if atr_pct is not None else "—"
         reason = _escape(c.get("analysis_reason"))
         action_cls = _action_class(action)
         long_align = "是" if c.get("daily_long_align") else "否"
@@ -414,6 +417,10 @@ def build_report_html(
                         <div class="info-value">{volume_ratio_str}</div>
                     </div>
                     <div class="info-item">
+                        <div class="info-label">ATR%</div>
+                        <div class="info-value">{atr_pct_str}</div>
+                    </div>
+                    <div class="info-item">
                         <div class="info-label">股息率</div>
                         <div class="info-value">{div_str}</div>
                     </div>
@@ -433,6 +440,10 @@ def build_report_html(
                         <div class="info-label">含盘前盘后</div>
                         <div class="info-value">{prepost_str}</div>
                     </div>
+                </div>
+                <div class="card-section">
+                    <div class="card-section-title">技术面摘要</div>
+                    <div class="card-section-content">{tech_status_one_line}</div>
                 </div>
                 <div class="card-section">
                     <div class="card-section-title">趋势结构</div>

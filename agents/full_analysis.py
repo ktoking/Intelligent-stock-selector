@@ -75,9 +75,16 @@ def _build_prompt(
         tm = t.get("trend_ma") or {}
         ms = t.get("macd_summary") or {}
         ks = t.get("kdj_summary") or {}
+        rs = t.get("rsi_summary") or {}
+        vc = t.get("volume_context") or {}
         long_align = t.get("daily_long_align", False)
         k_label = "日K" if interval == "1d" else f"{interval}分K"
+        tech_status_one_line = t.get("tech_status_one_line") or "—"
+        atr_pct = tech_levels.get("atr_pct")
         tech_text = f"""
+【技术面一句摘要（供你直接参考）】
+{tech_status_one_line}
+
 【{k_label} / 均线趋势】
 当前价: {tm.get('price')}  MA5: {tm.get('ma5')}  MA10: {tm.get('ma10')}  MA20: {tm.get('ma20')}  MA60: {tm.get('ma60')}
 多头排列(价>MA5>MA10>MA20>MA60): {long_align}
@@ -90,6 +97,15 @@ MACD: {ms.get('macd')}  Signal: {ms.get('signal')}  柱: {ms.get('histogram')}
 【KDJ】
 K: {ks.get('k')}  D: {ks.get('d')}  J: {ks.get('j')}
 超买(>80): {ks.get('overbought')}  超卖(<20): {ks.get('oversold')}
+
+【RSI】
+RSI: {rs.get('rsi')}  超买(>70): {rs.get('overbought')}  超卖(<30): {rs.get('oversold')}
+
+【量能】
+量比(近期/20日均量): {vc.get('volume_ratio')}  20日均量: {vc.get('volume_ma20')}
+
+【波动】
+ATR%: {atr_pct}%（ATR/收盘价×100，用于止损与仓位参考）
 
 【技术面入场/离场参考（供你评估加仓价与减仓价）】
 入场参考: {tech_levels.get('entry_note') or '—'}
@@ -319,6 +335,7 @@ def run_full_analysis(
         "reduce_price": parsed["reduce_price"],
         "tech_entry_note": (technical.get("tech_levels") or {}).get("entry_note") or "—",
         "tech_exit_note": (technical.get("tech_levels") or {}).get("exit_note") or "—",
+        "tech_status_one_line": technical.get("tech_status_one_line") or "—",
         "trend_structure": parsed["trend_structure"] or "—",
         "macd_status": parsed["macd_status"] or "—",
         "kdj_status": parsed["kdj_status"] or "—",
@@ -327,6 +344,7 @@ def run_full_analysis(
         "pe": fundamental.get("pe") or "—",
         "put_call": options_summary.get("description") or "—",
         "last_date": technical.get("last_date"),
+        "atr_pct": (technical.get("tech_levels") or {}).get("atr_pct"),
         "week52_high": fundamental.get("week52_high"),
         "week52_low": fundamental.get("week52_low"),
         "volume_ratio": fundamental.get("volume_ratio"),
