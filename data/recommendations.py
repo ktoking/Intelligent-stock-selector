@@ -118,11 +118,24 @@ def get_past_recommendations_with_returns(
     """
     在 get_past_recommendations 基础上，为每条记录拉取当前价、持有 1 周/1 月价，并计算涨跌幅与持有天数；
     拉取基准（标普500/沪深300/恒生）同期收益；计算最差收益与收益分布。
+    同一标的多次推荐只保留报告日最早的一条（合并到第一条），避免重复统计。
     返回 (rows, summary)。summary 含多持有期胜率/收益、基准对比、风险指标。
     """
     rows = get_past_recommendations(since_days=since_days)
     if not rows:
         return [], {"total_count": 0, "win_count": 0, "win_rate_pct": 0.0, "avg_return_pct": 0.0}
+
+    # 同一股票只保留报告日最早的一条（合并到第一条）
+    by_ticker: Dict[str, Dict[str, Any]] = {}
+    for r in rows:
+        t = (r.get("ticker") or "").upper().strip()
+        if not t:
+            continue
+        rd = (r.get("report_date") or "")[:10]
+        if t not in by_ticker or (rd and rd < (by_ticker[t].get("report_date") or "")[:10]):
+            by_ticker[t] = r
+    rows = list(by_ticker.values())
+    rows.sort(key=lambda x: x.get("report_date") or "", reverse=True)
 
     try:
         import yfinance as yf
