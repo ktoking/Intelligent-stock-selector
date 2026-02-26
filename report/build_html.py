@@ -132,24 +132,43 @@ def build_report_html(
         if bench_hk is not None:
             bench_parts.append(f"恒生 同期 {bench_hk:+.2f}%")
         bench_line = "；".join(bench_parts) if bench_parts else "—"
-        # 风险
+        # 风险与一眼看懂
         worst = backtest_summary.get("worst_return_pct")
+        best = backtest_summary.get("best_return_pct")
         worst_str = f"{worst:+.2f}%" if worst is not None else "—"
+        best_str = f"{best:+.2f}%" if best is not None else "—"
+        triggered_exit_count = backtest_summary.get("triggered_exit_count", 0)
+        recent_n = backtest_summary.get("recent_n", 0)
+        recent_win_rate_pct = backtest_summary.get("recent_win_rate_pct", 0)
         d_up10 = backtest_summary.get("dist_up_10", 0)
         d_0_10 = backtest_summary.get("dist_0_10", 0)
         d_neg10_0 = backtest_summary.get("dist_neg10_0", 0)
         d_down10 = backtest_summary.get("dist_down_10", 0)
         dist_line = f"涨&gt;10% {d_up10} 只，0–10% {d_0_10} 只，-10%–0 {d_neg10_0} 只，&lt;-10% {d_down10} 只"
 
-        summary_line = f"过去 {since_days} 天内共 {total_count} 条「9/10 分 买入」记录。<br>至今：上涨 {win_count} 条，胜率 {win_rate_pct}%，平均 {avg_return_pct:+.2f}%。"
+        summary_line = f"过去 {since_days} 天内共 {total_count} 条「9/10 分 买入」记录（同股只保留最早一条）。<br>至今：胜率 <b>{win_rate_pct}%</b>，平均收益 <b>{avg_return_pct:+.2f}%</b>；最近 {recent_n} 条胜率 <b>{recent_win_rate_pct}%</b>；触及减仓/离场价 <b>{triggered_exit_count}</b> 条（当前价≤当时减仓价视为卖出信号）。"
         if total_1w:
             summary_line += f" 持有1周（{total_1w} 条）：胜率 {win_rate_1w_pct}%，平均 {avg_return_1w_pct:+.2f}%。"
         if total_1m:
             summary_line += f" 持有1月（{total_1m} 条）：胜率 {win_rate_1m_pct}%，平均 {avg_return_1m_pct:+.2f}%。"
-        summary_line += f"<br>基准同期：{bench_line}<br>最差单只收益：{worst_str}；收益分布：{dist_line}。"
+        summary_line += f"<br>基准同期：{bench_line}<br>最差/最佳单只：{worst_str} / {best_str}；收益分布：{dist_line}。"
 
-        rows_html = []
-        for r in backtest_rows[:50]:  # 最多展示 50 条
+        # 一眼看懂：核心指标卡片
+        win_rate_class = "positive" if win_rate_pct >= 50 else "negative"
+        recent_class = "positive" if recent_win_rate_pct >= 50 else "negative"
+        at_a_glance = f"""
+            <div class="backtest-at-a-glance">
+                <div class="backtest-glance-item"><span class="backtest-glance-label">总条数</span><span class="backtest-glance-value">{total_count}</span></div>
+                <div class="backtest-glance-item"><span class="backtest-glance-label">胜率</span><span class="backtest-glance-value {win_rate_class}">{win_rate_pct}%</span></div>
+                <div class="backtest-glance-item"><span class="backtest-glance-label">平均收益</span><span class="backtest-glance-value {'positive' if avg_return_pct >= 0 else 'negative'}">{avg_return_pct:+.2f}%</span></div>
+                <div class="backtest-glance-item"><span class="backtest-glance-label">最近{recent_n}条胜率</span><span class="backtest-glance-value {recent_class}">{recent_win_rate_pct}%</span></div>
+                <div class="backtest-glance-item"><span class="backtest-glance-label">跌破卖出</span><span class="backtest-glance-value">{triggered_exit_count} 条</span></div>
+                <div class="backtest-glance-item"><span class="backtest-glance-label">最差/最佳</span><span class="backtest-glance-value">{worst_str} / {best_str}</span></div>
+            </div>"""
+
+        # 表格行：前 BACKTEST_VISIBLE 条直接显示，其余折叠
+        BACKTEST_VISIBLE = 15
+        def _backtest_row(r):
             ticker = _escape(r.get("ticker") or "—")
             name = _escape(r.get("name") or ticker)
             rd = _escape((r.get("report_date") or "")[:10])
@@ -161,6 +180,7 @@ def build_report_html(
             ret_1m = r.get("return_1m_pct")
             bench_ret = r.get("benchmark_return_pct")
             days = r.get("holding_days")
+            triggered = r.get("triggered_exit") is True
             price_then_str = f"{price_then:.2f}" if price_then is not None else "—"
             price_now_str = f"{price_now:.2f}" if price_now is not None else "—"
             def _ret_span(v):
@@ -173,16 +193,32 @@ def build_report_html(
             ret_1m_str = _ret_span(ret_1m)
             bench_str = _ret_span(bench_ret) if bench_ret is not None else "—"
             days_str = str(days) if days is not None else "—"
-            rows_html.append(
-                f"<tr><td>{name}</td><td>{ticker}</td><td>{rd}</td><td>{score}</td><td>{price_then_str}</td><td>{price_now_str}</td><td>{ret_str}</td><td>{ret_1w_str}</td><td>{ret_1m_str}</td><td>{bench_str}</td><td>{days_str}</td></tr>"
-            )
-        table_body = "\n".join(rows_html)
+            exit_badge = '<span class="triggered-exit-badge">卖出</span>' if triggered else "—"
+            return f"<tr><td>{name}</td><td>{ticker}</td><td>{rd}</td><td>{score}</td><td>{price_then_str}</td><td>{price_now_str}</td><td>{ret_str}</td><td>{ret_1w_str}</td><td>{ret_1m_str}</td><td>{bench_str}</td><td>{days_str}</td><td>{exit_badge}</td></tr>"
+
+        visible_rows = backtest_rows[:BACKTEST_VISIBLE]
+        more_rows = backtest_rows[BACKTEST_VISIBLE:]
+        table_body_visible = "\n".join(_backtest_row(r) for r in visible_rows)
+        if more_rows:
+            table_body_more = "\n".join(_backtest_row(r) for r in more_rows)
+            thead = '<thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>持有1周</th><th>持有1月</th><th>基准同期</th><th>持有天数</th><th>跌破卖出</th></tr></thead>'
+            table_body = table_body_visible + f"""
+            <tr class="backtest-expand-row"><td colspan="12" class="backtest-expand-cell">
+                <details class="backtest-details">
+                    <summary>展开更早 {len(more_rows)} 条</summary>
+                    <table class="backtest-table backtest-table-nested">{thead}<tbody>{table_body_more}</tbody></table>
+                </details>
+            </tr>"""
+        else:
+            table_body = table_body_visible
+
         backtest_block = f"""
         <div class="report-summary report-backtest">
             <div class="report-summary-title">既往推荐表现（过去 {since_days} 天 9/10 分 买入 → 多持有期、基准、风险）</div>
             <div class="report-summary-content">{summary_line}</div>
+            {at_a_glance}
             <table class="backtest-table">
-                <thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>持有1周</th><th>持有1月</th><th>基准同期</th><th>持有天数</th></tr></thead>
+                <thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>持有1周</th><th>持有1月</th><th>基准同期</th><th>持有天数</th><th>跌破卖出</th></tr></thead>
                 <tbody>{table_body}</tbody>
             </table>
         </div>"""
@@ -528,6 +564,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .no-results { text-align: center; padding: 80px 20px; color: #718096; font-size: 18px; background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 16px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); font-weight: 500; }
 .report-disclaimer { margin-top: 30px; padding: 20px 25px; background: rgba(255,255,255,0.9); border-radius: 12px; font-size: 13px; color: #6b7280; line-height: 1.6; text-align: center; border: 1px solid rgba(0,0,0,0.06); }
 .report-backtest { border-left-color: #10b981; }
+.backtest-at-a-glance { display: flex; flex-wrap: wrap; gap: 16px 24px; margin: 12px 0; padding: 12px 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+.backtest-glance-item { display: flex; flex-direction: column; gap: 2px; }
+.backtest-glance-label { font-size: 12px; color: #64748b; }
+.backtest-glance-value { font-size: 18px; font-weight: 700; color: #1e293b; }
+.backtest-glance-value.positive { color: #10b981; }
+.backtest-glance-value.negative { color: #ef4444; }
+.triggered-exit-badge { display: inline-block; padding: 2px 8px; font-size: 12px; font-weight: 600; color: #fff; background: #dc2626; border-radius: 4px; }
+.backtest-details { margin: 8px 0; }
+.backtest-details summary { cursor: pointer; color: #3b82f6; font-size: 13px; }
+.backtest-expand-row { vertical-align: top; }
+.backtest-expand-cell { padding: 8px !important; border-bottom: none !important; }
+.backtest-table-nested { margin-top: 8px; }
 .backtest-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
 .backtest-table th, .backtest-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
 .backtest-table th { background: #f7fafc; font-weight: 700; color: #2d3748; }

@@ -14,3 +14,25 @@
 {"ticker": "688301.SS", "report_date": "2026-02-11", "score": 9.0, "action": "买入", "price_at_report": 127.18, "name": "IRAY GROUP", "market": "A股"}
 {"ticker": "600309.SS", "report_date": "2026-02-11", "score": 9.0, "action": "买入", "price_at_report": 89.28, "name": "WANHUA CHEMICAL GROUP CO LTD", "market": "A股"}
 {"ticker": "002129.SZ", "report_date": "2026-02-11", "score": 9.0, "action": "买入", "price_at_report": 11.11, "name": "TCL ZHONGHUAN RENE", "market": "A股"}
+{"ticker": "XOM", "report_date": "2026-02-12", "score": 9.0, "action": "买入", "price_at_report": 155.56, "name": "Exxon Mobil Corporation", "market": "美股"}
+{"ticker": "WMT", "report_date": "2026-02-12", "score": 9.0, "action": "买入", "price_at_report": 128.77, "name": "Walmart Inc.", "market": "美股"}
+{"ticker": "CSCO", "report_date": "2026-02-12", "score": 9.0, "action": "买入", "price_at_report": 85.54, "name": "Cisco Systems, Inc.", "market": "美股"}
+{"ticker": "KO", "report_date": "2026-02-12", "score": 9.0, "action": "买入", "price_at_report": 78.6, "name": "Coca-Cola Company (The)", "market": "美股"}
+{"ticker": "PM", "report_date": "2026-02-12", "score": 9.0, "action": "买入", "price_at_report": 186.27, "name": "Philip Morris International Inc", "market": "美股"}
+{"ticker": "PEP", "report_date": "2026-02-12", "score": 9.0, "action": "买入", "price_at_report": 169.15, "name": "Pepsico, Inc.", "market": "美股"}
+{"ticker": "TXN", "report_date": "2026-02-12", "score": 9.0, "action": "买入", "price_at_report": 226.56, "name": "Texas Instruments Incorporated", "market": "美股"}
+{"ticker": "HON", "report_date": "2026-02-12", "score": 9.0, "action": "买入", "price_at_report": 242.7, "name": "Honeywell International Inc.", "market": "美股"}
+{"ticker": "LOW", "report_date": "2026-02-12", "score": 9.0, "action": "买入", "price_at_report": 287.04, "name": "Lowe's Companies, Inc.", "market": "美股"}
+{"ticker": "002078.SZ", "report_date": "2026-02-12", "score": 9.0, "action": "买入", "price_at_report": 17.3, "name": "SHANDONG SUNPAPER", "market": "A股"}
+{"ticker": "COST", "report_date": "2026-02-13", "score": 9.0, "action": "买入", "price_at_report": 998.86, "name": "Costco Wholesale Corporation", "market": "美股"}
+{"ticker": "PM", "report_date": "2026-02-13", "score": 9.0, "action": "买入", "price_at_report": 188.95, "name": "Philip Morris International Inc", "market": "美股"}
+{"ticker": "COP", "report_date": "2026-02-13", "score": 9.0, "action": "买入", "price_at_report": 110.83, "name": "ConocoPhillips", "market": "美股"}
+{"ticker": "EOG", "report_date": "2026-02-13", "score": 9.0, "action": "买入", "price_at_report": 117.85, "name": "EOG Resources, Inc.", "market": "美股"}
+{"ticker": "AZO", "report_date": "2026-02-13", "score": 9.0, "action": "买入", "price_at_report": 3788.71, "name": "AutoZone, Inc.", "market": "美股"}
+{"ticker": "002008.SZ", "report_date": "2026-02-13", "score": 9.0, "action": "买入", "price_at_report": 53.98, "name": "HAN'S LASER TECHNO", "market": "A股"}
+{"ticker": "002008.SZ", "report_date": "2026-02-26", "score": 9.0, "action": "买入", "price_at_report": 69.72, "name": "HAN'S LASER TECHNO", "market": "A股"}
+{"ticker": "600309.SS", "report_date": "2026-02-26", "score": 9.0, "action": "买入", "price_at_report": 90.87, "name": "WANHUA CHEMICAL GROUP CO LTD", "market": "A股"}
+{"ticker": "ASML", "report_date": "2026-02-26", "score": 9.0, "action": "买入", "price_at_report": 1526.51, "name": "ASML Holding N.V. - New York Re", "market": "美股"}
+{"ticker": "BKR", "report_date": "2026-02-26", "score": 9.0, "action": "买入", "price_at_report": 64.81, "name": "Baker Hughes Company", "market": "美股"}
+{"ticker": "0016.HK", "report_date": "2026-02-26", "score": 9.0, "action": "买入", "price_at_report": 140.3, "name": "SHK PPT", "market": "港股"}
+{"ticker": "0083.HK", "report_date": "2026-02-26", "score": 9.0, "action": "买入", "price_at_report": 13.01, "name": "SINO LAND", "market": "港股"}

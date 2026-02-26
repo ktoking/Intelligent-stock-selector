@@ -41,12 +41,20 @@ def save_recommendation(card: Dict[str, Any], report_date: str) -> None:
         price_at_report = float(str(price_raw).replace(",", "").strip()) if price_raw else None
     except (TypeError, ValueError):
         price_at_report = None
+    reduce_price_raw = (card.get("reduce_price") or "").strip()
+    reduce_price = None
+    if reduce_price_raw and reduce_price_raw not in ("—", "-", ""):
+        try:
+            reduce_price = float(str(reduce_price_raw).replace(",", "").strip())
+        except (TypeError, ValueError):
+            pass
     record = {
         "ticker": ticker,
         "report_date": (report_date or "")[:10],
         "score": s,
         "action": action,
         "price_at_report": price_at_report,
+        "reduce_price": reduce_price,
         "name": (card.get("name") or ticker).strip(),
         "market": (card.get("market") or "美股").strip(),
     }
@@ -205,6 +213,13 @@ def get_past_recommendations_with_returns(
         else:
             r["return_pct"] = None
 
+        # 跌破卖出：当前价 ≤ 当时报告给出的减仓/离场价（reduce_price）则视为触及卖出信号
+        reduce_price = r.get("reduce_price")
+        if reduce_price is not None and price_now is not None and price_now <= reduce_price:
+            r["triggered_exit"] = True
+        else:
+            r["triggered_exit"] = False
+
         # 持有 1 周 / 1 月 收益
         r["return_1w_pct"] = None
         r["return_1m_pct"] = None
@@ -241,14 +256,25 @@ def get_past_recommendations_with_returns(
     win_count = sum(1 for x in valid_returns if x > 0)
     total = len(rows)
 
+    # 跌破卖出条数（当前价 ≤ 当时减仓价的记录）
+    triggered_exit_count = sum(1 for r in rows if r.get("triggered_exit") is True)
+
+    # 最近 N 条胜率（按推荐日倒序取前 N 条，便于一眼看近期表现）
+    recent_n = min(10, len(rows))
+    recent_rows = rows[:recent_n]
+    recent_returns = [r.get("return_pct") for r in recent_rows if r.get("return_pct") is not None]
+    recent_win_count = sum(1 for x in recent_returns if x > 0)
+    recent_win_rate_pct = round(recent_win_count / len(recent_returns) * 100, 1) if recent_returns else 0.0
+
     # 1 周 / 1 月 胜率与平均收益
     total_1w = len(returns_1w)
     win_count_1w = sum(1 for x in returns_1w if x > 0)
     total_1m = len(returns_1m)
     win_count_1m = sum(1 for x in returns_1m if x > 0)
 
-    # 风险：最差收益、收益分布
+    # 风险：最差收益、最佳收益、收益分布
     worst_return_pct = min(valid_returns) if valid_returns else None
+    best_return_pct = max(valid_returns) if valid_returns else None
     dist_up_10 = sum(1 for x in valid_returns if x > 10)
     dist_0_10 = sum(1 for x in valid_returns if 0 < x <= 10)
     dist_neg10_0 = sum(1 for x in valid_returns if -10 <= x < 0)
@@ -260,6 +286,11 @@ def get_past_recommendations_with_returns(
         "win_rate_pct": round(win_count / total * 100, 1) if total else 0.0,
         "avg_return_pct": round(sum(valid_returns) / len(valid_returns), 2) if valid_returns else 0.0,
         "since_days": since_days,
+        "triggered_exit_count": triggered_exit_count,
+        "recent_n": recent_n,
+        "recent_win_count": recent_win_count,
+        "recent_win_rate_pct": recent_win_rate_pct,
+        "best_return_pct": round(best_return_pct, 2) if best_return_pct is not None else None,
         "total_1w": total_1w,
         "win_count_1w": win_count_1w,
         "win_rate_1w_pct": round(win_count_1w / total_1w * 100, 1) if total_1w else 0.0,
