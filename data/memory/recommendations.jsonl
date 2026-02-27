@@ -36,3 +36,7 @@
 {"ticker": "BKR", "report_date": "2026-02-26", "score": 9.0, "action": "买入", "price_at_report": 64.81, "name": "Baker Hughes Company", "market": "美股"}
 {"ticker": "0016.HK", "report_date": "2026-02-26", "score": 9.0, "action": "买入", "price_at_report": 140.3, "name": "SHK PPT", "market": "港股"}
 {"ticker": "0083.HK", "report_date": "2026-02-26", "score": 9.0, "action": "买入", "price_at_report": 13.01, "name": "SINO LAND", "market": "港股"}
+{"ticker": "KO", "report_date": "2026-02-27", "score": 9.0, "action": "买入", "price_at_report": 80.5, "name": "Coca-Cola Company (The)", "market": "美股"}
+{"ticker": "MCD", "report_date": "2026-02-27", "score": 9.0, "action": "买入", "price_at_report": 334.53, "name": "McDonald's Corporation", "market": "美股"}
+{"ticker": "600309.SS", "report_date": "2026-02-27", "score": 9.0, "action": "买入", "price_at_report": 92.52, "name": "WANHUA CHEMICAL GROUP CO LTD", "market": "A股"}
+{"ticker": "2899.HK", "report_date": "2026-02-27", "score": 9.0, "action": "买入", "price_at_report": 44.94, "reduce_price": null, "name": "ZIJIN MINING", "market": "港股"}

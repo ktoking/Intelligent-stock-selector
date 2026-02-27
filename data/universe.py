@@ -35,6 +35,21 @@ def get_nasdaq100_tickers_from_web() -> Optional[List[str]]:
     return None
 
 
+def _parse_hk_code(raw: str) -> Optional[str]:
+    """从 Wikipedia 表格单元格解析港股代码为 yfinance 格式（如 0700.HK）。"""
+    if not raw or raw == "nan":
+        return None
+    s = "".join(str(raw).strip().split()).replace(",", "")
+    # SEHK: 700 或 700 或 0700
+    if ":" in s:
+        s = s.split(":")[-1].strip()
+    if s.isdigit() and 1 <= len(s) <= 4:
+        return s.zfill(4) + ".HK"
+    if s.endswith(".HK"):
+        return s
+    return None
+
+
 def get_hangseng_tickers_from_web() -> Optional[List[str]]:
     """从 Wikipedia 拉取恒生指数成分股（yfinance 格式带 .HK），失败返回 None。"""
     try:
@@ -43,23 +58,58 @@ def get_hangseng_tickers_from_web() -> Optional[List[str]]:
         for df in tables:
             if df is None or df.empty:
                 continue
-            # 常见列名：Stock code, Code, 代號 等
-            for code_col in ["Stock code", "Code", "Symbol", "代號", "Stock Code"]:
+            for code_col in ["Ticker", "Stock code", "Code", "Symbol", "代號", "Stock Code"]:
                 if code_col in df.columns:
-                    codes = df[code_col].astype(str).str.strip().str.replace(",", "")
                     out = []
-                    for c in codes.tolist():
-                        if not c or c == "nan" or c == code_col:
-                            continue
-                        # 去掉空格、补成 4 位
-                        c = "".join(c.split())
-                        if c.isdigit() and len(c) <= 4:
-                            c = c.zfill(4) + ".HK"
-                        elif not c.endswith(".HK"):
-                            c = c + ".HK"
-                        out.append(c)
+                    for c in df[code_col].astype(str).tolist():
+                        t = _parse_hk_code(c)
+                        if t and t not in out:
+                            out.append(t)
                     if len(out) >= 10:
                         return out
+    except Exception:
+        pass
+    return None
+
+
+def get_hstech_tickers_from_web() -> Optional[List[str]]:
+    """从 Wikipedia 拉取恒生科技指数成分股（yfinance 格式带 .HK）。恒科无独立成分表，尝试国企指数中科技类，失败返回 None。"""
+    try:
+        url = "https://en.wikipedia.org/wiki/Hang_Seng_China_Enterprises_Index"
+        tables = pd.read_html(url)
+        tech_keywords = ("information technology", "technology", "consumer discretionary", "healthcare")
+        for df in tables:
+            if df is None or df.empty:
+                continue
+            code_col = None
+            industry_col = None
+            for c in df.columns:
+                if str(c).lower() in ("ticker", "code", "symbol", "stock code"):
+                    code_col = c
+                if "industry" in str(c).lower() or "sector" in str(c).lower():
+                    industry_col = c
+            if code_col is None:
+                continue
+            out = []
+            for _, row in df.iterrows():
+                raw = row.get(code_col, "")
+                if industry_col and industry_col in row.index:
+                    ind = str(row.get(industry_col, "")).lower()
+                    if not any(k in ind for k in tech_keywords):
+                        continue
+                t = _parse_hk_code(str(raw))
+                if t and t not in out:
+                    out.append(t)
+            if len(out) >= 10:
+                return out[:30]
+            # 无 Industry 列或科技类不足时，取前 30 只
+            out = []
+            for c in df[code_col].astype(str).tolist():
+                t = _parse_hk_code(c)
+                if t and t not in out:
+                    out.append(t)
+            if len(out) >= 10:
+                return out[:30]
     except Exception:
         pass
     return None

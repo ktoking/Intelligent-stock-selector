@@ -47,9 +47,9 @@ python server.py
 | **tickers** | 逗号分隔股票代码；不传则按 market+pool 取池 | — |
 | **limit** | 不传 tickers 时取的数量 | 5 |
 | **market** | 市场：`us` 美股 / `cn` A股 / `hk` 港股 | us |
-| **pool** | 选股池：不传或 `sp500` 大盘；`nasdaq100` 纳斯达克100；`russell2000` 美股小盘（罗素2000）；`csi2000` A股小盘（中证2000） | — |
+| **pool** | 选股池：不传或 `sp500` 大盘；`nasdaq100` 纳斯达克100；`russell2000` 美股小盘；`csi2000` A股小盘；`hsi` 恒指；`hstech` 恒科 | — |
 
-选股池**优先从线上拉取**（Wikipedia 等）：纳斯达克100、恒生指数、沪深300、罗素2000（若有表）会先尝试线上成分表，失败再回退到项目内静态列表；美股大盘 `limit>10` 仍从 S&P 500 线上拉取后按市值+近期增长排序。`limit` 上限已放宽到 500，便于做全量或大批量分析。
+选股池**优先从线上拉取**（Wikipedia 等）：纳斯达克100、恒生指数、恒生科技指数、沪深300、罗素2000（若有表）会先尝试线上成分表，失败再回退到项目内静态列表；美股大盘 `limit>10` 仍从 S&P 500 线上拉取后按市值+近期增长排序。`limit` 上限已放宽到 500，便于做全量或大批量分析。
 | **deep** | 1=每只跑深度分析①②③④⑤+与上次对比；0=仅技术+消息+财报+期权+综合评分 | 0 |
 | **interval** | K 线：`1d` 日 K；`5m`/`15m`/`10m`/`1m` 分 K（10m 内部用 15m） | 1d |
 | **prepost** | 1=含盘前盘后（日 K 时涨跌幅为盘前/盘后价） | 0 |
@@ -70,6 +70,8 @@ python server.py
 | 美股纳斯达克100 前 20 只 | `/report?market=us&pool=nasdaq100&limit=20` |
 | 美股小盘（罗素2000 风格）前 10 只 | `/report?market=us&pool=russell2000&limit=10` |
 | A股小盘（中证2000 风格）前 10 只 | `/report?market=cn&pool=csi2000&limit=10` |
+| 港股恒指前 20 只 | `/report?market=hk&pool=hsi&limit=20` |
+| 港股恒科前 20 只 | `/report?market=hk&pool=hstech&limit=20` |
 | 指定 A 股（6 位自动补 .SS/.SZ） | `/report?tickers=001317,603767,600882` |
 | 深度报告（含①②③④⑤+与上次对比） | `/report?deep=1&limit=5` |
 | 分 K 超短线（15 分钟 K） | `/report?interval=15m&limit=10` |

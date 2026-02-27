@@ -124,6 +124,7 @@ def build_report_html(
         bench_us = backtest_summary.get("benchmark_avg_us_pct")
         bench_cn = backtest_summary.get("benchmark_avg_cn_pct")
         bench_hk = backtest_summary.get("benchmark_avg_hk_pct")
+        bench_hstech = backtest_summary.get("benchmark_avg_hstech_pct")
         bench_parts = []
         if bench_us is not None:
             bench_parts.append(f"标普500 同期 {bench_us:+.2f}%")
@@ -131,6 +132,8 @@ def build_report_html(
             bench_parts.append(f"沪深300 同期 {bench_cn:+.2f}%")
         if bench_hk is not None:
             bench_parts.append(f"恒生 同期 {bench_hk:+.2f}%")
+        if bench_hstech is not None:
+            bench_parts.append(f"恒科 同期 {bench_hstech:+.2f}%")
         bench_line = "；".join(bench_parts) if bench_parts else "—"
         # 风险与一眼看懂
         worst = backtest_summary.get("worst_return_pct")
@@ -146,12 +149,70 @@ def build_report_html(
         d_down10 = backtest_summary.get("dist_down_10", 0)
         dist_line = f"涨&gt;10% {d_up10} 只，0–10% {d_0_10} 只，-10%–0 {d_neg10_0} 只，&lt;-10% {d_down10} 只"
 
-        summary_line = f"过去 {since_days} 天内共 {total_count} 条「9/10 分 买入」记录（同股只保留最早一条）。<br>至今：胜率 <b>{win_rate_pct}%</b>，平均收益 <b>{avg_return_pct:+.2f}%</b>；最近 {recent_n} 条胜率 <b>{recent_win_rate_pct}%</b>；触及减仓/离场价 <b>{triggered_exit_count}</b> 条（当前价≤当时减仓价视为卖出信号）。"
+        summary_line = f"过去 {since_days} 天内共 {total_count} 条「9/10 分 买入」记录（同股只保留最早一条）。<br>至今：胜率 <b>{win_rate_pct}%</b>，平均收益 <b>{avg_return_pct:+.2f}%</b>；最近 {recent_n} 条胜率 <b>{recent_win_rate_pct}%</b>；触及减仓/离场价 <b>{triggered_exit_count}</b> 条。"
         if total_1w:
             summary_line += f" 持有1周（{total_1w} 条）：胜率 {win_rate_1w_pct}%，平均 {avg_return_1w_pct:+.2f}%。"
         if total_1m:
             summary_line += f" 持有1月（{total_1m} 条）：胜率 {win_rate_1m_pct}%，平均 {avg_return_1m_pct:+.2f}%。"
         summary_line += f"<br>基准同期：{bench_line}<br>最差/最佳单只：{worst_str} / {best_str}；收益分布：{dist_line}。"
+
+        # 图表：胜率对比、收益分布（纯 CSS，无外部依赖）
+        total_valid = max(total_count, 1)
+        dist_total = d_up10 + d_0_10 + d_neg10_0 + d_down10
+        dist_total = max(dist_total, 1)
+        p_up10 = d_up10 / dist_total * 100
+        p_0_10 = d_0_10 / dist_total * 100
+        p_neg = d_neg10_0 / dist_total * 100
+        p_down = d_down10 / dist_total * 100
+        charts_html = f"""
+            <div class="backtest-charts">
+                <div class="backtest-chart-group">
+                    <div class="backtest-chart-title">胜率对比</div>
+                    <div class="backtest-chart-bars">
+                        <div class="backtest-bar-row">
+                            <span class="backtest-bar-label">至今</span>
+                            <div class="backtest-bar-track"><div class="backtest-bar-fill {'positive' if win_rate_pct >= 50 else 'negative'}" style="width:{min(100, win_rate_pct)}%"></div></div>
+                            <span class="backtest-bar-value {'positive' if win_rate_pct >= 50 else 'negative'}">{win_rate_pct}%</span>
+                        </div>
+                        <div class="backtest-bar-row">
+                            <span class="backtest-bar-label">1周</span>
+                            <div class="backtest-bar-track"><div class="backtest-bar-fill {'positive' if win_rate_1w_pct >= 50 else 'negative'}" style="width:{min(100, win_rate_1w_pct)}%"></div></div>
+                            <span class="backtest-bar-value {'positive' if win_rate_1w_pct >= 50 else 'negative'}">{win_rate_1w_pct}%</span>
+                        </div>
+                        <div class="backtest-bar-row">
+                            <span class="backtest-bar-label">1月</span>
+                            <div class="backtest-bar-track"><div class="backtest-bar-fill {'positive' if win_rate_1m_pct >= 50 else 'negative'}" style="width:{min(100, win_rate_1m_pct)}%"></div></div>
+                            <span class="backtest-bar-value {'positive' if win_rate_1m_pct >= 50 else 'negative'}">{win_rate_1m_pct}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="backtest-chart-group">
+                    <div class="backtest-chart-title">收益分布</div>
+                    <div class="backtest-dist-bar">
+                        <div class="backtest-dist-seg seg-up" style="width:{p_up10}%" title="涨&gt;10% {d_up10}只"></div>
+                        <div class="backtest-dist-seg seg-0-10" style="width:{p_0_10}%" title="0-10% {d_0_10}只"></div>
+                        <div class="backtest-dist-seg seg-neg" style="width:{p_neg}%" title="-10%-0 {d_neg10_0}只"></div>
+                        <div class="backtest-dist-seg seg-down" style="width:{p_down}%" title="&lt;-10% {d_down10}只"></div>
+                    </div>
+                    <div class="backtest-dist-legend">
+                        <span><i class="seg-dot seg-up"></i>涨&gt;10% {d_up10}</span>
+                        <span><i class="seg-dot seg-0-10"></i>0-10% {d_0_10}</span>
+                        <span><i class="seg-dot seg-neg"></i>-10%-0 {d_neg10_0}</span>
+                        <span><i class="seg-dot seg-down"></i>&lt;-10% {d_down10}</span>
+                    </div>
+                </div>
+                <div class="backtest-chart-group">
+                    <div class="backtest-chart-title">基准同期</div>
+                    <div class="backtest-bench-bars">
+                        {"".join([
+                            f'<div class="backtest-bench-row"><span class="backtest-bar-label">标普500</span><span class="backtest-bar-value {"positive" if bench_us >= 0 else "negative"}">{bench_us:+.2f}%</span></div>' if bench_us is not None else "",
+                            f'<div class="backtest-bench-row"><span class="backtest-bar-label">沪深300</span><span class="backtest-bar-value {"positive" if bench_cn >= 0 else "negative"}">{bench_cn:+.2f}%</span></div>' if bench_cn is not None else "",
+                            f'<div class="backtest-bench-row"><span class="backtest-bar-label">恒生</span><span class="backtest-bar-value {"positive" if bench_hk >= 0 else "negative"}">{bench_hk:+.2f}%</span></div>' if bench_hk is not None else "",
+                            f'<div class="backtest-bench-row"><span class="backtest-bar-label">恒科</span><span class="backtest-bar-value {"positive" if bench_hstech >= 0 else "negative"}">{bench_hstech:+.2f}%</span></div>' if bench_hstech is not None else "",
+                        ])}
+                    </div>
+                </div>
+            </div>"""
 
         # 一眼看懂：核心指标卡片
         win_rate_class = "positive" if win_rate_pct >= 50 else "negative"
@@ -202,7 +263,7 @@ def build_report_html(
         if more_rows:
             table_body_more = "\n".join(_backtest_row(r) for r in more_rows)
             thead = '<thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>持有1周</th><th>持有1月</th><th>基准同期</th><th>持有天数</th><th>跌破卖出</th></tr></thead>'
-            table_body = table_body_visible + f"""
+            table_inner = table_body_visible + f"""
             <tr class="backtest-expand-row"><td colspan="12" class="backtest-expand-cell">
                 <details class="backtest-details">
                     <summary>展开更早 {len(more_rows)} 条</summary>
@@ -210,17 +271,25 @@ def build_report_html(
                 </details>
             </tr>"""
         else:
-            table_body = table_body_visible
+            table_inner = table_body_visible
+
+        # 历史股票表格：默认折叠，点击「查看历史股票明细」展开
+        table_html = f"""
+            <details class="backtest-table-details">
+                <summary class="backtest-table-summary">查看历史股票明细（{total_count} 条）</summary>
+                <table class="backtest-table">
+                    <thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>持有1周</th><th>持有1月</th><th>基准同期</th><th>持有天数</th><th>跌破卖出</th></tr></thead>
+                    <tbody>{table_inner}</tbody>
+                </table>
+            </details>"""
 
         backtest_block = f"""
         <div class="report-summary report-backtest">
             <div class="report-summary-title">既往推荐表现（过去 {since_days} 天 9/10 分 买入 → 多持有期、基准、风险）</div>
             <div class="report-summary-content">{summary_line}</div>
             {at_a_glance}
-            <table class="backtest-table">
-                <thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>持有1周</th><th>持有1月</th><th>基准同期</th><th>持有天数</th><th>跌破卖出</th></tr></thead>
-                <tbody>{table_body}</tbody>
-            </table>
+            {charts_html}
+            {table_html}
         </div>"""
 
     # 收集筛选选项（交易动作已归一为 买入/观察/离场）
@@ -580,7 +649,38 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .backtest-table th, .backtest-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
 .backtest-table th { background: #f7fafc; font-weight: 700; color: #2d3748; }
 .backtest-table .info-value.positive { color: #10b981; }
-.backtest-table .info-value.negative { color: #ef4444; }"""
+.backtest-table .info-value.negative { color: #ef4444; }
+.backtest-charts { display: flex; flex-wrap: wrap; gap: 24px; margin: 16px 0; }
+.backtest-chart-group { flex: 1; min-width: 200px; padding: 12px 16px; background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; }
+.backtest-chart-title { font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.backtest-chart-bars { display: flex; flex-direction: column; gap: 10px; }
+.backtest-bar-row { display: flex; align-items: center; gap: 10px; }
+.backtest-bar-label { font-size: 12px; color: #64748b; width: 36px; flex-shrink: 0; }
+.backtest-bar-track { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
+.backtest-bar-fill { height: 100%; border-radius: 5px; transition: width 0.3s; }
+.backtest-bar-fill.positive { background: linear-gradient(90deg, #34d399, #10b981); }
+.backtest-bar-fill.negative { background: linear-gradient(90deg, #f87171, #ef4444); }
+.backtest-bar-value { font-size: 13px; font-weight: 700; width: 44px; text-align: right; }
+.backtest-dist-bar { display: flex; height: 24px; border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+.backtest-dist-seg { min-width: 2px; transition: width 0.3s; }
+.backtest-dist-seg.seg-up { background: #10b981; }
+.backtest-dist-seg.seg-0-10 { background: #6ee7b7; }
+.backtest-dist-seg.seg-neg { background: #fca5a5; }
+.backtest-dist-seg.seg-down { background: #ef4444; }
+.backtest-dist-legend { display: flex; flex-wrap: wrap; gap: 12px 16px; font-size: 12px; color: #64748b; }
+.backtest-dist-legend .seg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.backtest-dist-legend .seg-dot.seg-up { background: #10b981; }
+.backtest-dist-legend .seg-dot.seg-0-10 { background: #6ee7b7; }
+.backtest-dist-legend .seg-dot.seg-neg { background: #fca5a5; }
+.backtest-dist-legend .seg-dot.seg-down { background: #ef4444; }
+.backtest-bench-bars { display: flex; flex-direction: column; gap: 8px; }
+.backtest-bench-row { display: flex; justify-content: space-between; align-items: center; }
+.backtest-table-details { margin-top: 12px; }
+.backtest-table-summary { cursor: pointer; padding: 10px 14px; background: #f1f5f9; border-radius: 8px; font-size: 14px; font-weight: 600; color: #475569; }
+.backtest-table-summary:hover { background: #e2e8f0; color: #334155; }
+.backtest-table-details[open] .backtest-table-summary { border-radius: 8px 8px 0 0; margin-bottom: 0; }
+.backtest-table-details .backtest-table { margin-top: 0; }
+"""
 
     script = f"""
         const cards = Array.from(document.querySelectorAll('.card'));

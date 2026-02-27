@@ -393,7 +393,7 @@ def report_page(
     interval: str = Query("1d", description="K线周期：1d=日K，5m/15m/10m/1m=分K（10m 用 15m 数据）"),
     prepost: int = Query(0, description="是否含盘前盘后：0=否，1=是（分K时常用）"),
     market: str = Query("us", description="市场选股：us=美股，cn=A股，hk=港股（不传 tickers 时生效）"),
-    pool: str = Query("", description="选股池：不传或 sp500=大盘；nasdaq100=纳斯达克100；russell2000=美股小盘（罗素2000）；csi2000=A股小盘/潜力（中证2000），不传 tickers 时生效"),
+    pool: str = Query("", description="选股池：不传或 sp500=大盘；nasdaq100=纳斯达克100；russell2000=美股小盘；csi2000=A股小盘；hsi=恒指；hstech=恒科，不传 tickers 时生效"),
     save_output: int = Query(1, description="1=将报告 HTML 保存到 report/output/；0=不保存（前端页面触发时传 0）"),
 ):
     """

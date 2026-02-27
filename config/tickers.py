@@ -8,6 +8,7 @@ from data.universe import (
     get_top_by_market_cap_and_growth,
     get_nasdaq100_tickers_from_web,
     get_hangseng_tickers_from_web,
+    get_hstech_tickers_from_web,
     get_csi300_tickers_from_web,
     get_russell2000_tickers_from_web,
     get_csi300_tickers_akshare,
@@ -47,11 +48,13 @@ MARKET_CN = "cn"
 MARKET_HK = "hk"
 MARKETS = [MARKET_US, MARKET_CN, MARKET_HK]
 
-# 选股池枚举：大盘=默认（S&P500/沪深龙头），小盘/潜力=罗素2000/中证2000，纳斯达克100
+# 选股池枚举：大盘=默认（S&P500/沪深龙头），小盘/潜力=罗素2000/中证2000，纳斯达克100；港股恒指/恒科
 POOL_LARGE = "sp500"       # 美股默认；A股为沪深龙头
 POOL_NASDAQ100 = "nasdaq100"    # 美股纳斯达克100（科技/成长大盘）
 POOL_SMALL_US = "russell2000"   # 美股小盘（罗素2000 风格）
 POOL_SMALL_CN = "csi2000"       # A股小盘/潜力（中证2000 风格）
+POOL_HK_HSI = "hsi"             # 港股恒生指数（恒指）
+POOL_HK_HSTECH = "hstech"       # 港股恒生科技指数（恒科）
 
 # 美股纳斯达克100：科技/成长大盘（yfinance 代码），常见成分股静态列表
 NASDAQ_100_TICKERS_FALLBACK = [
@@ -87,13 +90,36 @@ CN_QUALITY_TICKERS_FALLBACK = [
     "601988.SS", "601818.SS", "600104.SS", "300496.SZ", "002230.SZ",
 ]
 
-# 港股：恒生/龙头（yfinance 格式：.HK）
+# 港股：恒生指数 88 只成分股（yfinance 格式：.HK），线上拉取失败时回退，来源 Wikipedia/etnet 2026
 HK_QUALITY_TICKERS_FALLBACK = [
-    "0700.HK", "9988.HK", "3690.HK", "0941.HK", "1299.HK", "2318.HK",
-    "2382.HK", "2628.HK", "0939.HK", "1398.HK", "3988.HK", "1093.HK",
-    "2269.HK", "1810.HK", "9618.HK", "9961.HK", "9999.HK", "2899.HK",
-    "1177.HK", "2020.HK", "1171.HK", "1972.HK", "6690.HK", "2196.HK",
-    "0836.HK", "0016.HK", "0011.HK", "0066.HK", "0083.HK", "0027.HK",
+    "0005.HK", "0388.HK", "0939.HK", "1299.HK", "1398.HK", "2318.HK", "2388.HK", "2628.HK", "3968.HK", "3988.HK",
+    "0002.HK", "0003.HK", "0006.HK", "0836.HK", "1038.HK", "2688.HK",
+    "0012.HK", "0016.HK", "0017.HK", "0083.HK", "0101.HK", "0688.HK", "0823.HK", "0960.HK", "1109.HK", "1113.HK", "1209.HK", "1997.HK",
+    "0001.HK", "0027.HK", "0066.HK", "0175.HK", "0241.HK", "0267.HK", "0285.HK", "0288.HK", "0291.HK", "0300.HK",
+    "0316.HK", "0322.HK", "0386.HK", "0669.HK", "0700.HK", "0728.HK", "0762.HK", "0857.HK", "0868.HK", "0881.HK",
+    "0883.HK", "0941.HK", "0968.HK", "0981.HK", "0992.HK", "1024.HK", "1044.HK", "1088.HK", "1093.HK", "1099.HK",
+    "1177.HK", "1211.HK", "1378.HK", "1810.HK", "1801.HK", "1876.HK", "1928.HK", "1929.HK", "2015.HK", "2020.HK",
+    "2057.HK", "2269.HK", "2313.HK", "2319.HK", "2331.HK", "2359.HK", "2382.HK",
+    "2618.HK", "3690.HK", "3692.HK", "6618.HK", "6690.HK", "6862.HK", "9633.HK", "9888.HK", "9901.HK", "9961.HK",
+    "9988.HK", "9992.HK", "9999.HK",
+]
+
+# 港股：恒生科技指数（恒科）成分股静态列表，线上拉取失败时回退。官方 30 只 + 科技/消费/医药扩展至 ~100 只
+HK_HSTECH_TICKERS_FALLBACK = [
+    "0700.HK", "9988.HK", "3690.HK", "1810.HK", "9618.HK", "9961.HK", "9999.HK",
+    "9888.HK", "1024.HK", "2382.HK", "2269.HK", "2196.HK", "6690.HK", "241.HK",
+    "2020.HK", "1177.HK", "1211.HK", "992.HK", "981.HK", "3692.HK", "6618.HK",
+    "2313.HK", "9626.HK", "2015.HK", "9868.HK", "2359.HK", "1801.HK", "9990.HK",
+    "0941.HK", "0762.HK", "0728.HK", "0788.HK", "0968.HK", "0868.HK", "9633.HK",
+    "06690.HK", "06862.HK", "09992.HK", "1698.HK", "9660.HK", "9698.HK", "2899.HK",
+    "0772.HK", "1797.HK", "6060.HK", "09886.HK", "09901.HK", "6098.HK",
+    "0388.HK", "0669.HK", "1044.HK", "1088.HK", "1093.HK", "1099.HK", "1109.HK", "1113.HK",
+    "1171.HK", "1378.HK", "0175.HK", "1876.HK", "1928.HK", "1929.HK", "2318.HK", "2319.HK",
+    "2388.HK", "2628.HK", "0288.HK", "0291.HK", "0300.HK", "0316.HK", "0322.HK",
+    "0386.HK", "0688.HK", "0823.HK", "0836.HK", "0857.HK", "0881.HK", "0883.HK", "0960.HK",
+    "0267.HK", "0285.HK", "0384.HK", "6186.HK", "3888.HK", "3968.HK", "3998.HK", "9923.HK",
+    "9996.HK", "9997.HK", "2333.HK", "2607.HK", "2688.HK", "2007.HK", "1992.HK", "1766.HK",
+    "1890.HK", "6608.HK", "6188.HK", "0966.HK", "2029.HK", "3990.HK",
 ]
 
 # 美股小盘/潜力股：罗素2000 风格（yfinance 代码），多行业覆盖
@@ -178,8 +204,12 @@ def get_report_tickers(
             return tickers[:n]
         tickers = get_csi300_tickers_from_web()
         return (tickers[:n] if tickers else CN_QUALITY_TICKERS_FALLBACK[:n])
-    # 港股：优先恒生成分线上
+    # 港股：按 pool 选择恒指或恒科
     if market == MARKET_HK:
+        if pool == POOL_HK_HSTECH:
+            tickers = get_hstech_tickers_from_web()
+            return (tickers[:n] if tickers else HK_HSTECH_TICKERS_FALLBACK[:n])
+        # 恒指：pool=hsi / hangseng / sp500 / 空
         tickers = get_hangseng_tickers_from_web()
         return (tickers[:n] if tickers else HK_QUALITY_TICKERS_FALLBACK[:n])
     # 美股大盘：limit<=10 用静态快；limit>10 拉 S&P 500 线上再按市值+增长排序

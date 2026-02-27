@@ -176,8 +176,8 @@ def get_past_recommendations_with_returns(
         except Exception:
             hist_by_ticker[t] = None
 
-    # 基准：标普500 / 沪深300 / 恒生
-    bench_tickers = {"美股": "^GSPC", "A股": "000300.SS", "港股": "^HSI"}
+    # 基准：标普500 / 沪深300 / 恒生 / 恒科（港股双基准）
+    bench_tickers = {"美股": "^GSPC", "A股": "000300.SS", "港股": "^HSI", "恒科": "^HSTECH"}
     bench_hist: Dict[str, Any] = {}
     for _m, bt in bench_tickers.items():
         try:
@@ -192,6 +192,7 @@ def get_past_recommendations_with_returns(
     bench_returns_us: List[float] = []
     bench_returns_cn: List[float] = []
     bench_returns_hk: List[float] = []
+    bench_returns_hstech: List[float] = []
 
     for r in rows:
         t = (r.get("ticker") or "").upper().strip()
@@ -251,6 +252,16 @@ def get_past_recommendations_with_returns(
                     bench_returns_cn.append(r["benchmark_return_pct"])
                 elif market == "港股":
                     bench_returns_hk.append(r["benchmark_return_pct"])
+        # 港股额外：恒科同期收益（用于报告双列展示）
+        r["benchmark_hstech_return_pct"] = None
+        if market == "港股":
+            bh_hstech = bench_hist.get("^HSTECH")
+            if bh_hstech is not None:
+                close_then = _close_on_or_after(bh_hstech, report_d)
+                close_now = _latest_close(bh_hstech)
+                if close_then and close_now and close_then > 0:
+                    r["benchmark_hstech_return_pct"] = round((close_now - close_then) / close_then * 100, 2)
+                    bench_returns_hstech.append(r["benchmark_hstech_return_pct"])
 
     valid_returns = [x for x in returns if x is not None]
     win_count = sum(1 for x in valid_returns if x > 0)
@@ -302,6 +313,7 @@ def get_past_recommendations_with_returns(
         "benchmark_avg_us_pct": round(sum(bench_returns_us) / len(bench_returns_us), 2) if bench_returns_us else None,
         "benchmark_avg_cn_pct": round(sum(bench_returns_cn) / len(bench_returns_cn), 2) if bench_returns_cn else None,
         "benchmark_avg_hk_pct": round(sum(bench_returns_hk) / len(bench_returns_hk), 2) if bench_returns_hk else None,
+        "benchmark_avg_hstech_pct": round(sum(bench_returns_hstech) / len(bench_returns_hstech), 2) if bench_returns_hstech else None,
         "worst_return_pct": round(worst_return_pct, 2) if worst_return_pct is not None else None,
         "dist_up_10": dist_up_10,
         "dist_0_10": dist_0_10,
