@@ -1,22 +1,27 @@
 """
-技术面：从 yfinance 历史数据计算 MA、MACD、KDJ、RSI、量能、ATR%，并给出数值摘要供 LLM 解读。
-支持日K（1d）与分K（1m/5m/15m），可选盘前盘后（prepost）。
-入场/离场规则可配置：ATR 止损倍数、放量突破阈值（见环境变量）。
+技术面：从 yfinance 历史数据计算 MA、MACD、KDJ、RSI、布林带、OBV、量能、ATR%，并给出数值摘要供 LLM 解读。
+支持 MACD/RSI 背离自动检测。支持日K（1d）与分K（1m/5m/15m），可选盘前盘后（prepost）。
+入场/离场规则可配置：ATR 止损倍数、放量突破阈值（见 config/analysis_config）。
 """
-import os
 import pandas as pd
 import yfinance as yf
-from typing import Optional
+from typing import Optional, Tuple, List
+
+from config.analysis_config import (
+    ATR_STOP_MULT,
+    VOLUME_BREAKOUT_RATIO,
+    BB_PERIOD,
+    BB_STD_MULT,
+    VOLUME_MA_PERIOD,
+    DIVERGENCE_LOOKBACK,
+    DIVERGENCE_MIN_BARS,
+)
 
 # 分K 默认拉取周期（yfinance 限制：1m 最多约 7d，5m/15m 最多约 60d）
 _INTERVAL_DEFAULT_PERIOD = {"1d": "6mo", "1m": "5d", "5m": "5d", "15m": "5d", "30m": "5d", "60m": "5d"}
 # 分K 最少需要根数（MA60 需 60 根，分K 可放宽到 30）
 _MIN_BARS_DAILY = 60
 _MIN_BARS_INTRADAY = 30
-
-# 入场/离场可调：ATR 止损倍数（离场）；放量突破阈值（量比 >= 该值且突破近期高点视为放量突破）
-_TECH_ATR_STOP_MULT = float(os.environ.get("TECH_ATR_STOP_MULT", "1.5").strip() or "1.5")
-_TECH_VOLUME_BREAKOUT_RATIO = float(os.environ.get("TECH_VOLUME_BREAKOUT_RATIO", "1.5").strip() or "1.5")
 
 
 def _macd(close: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
@@ -60,6 +65,88 @@ def _atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) ->
     return tr.rolling(period).mean()
 
 
+def _bollinger(close: pd.Series, period: int = 20, std_mult: float = 2.0) -> Tuple[pd.Series, pd.Series, pd.Series]:
+    """布林带：中轨=SMA(period)，上下轨=中轨±std_mult×标准差。"""
+    middle = close.rolling(period).mean()
+    std = close.rolling(period).std()
+    upper = middle + std_mult * std
+    lower = middle - std_mult * std
+    return upper, middle, lower
+
+
+def _obv(close: pd.Series, volume: pd.Series) -> pd.Series:
+    """OBV 能量潮：涨日加量、跌日减量。"""
+    direction = close.diff().apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
+    obv = (direction * volume).fillna(0).cumsum()
+    return obv
+
+
+def _find_swing_highs(series: pd.Series, window: int = 3) -> List[int]:
+    """返回近期 swing high 的索引列表（从旧到新）。"""
+    idxs = []
+    for i in range(window, len(series) - window):
+        if series.iloc[i] == series.iloc[i - window : i + window + 1].max():
+            idxs.append(i)
+    return idxs
+
+
+def _find_swing_lows(series: pd.Series, window: int = 3) -> List[int]:
+    """返回近期 swing low 的索引列表（从旧到新）。"""
+    idxs = []
+    for i in range(window, len(series) - window):
+        if series.iloc[i] == series.iloc[i - window : i + window + 1].min():
+            idxs.append(i)
+    return idxs
+
+
+def _detect_divergence(
+    close: pd.Series,
+    macd_line: pd.Series,
+    rsi_series: pd.Series,
+    lookback: int = 30,
+    min_bars: int = 20,
+) -> dict:
+    """
+    检测 MACD/RSI 顶背离与底背离。
+    顶背离：价格创新高，指标未创新高。
+    底背离：价格创新低，指标未创新低。
+    返回 {"macd_top", "macd_bottom", "rsi_top", "rsi_bottom"} 布尔值。
+    """
+    out = {"macd_top": False, "macd_bottom": False, "rsi_top": False, "rsi_bottom": False}
+    n = len(close)
+    if n < min_bars or lookback < 5:
+        return out
+    use = min(lookback, n - 1)
+    window = 3
+
+    # 取近期数据
+    c = close.iloc[-use:]
+    m = macd_line.iloc[-use:]
+    r = rsi_series.iloc[-use:]
+
+    # Swing highs/lows
+    sh = _find_swing_highs(c, window)
+    sl = _find_swing_lows(c, window)
+
+    # 顶背离：取最近两个 swing high，价格更高但指标更低
+    if len(sh) >= 2:
+        i1, i2 = sh[-2], sh[-1]
+        if c.iloc[i2] > c.iloc[i1] and m.iloc[i2] < m.iloc[i1]:
+            out["macd_top"] = True
+        if c.iloc[i2] > c.iloc[i1] and r.iloc[i2] < r.iloc[i1]:
+            out["rsi_top"] = True
+
+    # 底背离：取最近两个 swing low，价格更低但指标更高
+    if len(sl) >= 2:
+        i1, i2 = sl[-2], sl[-1]
+        if c.iloc[i2] < c.iloc[i1] and m.iloc[i2] > m.iloc[i1]:
+            out["macd_bottom"] = True
+        if c.iloc[i2] < c.iloc[i1] and r.iloc[i2] > r.iloc[i1]:
+            out["rsi_bottom"] = True
+
+    return out
+
+
 def _compute_entry_exit_levels(
     close: pd.Series,
     high: pd.Series,
@@ -98,7 +185,7 @@ def _compute_entry_exit_levels(
     out["atr"] = round(atr_val, 2) if atr_val is not None else None
     out["atr_pct"] = atr_pct
 
-    mult = _TECH_ATR_STOP_MULT
+    mult = ATR_STOP_MULT
     exit_parts = []
     if ma20 is not None:
         exit_parts.append(f"跌破 MA20 约 {ma20:.2f} 考虑减仓")
@@ -116,11 +203,11 @@ def _compute_entry_exit_levels(
         entry_parts.append(f"突破近期高点约 {resistance_20d:.2f} 为强势信号")
     if (
         volume_ratio_tech is not None
-        and volume_ratio_tech >= _TECH_VOLUME_BREAKOUT_RATIO
+        and volume_ratio_tech >= VOLUME_BREAKOUT_RATIO
         and resistance_20d is not None
         and resistance_20d > price
     ):
-        entry_parts.append(f"若放量（量比≥{_TECH_VOLUME_BREAKOUT_RATIO}）突破近期高点更佳")
+        entry_parts.append(f"若放量（量比≥{VOLUME_BREAKOUT_RATIO}）突破近期高点更佳")
     out["entry_note"] = "；".join(entry_parts) if entry_parts else "—"
 
     return out
@@ -137,6 +224,9 @@ def _build_tech_status_one_line(
     rsi_oversold: bool,
     volume_ratio_tech: Optional[float],
     atr_pct: Optional[float],
+    bb_summary: Optional[dict] = None,
+    obv_summary: Optional[dict] = None,
+    divergence_summary: Optional[dict] = None,
 ) -> str:
     """生成一句技术面状态摘要，供 LLM 与报告展示。"""
     parts = []
@@ -163,8 +253,26 @@ def _build_tech_status_one_line(
             parts.append(f"RSI超卖({rsi_val:.0f})")
         else:
             parts.append(f"RSI中性({rsi_val:.0f})")
+    if bb_summary:
+        if bb_summary.get("above_upper"):
+            parts.append("布林带上轨上方")
+        elif bb_summary.get("below_lower"):
+            parts.append("布林带下轨下方")
+        else:
+            bp = bb_summary.get("bollinger_pct")
+            if bp is not None:
+                parts.append(f"布林带{bp:.0f}%")
+    if obv_summary and obv_summary.get("obv_above_ma") is True:
+        parts.append("OBV上穿均量")
+    elif obv_summary and obv_summary.get("obv_above_ma") is False:
+        parts.append("OBV下穿均量")
+    if divergence_summary:
+        if divergence_summary.get("macd_top") or divergence_summary.get("rsi_top"):
+            parts.append("顶背离")
+        if divergence_summary.get("macd_bottom") or divergence_summary.get("rsi_bottom"):
+            parts.append("底背离")
     if volume_ratio_tech is not None:
-        if volume_ratio_tech >= _TECH_VOLUME_BREAKOUT_RATIO:
+        if volume_ratio_tech >= VOLUME_BREAKOUT_RATIO:
             parts.append(f"量能放大(量比{volume_ratio_tech:.2f})")
         else:
             parts.append(f"量比{volume_ratio_tech:.2f}")
@@ -202,6 +310,9 @@ def get_technical_summary(
             "macd_summary": None,
             "kdj_summary": None,
             "rsi_summary": None,
+            "bb_summary": None,
+            "obv_summary": None,
+            "divergence_summary": None,
             "volume_context": None,
             "tech_levels": {},
             "tech_status_one_line": None,
@@ -216,6 +327,9 @@ def get_technical_summary(
             "macd_summary": None,
             "kdj_summary": None,
             "rsi_summary": None,
+            "bb_summary": None,
+            "obv_summary": None,
+            "divergence_summary": None,
             "volume_context": None,
             "tech_levels": {},
             "tech_status_one_line": None,
@@ -228,11 +342,11 @@ def get_technical_summary(
     low = hist["Low"]
     volume = hist["Volume"] if hasattr(hist, "columns") and "Volume" in hist.columns else None
 
-    # 量能上下文：近期成交量 / 20 日均量
+    # 量能上下文：近期成交量 / N 日均量
     volume_ratio_tech = None
     volume_ma20 = None
-    if volume is not None and len(volume) >= 20:
-        volume_ma20 = float(volume.rolling(20).mean().iloc[-1])
+    if volume is not None and len(volume) >= VOLUME_MA_PERIOD:
+        volume_ma20 = float(volume.rolling(VOLUME_MA_PERIOD).mean().iloc[-1])
         if volume_ma20 and volume_ma20 > 0:
             volume_ratio_tech = float(volume.iloc[-1]) / volume_ma20
 
@@ -264,6 +378,41 @@ def get_technical_summary(
     rsi_val = float(rsi_series.iloc[-1]) if len(rsi_series) >= 14 else None
     rsi_overbought = rsi_val is not None and rsi_val > 70
     rsi_oversold = rsi_val is not None and rsi_val < 30
+
+    # 布林带
+    bb_upper, bb_middle, bb_lower = _bollinger(close, BB_PERIOD, BB_STD_MULT)
+    bb_summary = None
+    if len(close) >= BB_PERIOD:
+        u = float(bb_upper.iloc[-1])
+        m = float(bb_middle.iloc[-1])
+        l = float(bb_lower.iloc[-1])
+        bb_summary = {
+            "upper": round(u, 2),
+            "middle": round(m, 2),
+            "lower": round(l, 2),
+            "above_upper": price > u,
+            "below_lower": price < l,
+            "bollinger_pct": round((price - l) / (u - l) * 100, 1) if (u - l) and (u - l) > 0 else None,  # 0~100，越近上轨越超买
+        }
+
+    # OBV 能量潮
+    obv_summary = None
+    if volume is not None and len(volume) >= 5:
+        obv_series = _obv(close, volume)
+        obv_now = float(obv_series.iloc[-1])
+        obv_ma = float(obv_series.rolling(VOLUME_MA_PERIOD).mean().iloc[-1]) if len(obv_series) >= VOLUME_MA_PERIOD else None
+        obv_summary = {
+            "obv": round(obv_now, 0),
+            "obv_ma": round(obv_ma, 0) if obv_ma is not None else None,
+            "obv_above_ma": obv_now > obv_ma if obv_ma is not None else None,  # 量价配合偏多
+        }
+
+    # MACD/RSI 背离检测
+    divergence_summary = _detect_divergence(
+        close, macd_line, rsi_series,
+        lookback=DIVERGENCE_LOOKBACK,
+        min_bars=DIVERGENCE_MIN_BARS,
+    )
 
     # 日线多头排列：价格 > MA5 > MA10 > MA20 > MA60（日 K 维度）
     long_align = False
@@ -336,6 +485,9 @@ def get_technical_summary(
         rsi_oversold=rsi_oversold,
         volume_ratio_tech=volume_ratio_tech,
         atr_pct=tech_levels.get("atr_pct"),
+        bb_summary=bb_summary,
+        obv_summary=obv_summary,
+        divergence_summary=divergence_summary,
     )
 
     return {
@@ -344,6 +496,9 @@ def get_technical_summary(
         "macd_summary": macd_summary,
         "kdj_summary": kdj_summary,
         "rsi_summary": rsi_summary,
+        "bb_summary": bb_summary,
+        "obv_summary": obv_summary,
+        "divergence_summary": divergence_summary,
         "volume_context": volume_context,
         "daily_long_align": long_align,
         "last_date": last_date_str,

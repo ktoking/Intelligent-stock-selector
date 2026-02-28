@@ -12,3 +12,5 @@ chromadb>=0.4.0
 requests>=2.28.0
 # A股选股池（可选）：沪深300 / 全A按市值
 akshare>=1.12.0
+# 每日报告脚本（可选）：周末/节假日跳过，pip install chinesecalendar
+chinesecalendar>=1.9.0

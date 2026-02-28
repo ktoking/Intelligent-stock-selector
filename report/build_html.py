@@ -120,6 +120,12 @@ def build_report_html(
         total_1m = backtest_summary.get("total_1m", 0)
         win_rate_1m_pct = backtest_summary.get("win_rate_1m_pct", 0)
         avg_return_1m_pct = backtest_summary.get("avg_return_1m_pct", 0)
+        total_2m = backtest_summary.get("total_2m", 0)
+        win_rate_2m_pct = backtest_summary.get("win_rate_2m_pct", 0)
+        avg_return_2m_pct = backtest_summary.get("avg_return_2m_pct", 0)
+        total_3m = backtest_summary.get("total_3m", 0)
+        win_rate_3m_pct = backtest_summary.get("win_rate_3m_pct", 0)
+        avg_return_3m_pct = backtest_summary.get("avg_return_3m_pct", 0)
         # 基准
         bench_us = backtest_summary.get("benchmark_avg_us_pct")
         bench_cn = backtest_summary.get("benchmark_avg_cn_pct")
@@ -154,6 +160,10 @@ def build_report_html(
             summary_line += f" 持有1周（{total_1w} 条）：胜率 {win_rate_1w_pct}%，平均 {avg_return_1w_pct:+.2f}%。"
         if total_1m:
             summary_line += f" 持有1月（{total_1m} 条）：胜率 {win_rate_1m_pct}%，平均 {avg_return_1m_pct:+.2f}%。"
+        if total_2m:
+            summary_line += f" 持有2月（{total_2m} 条）：胜率 {win_rate_2m_pct}%，平均 {avg_return_2m_pct:+.2f}%。"
+        if total_3m:
+            summary_line += f" 持有3月（{total_3m} 条）：胜率 {win_rate_3m_pct}%，平均 {avg_return_3m_pct:+.2f}%。"
         summary_line += f"<br>基准同期：{bench_line}<br>最差/最佳单只：{worst_str} / {best_str}；收益分布：{dist_line}。"
 
         # 图表：胜率对比、收益分布（纯 CSS，无外部依赖）
@@ -183,6 +193,16 @@ def build_report_html(
                             <span class="backtest-bar-label">1月</span>
                             <div class="backtest-bar-track"><div class="backtest-bar-fill {'positive' if win_rate_1m_pct >= 50 else 'negative'}" style="width:{min(100, win_rate_1m_pct)}%"></div></div>
                             <span class="backtest-bar-value {'positive' if win_rate_1m_pct >= 50 else 'negative'}">{win_rate_1m_pct}%</span>
+                        </div>
+                        <div class="backtest-bar-row">
+                            <span class="backtest-bar-label">2月</span>
+                            <div class="backtest-bar-track"><div class="backtest-bar-fill {'positive' if win_rate_2m_pct >= 50 else 'negative'}" style="width:{min(100, win_rate_2m_pct)}%"></div></div>
+                            <span class="backtest-bar-value {'positive' if win_rate_2m_pct >= 50 else 'negative'}">{win_rate_2m_pct}%</span>
+                        </div>
+                        <div class="backtest-bar-row">
+                            <span class="backtest-bar-label">3月</span>
+                            <div class="backtest-bar-track"><div class="backtest-bar-fill {'positive' if win_rate_3m_pct >= 50 else 'negative'}" style="width:{min(100, win_rate_3m_pct)}%"></div></div>
+                            <span class="backtest-bar-value {'positive' if win_rate_3m_pct >= 50 else 'negative'}">{win_rate_3m_pct}%</span>
                         </div>
                     </div>
                 </div>
@@ -239,6 +259,8 @@ def build_report_html(
             ret = r.get("return_pct")
             ret_1w = r.get("return_1w_pct")
             ret_1m = r.get("return_1m_pct")
+            ret_2m = r.get("return_2m_pct")
+            ret_3m = r.get("return_3m_pct")
             bench_ret = r.get("benchmark_return_pct")
             days = r.get("holding_days")
             triggered = r.get("triggered_exit") is True
@@ -252,19 +274,21 @@ def build_report_html(
             ret_str = _ret_span(ret)
             ret_1w_str = _ret_span(ret_1w)
             ret_1m_str = _ret_span(ret_1m)
+            ret_2m_str = _ret_span(ret_2m)
+            ret_3m_str = _ret_span(ret_3m)
             bench_str = _ret_span(bench_ret) if bench_ret is not None else "—"
             days_str = str(days) if days is not None else "—"
             exit_badge = '<span class="triggered-exit-badge">卖出</span>' if triggered else "—"
-            return f"<tr><td>{name}</td><td>{ticker}</td><td>{rd}</td><td>{score}</td><td>{price_then_str}</td><td>{price_now_str}</td><td>{ret_str}</td><td>{ret_1w_str}</td><td>{ret_1m_str}</td><td>{bench_str}</td><td>{days_str}</td><td>{exit_badge}</td></tr>"
+            return f"<tr><td>{name}</td><td>{ticker}</td><td>{rd}</td><td>{score}</td><td>{price_then_str}</td><td>{price_now_str}</td><td>{ret_str}</td><td>{ret_1w_str}</td><td>{ret_1m_str}</td><td>{ret_2m_str}</td><td>{ret_3m_str}</td><td>{bench_str}</td><td>{days_str}</td><td>{exit_badge}</td></tr>"
 
         visible_rows = backtest_rows[:BACKTEST_VISIBLE]
         more_rows = backtest_rows[BACKTEST_VISIBLE:]
         table_body_visible = "\n".join(_backtest_row(r) for r in visible_rows)
         if more_rows:
             table_body_more = "\n".join(_backtest_row(r) for r in more_rows)
-            thead = '<thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>持有1周</th><th>持有1月</th><th>基准同期</th><th>持有天数</th><th>跌破卖出</th></tr></thead>'
+            thead = '<thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>1周</th><th>1月</th><th>2月</th><th>3月</th><th>基准同期</th><th>持有天数</th><th>跌破卖出</th></tr></thead>'
             table_inner = table_body_visible + f"""
-            <tr class="backtest-expand-row"><td colspan="12" class="backtest-expand-cell">
+            <tr class="backtest-expand-row"><td colspan="14" class="backtest-expand-cell">
                 <details class="backtest-details">
                     <summary>展开更早 {len(more_rows)} 条</summary>
                     <table class="backtest-table backtest-table-nested">{thead}<tbody>{table_body_more}</tbody></table>
@@ -278,7 +302,7 @@ def build_report_html(
             <details class="backtest-table-details">
                 <summary class="backtest-table-summary">查看历史股票明细（{total_count} 条）</summary>
                 <table class="backtest-table">
-                    <thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>持有1周</th><th>持有1月</th><th>基准同期</th><th>持有天数</th><th>跌破卖出</th></tr></thead>
+                    <thead><tr><th>名称</th><th>代码</th><th>推荐日</th><th>评分</th><th>当时价</th><th>今日价</th><th>至今涨跌</th><th>1周</th><th>1月</th><th>2月</th><th>3月</th><th>基准同期</th><th>持有天数</th><th>跌破卖出</th></tr></thead>
                     <tbody>{table_inner}</tbody>
                 </table>
             </details>"""
@@ -297,12 +321,13 @@ def build_report_html(
     actions = sorted(set((c.get("action") or "观察").strip() for c in cards))
     markets = sorted(set((c.get("market") or "美股").strip() for c in cards)) or ["美股"]
 
+    # 默认只勾选 9/10 分与买入，便于一眼看推荐标的
     score_options = "".join(
-        f'<label class="filter-checkbox"><input type="checkbox" value="{s}" checked><span>{s}</span></label>'
+        f'<label class="filter-checkbox"><input type="checkbox" value="{s}" {"checked" if s in ("9", "10") else ""}><span>{s}</span></label>'
         for s in scores
     )
     action_options = "".join(
-        f'<label class="filter-checkbox"><input type="checkbox" value="{_escape(a)}" checked><span>{_escape(a)}</span></label>'
+        f'<label class="filter-checkbox"><input type="checkbox" value="{_escape(a)}" {"checked" if a == "买入" else ""}><span>{_escape(a)}</span></label>'
         for a in actions
     )
     market_options = "".join(
@@ -724,7 +749,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
         document.getElementById('sortSelect').addEventListener('change', filterAndSort);
         document.querySelectorAll('#scoreFilter input, #actionFilter input, #marketFilter input').forEach(cb => cb.addEventListener('change', filterAndSort));
         if (document.getElementById('directionUnchangedOnly')) document.getElementById('directionUnchangedOnly').addEventListener('change', filterAndSort);
-        document.getElementById('displayCount').textContent = totalCount;
+        filterAndSort();  // 初始应用默认筛选（9/10分+买入）
     """
 
     return f"""<!DOCTYPE html>

@@ -1,6 +1,7 @@
 """
 既往推荐追踪与回测：记录每次报告中 9/10 分且「买入」的标的，并在后续报告中展示「今日表现」与胜率统计。
 仅使用 JSONL 持久化，与 memory_store 同目录；不依赖外部 DB。
+记录条件见 config/analysis_config（RECOMMEND_MIN_SCORE、RECOMMEND_ACTION）。
 """
 import os
 import json
@@ -22,16 +23,22 @@ def _file_path() -> Path:
 
 def save_recommendation(card: Dict[str, Any], report_date: str) -> None:
     """
-    若卡片为 9 或 10 分且动作为「买入」，则追加一条推荐记录。
+    若卡片达到最低评分且动作为「买入」，则追加一条推荐记录。
+    条件见 config/analysis_config（RECOMMEND_MIN_SCORE、RECOMMEND_ACTION）。
     report_date 建议为 YYYY-MM-DD（与报告生成日一致）。
     """
+    try:
+        from config.analysis_config import RECOMMEND_MIN_SCORE, RECOMMEND_ACTION
+    except ImportError:
+        RECOMMEND_MIN_SCORE = 9
+        RECOMMEND_ACTION = "买入"
     score = card.get("score")
     try:
         s = float(score) if score is not None else 0
     except (TypeError, ValueError):
         s = 0
     action = (card.get("action") or "").strip()
-    if s < 9 or action != "买入":
+    if s < RECOMMEND_MIN_SCORE or action != RECOMMEND_ACTION:
         return
     ticker = (card.get("ticker") or "").upper().strip()
     if not ticker:
@@ -189,6 +196,8 @@ def get_past_recommendations_with_returns(
     returns: List[Optional[float]] = []
     returns_1w: List[Optional[float]] = []
     returns_1m: List[Optional[float]] = []
+    returns_2m: List[Optional[float]] = []
+    returns_3m: List[Optional[float]] = []
     bench_returns_us: List[float] = []
     bench_returns_cn: List[float] = []
     bench_returns_hk: List[float] = []
@@ -221,20 +230,32 @@ def get_past_recommendations_with_returns(
         else:
             r["triggered_exit"] = False
 
-        # 持有 1 周 / 1 月 收益
+        # 持有 1 周 / 1 月 / 2 月 / 3 月 收益
         r["return_1w_pct"] = None
         r["return_1m_pct"] = None
+        r["return_2m_pct"] = None
+        r["return_3m_pct"] = None
         if hist is not None and price_then and price_then > 0:
             d7 = report_d + timedelta(days=7)
             d30 = report_d + timedelta(days=30)
+            d60 = report_d + timedelta(days=60)
+            d90 = report_d + timedelta(days=90)
             p7 = _close_on_or_after(hist, d7)
             p30 = _close_on_or_after(hist, d30)
+            p60 = _close_on_or_after(hist, d60)
+            p90 = _close_on_or_after(hist, d90)
             if p7 is not None and r["holding_days"] >= 7:
                 r["return_1w_pct"] = round((p7 - price_then) / price_then * 100, 2)
                 returns_1w.append(r["return_1w_pct"])
             if p30 is not None and r["holding_days"] >= 30:
                 r["return_1m_pct"] = round((p30 - price_then) / price_then * 100, 2)
                 returns_1m.append(r["return_1m_pct"])
+            if p60 is not None and r["holding_days"] >= 60:
+                r["return_2m_pct"] = round((p60 - price_then) / price_then * 100, 2)
+                returns_2m.append(r["return_2m_pct"])
+            if p90 is not None and r["holding_days"] >= 90:
+                r["return_3m_pct"] = round((p90 - price_then) / price_then * 100, 2)
+                returns_3m.append(r["return_3m_pct"])
 
         # 基准同期收益
         market = (r.get("market") or "美股").strip()
@@ -277,11 +298,15 @@ def get_past_recommendations_with_returns(
     recent_win_count = sum(1 for x in recent_returns if x > 0)
     recent_win_rate_pct = round(recent_win_count / len(recent_returns) * 100, 1) if recent_returns else 0.0
 
-    # 1 周 / 1 月 胜率与平均收益
+    # 1 周 / 1 月 / 2 月 / 3 月 胜率与平均收益
     total_1w = len(returns_1w)
     win_count_1w = sum(1 for x in returns_1w if x > 0)
     total_1m = len(returns_1m)
     win_count_1m = sum(1 for x in returns_1m if x > 0)
+    total_2m = len(returns_2m)
+    win_count_2m = sum(1 for x in returns_2m if x > 0)
+    total_3m = len(returns_3m)
+    win_count_3m = sum(1 for x in returns_3m if x > 0)
 
     # 风险：最差收益、最佳收益、收益分布
     worst_return_pct = min(valid_returns) if valid_returns else None
@@ -310,6 +335,14 @@ def get_past_recommendations_with_returns(
         "win_count_1m": win_count_1m,
         "win_rate_1m_pct": round(win_count_1m / total_1m * 100, 1) if total_1m else 0.0,
         "avg_return_1m_pct": round(sum(returns_1m) / len(returns_1m), 2) if returns_1m else 0.0,
+        "total_2m": total_2m,
+        "win_count_2m": win_count_2m,
+        "win_rate_2m_pct": round(win_count_2m / total_2m * 100, 1) if total_2m else 0.0,
+        "avg_return_2m_pct": round(sum(returns_2m) / len(returns_2m), 2) if returns_2m else 0.0,
+        "total_3m": total_3m,
+        "win_count_3m": win_count_3m,
+        "win_rate_3m_pct": round(win_count_3m / total_3m * 100, 1) if total_3m else 0.0,
+        "avg_return_3m_pct": round(sum(returns_3m) / len(returns_3m), 2) if returns_3m else 0.0,
         "benchmark_avg_us_pct": round(sum(bench_returns_us) / len(bench_returns_us), 2) if bench_returns_us else None,
         "benchmark_avg_cn_pct": round(sum(bench_returns_cn) / len(bench_returns_cn), 2) if bench_returns_cn else None,
         "benchmark_avg_hk_pct": round(sum(bench_returns_hk) / len(bench_returns_hk), 2) if bench_returns_hk else None,

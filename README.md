@@ -85,6 +85,25 @@ python server.py
 - **深度模式**（`deep=1`）：依赖 LangChain（`langchain-core`、`langchain-openai`）；会跑 ①②③④⑤ 并做「与上次对比」，且对综合评分做一次轻量 LLM 微调。深度分析默认并行执行以缩短耗时；可设 `DEEP_PARALLEL=0` 改为顺序。
 - **既往推荐追踪与胜率**：每次报告中 9/10 分且「买入」的标会自动写入 `data/memory/recommendations.jsonl`；下次报告会拉取过去 30 天内这些推荐标的的「今日价」并计算涨跌幅与持有天数，在报告顶部展示「既往推荐表现」表格及胜率/平均涨跌幅，相当于轻量回测。
 
+### 每日定时报告（9 点自动跑三份）
+
+脚本 `scripts/daily_report.py` 可每日自动跑三份报告：**美股 SP500 100 只**、**A 股中证 2000 100 只**、**港股恒指 100 只**，`deep=0` 不跑深度分析。
+
+**前置**：服务需已启动（`python server.py`），可配合 systemd / screen 常驻。**周末及中国法定节假日自动跳过**（可 `--force` 强制执行）；节假日判断需 `pip install chinese_calendar`。
+
+```bash
+# 手动执行
+python scripts/daily_report.py
+
+# 定时（crontab -e 添加）
+0 9 * * * cd /path/to/stock-agent && python scripts/daily_report.py
+
+# 周末/节假日强制运行
+python scripts/daily_report.py --force
+```
+
+报告保存到 `report/output/report-MMDD-HHMM.html`，三份会按完成时间生成不同文件名。
+
 ### 评分说明（详细）
 
 报告里的 **评分** 为 **10～1 分制**（10 最强、1 最弱），由两阶段组成。

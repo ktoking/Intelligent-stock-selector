@@ -76,6 +76,9 @@ def _build_prompt(
         ms = t.get("macd_summary") or {}
         ks = t.get("kdj_summary") or {}
         rs = t.get("rsi_summary") or {}
+        bb = t.get("bb_summary") or {}
+        obv = t.get("obv_summary") or {}
+        div = t.get("divergence_summary") or {}
         vc = t.get("volume_context") or {}
         long_align = t.get("daily_long_align", False)
         k_label = "日K" if interval == "1d" else f"{interval}分K"
@@ -100,6 +103,15 @@ K: {ks.get('k')}  D: {ks.get('d')}  J: {ks.get('j')}
 
 【RSI】
 RSI: {rs.get('rsi')}  超买(>70): {rs.get('overbought')}  超卖(<30): {rs.get('oversold')}
+
+【布林带】
+上轨: {bb.get('upper')}  中轨: {bb.get('middle')}  下轨: {bb.get('lower')}  位置%: {bb.get('bollinger_pct')}  上轨上方: {bb.get('above_upper')}  下轨下方: {bb.get('below_lower')}
+
+【OBV】
+OBV: {obv.get('obv')}  OBV均线: {obv.get('obv_ma')}  量价配合(OBV>均线): {obv.get('obv_above_ma')}
+
+【背离】
+MACD顶背离: {div.get('macd_top')}  MACD底背离: {div.get('macd_bottom')}  RSI顶背离: {div.get('rsi_top')}  RSI底背离: {div.get('rsi_bottom')}
 
 【量能】
 量比(近期/20日均量): {vc.get('volume_ratio')}  20日均量: {vc.get('volume_ma20')}
@@ -151,16 +163,18 @@ ATR%: {atr_pct}%（ATR/收盘价×100，用于止损与仓位参考）
     return f"""
 你是一位{role}。请以{time_scope}，根据下面【技术面】【消息面】【财报/估值/期权】数据，用中文输出以下 10 项，每项单独一行，格式严格如下（不要多写其他内容）：
 
+【评分与动作要求】9分应极少给出，每份报告建议不超过3只；10分保留给极罕见的最优标的。加仓价、减仓价必须与上方【技术面入场/离场参考】中的 entry_note、exit_note 一致或在其基础上略作说明。
+
 核心结论：<一句话总结该标的当前是否值得关注及主要理由>
 趋势结构：<一句话描述{trend_hint}>
 MACD状态：<一句话描述MACD位置与金叉死叉>
 KDJ状态：<一句话描述超买超卖与钝化>
 分析原因：<2-4句综合结论，可结合PE、期权多空、均线排列>
-评分：<10-1的数字，仅数字，10=最强 1=最弱>
+评分：<10-1的数字，仅数字，10=最强 1=最弱；9分需基本面+技术面+消息面全方位优秀>
 评分理由：<一句话说明为何给该评分，如 均线多头+PE合理+期权偏多 或 技术承压+估值偏高>
 交易动作：<仅填其一：买入 / 观察 / 离场。偏多或可加仓填「买入」，偏空或减仓填「离场」，不确定填「观察」。>
-加仓价格：<尽量根据上方【技术面入场/离场参考】给出具体价位数字，如 185.50；仅当确实无参考或无法给出时填“—”—>
-减仓价格：<尽量根据上方离场参考（跌破MA20/MA60等）给出具体价位数字；仅当确实无参考时填“—”—>
+加仓价格：<必须与上方【入场参考】entry_note 一致或在其基础上给出具体价位；无参考时填“—”—>
+减仓价格：<必须与上方【离场参考】exit_note 一致或在其基础上给出具体价位；无参考时填“—”—>
 
 {rag_context + chr(10) + chr(10) if rag_context and rag_context.strip() else ""}【技术面】
 {tech_text}

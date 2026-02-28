@@ -40,3 +40,11 @@
 {"ticker": "MCD", "report_date": "2026-02-27", "score": 9.0, "action": "买入", "price_at_report": 334.53, "name": "McDonald's Corporation", "market": "美股"}
 {"ticker": "600309.SS", "report_date": "2026-02-27", "score": 9.0, "action": "买入", "price_at_report": 92.52, "name": "WANHUA CHEMICAL GROUP CO LTD", "market": "A股"}
 {"ticker": "2899.HK", "report_date": "2026-02-27", "score": 9.0, "action": "买入", "price_at_report": 44.94, "reduce_price": null, "name": "ZIJIN MINING", "market": "港股"}
+{"ticker": "CVX", "report_date": "2026-02-28", "score": 9.0, "action": "买入", "price_at_report": 186.76, "reduce_price": null, "name": "Chevron Corporation", "market": "美股"}
+{"ticker": "KO", "report_date": "2026-02-28", "score": 9.0, "action": "买入", "price_at_report": 81.56, "reduce_price": null, "name": "Coca-Cola Company (The)", "market": "美股"}
+{"ticker": "SYK", "report_date": "2026-02-28", "score": 9.0, "action": "买入", "price_at_report": 387.46, "reduce_price": null, "name": "Stryker Corporation", "market": "美股"}
+{"ticker": "NOC", "report_date": "2026-02-28", "score": 9.0, "action": "买入", "price_at_report": 724.38, "reduce_price": null, "name": "Northrop Grumman Corporation", "market": "美股"}
+{"ticker": "VLO", "report_date": "2026-02-28", "score": 9.0, "action": "买入", "price_at_report": 204.64, "reduce_price": null, "name": "Valero Energy Corporation", "market": "美股"}
+{"ticker": "002008.SZ", "report_date": "2026-02-28", "score": 10.0, "action": "买入", "price_at_report": 72.3, "reduce_price": 67.26, "name": "HAN'S LASER TECHNO", "market": "A股"}
+{"ticker": "002916.SZ", "report_date": "2026-02-28", "score": 10.0, "action": "买入", "price_at_report": 285.46, "reduce_price": null, "name": "SHENNAN CIRCUITS C", "market": "A股"}
+{"ticker": "600309.SS", "report_date": "2026-02-28", "score": 10.0, "action": "买入", "price_at_report": 93.0, "reduce_price": null, "name": "WANHUA CHEMICAL GROUP CO LTD", "market": "A股"}

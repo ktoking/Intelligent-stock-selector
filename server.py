@@ -149,13 +149,14 @@ def _run_report_impl(
                 report_summary = report_summary.strip()
         except Exception as e:
             print(f"[Report] 报告总览 LLM 调用失败: {e}", flush=True)
-    # 既往推荐追踪：记录本期 9/10 分且「买入」的标的，并拉取过去 N 天推荐的表现与胜率
+    # 既往推荐追踪：记录本期 9/10 分且「买入」的标的（每份报告最多 3 条），并拉取过去 N 天推荐的表现与胜率
     report_date = gen_time[:10]
     try:
         from data.recommendations import save_recommendation, get_past_recommendations_with_returns
-        for c in cards:
+        buy_9_10 = [c for c in cards if (c.get("score") or 0) >= 9 and (c.get("action") or "").strip() == "买入"]
+        for c in buy_9_10[:3]:  # 每份报告最多记录 3 条
             save_recommendation(c, report_date)
-        backtest_rows, backtest_summary = get_past_recommendations_with_returns(since_days=30)
+        backtest_rows, backtest_summary = get_past_recommendations_with_returns(since_days=90)
     except Exception as e:
         print(f"[Report] 既往推荐追踪失败: {e}", flush=True)
         backtest_rows, backtest_summary = [], {}
