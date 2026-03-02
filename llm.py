@@ -3,7 +3,7 @@ LLM 调用：默认使用本地免费的 Ollama，可选 DeepSeek 等云端 API�
 
 免费用法（推荐）：
   1. 安装 Ollama：https://ollama.com
-  2. 拉取模型：ollama pull qwen2.5  或  ollama pull llama3.2
+  2. 拉取模型：ollama pull qwen2.5:7b  或  ollama pull qwen2.5
   3. 不设置任何 API Key，直接运行 python main.py
 
 云端用法（需付费/配额）：
@@ -45,8 +45,8 @@ elif _openai_key and _backend not in ("ollama", "deepseek"):
 else:
     # 默认：Ollama 本地，免费，无需 API Key
     client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama", timeout=_LLM_TIMEOUT)
-    # qwen2.5:3b 轻量够用；追求更好效果可改为 qwen2.5:7b / qwen2.5:14b（ollama pull qwen2.5:7b）
-    DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:3b").strip() or "qwen2.5:3b"
+    # qwen2.5:7b 平衡效果与速度；轻量可改为 qwen2.5:3b，追求更好可改为 qwen2.5:14b（ollama pull qwen2.5:7b）
+    DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b").strip() or "qwen2.5:7b"
 
 
 def ask_llm(system, user, model=None, temperature=None, max_tokens=None):
@@ -73,7 +73,7 @@ def ask_llm(system, user, model=None, temperature=None, max_tokens=None):
             raise RuntimeError(
                 "无法连接 Ollama。请先安装并启动 Ollama，并拉取模型：\n"
                 "  https://ollama.com\n"
-                "  ollama pull qwen2.5"
+                "  ollama pull qwen2.5:7b"
             ) from e
         if "429" in err_msg or "quota" in err_msg.lower() or "insufficient_quota" in err_msg.lower():
             raise RuntimeError(

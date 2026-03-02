@@ -153,6 +153,10 @@ def get_past_recommendations_with_returns(
     rows.sort(key=lambda x: x.get("report_date") or "", reverse=True)
 
     try:
+        import logging
+        _yf_log = logging.getLogger("yfinance")
+        _yf_log.setLevel(logging.ERROR)
+        _yf_log.propagate = False
         import yfinance as yf
     except Exception:
         for r in rows:

@@ -59,7 +59,7 @@ def get_llm() -> BaseChatModel:
             **common,
         )
     else:
-        model = os.environ.get("OLLAMA_MODEL", "qwen2.5:3b").strip() or "qwen2.5:3b"
+        model = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b").strip() or "qwen2.5:7b"
         _llm_instance = ChatOpenAI(
             base_url="http://localhost:11434/v1",
             api_key="ollama",

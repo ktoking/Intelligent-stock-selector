@@ -48,3 +48,9 @@
 {"ticker": "002008.SZ", "report_date": "2026-02-28", "score": 10.0, "action": "买入", "price_at_report": 72.3, "reduce_price": 67.26, "name": "HAN'S LASER TECHNO", "market": "A股"}
 {"ticker": "002916.SZ", "report_date": "2026-02-28", "score": 10.0, "action": "买入", "price_at_report": 285.46, "reduce_price": null, "name": "SHENNAN CIRCUITS C", "market": "A股"}
 {"ticker": "600309.SS", "report_date": "2026-02-28", "score": 10.0, "action": "买入", "price_at_report": 93.0, "reduce_price": null, "name": "WANHUA CHEMICAL GROUP CO LTD", "market": "A股"}
+{"ticker": "XOM", "report_date": "2026-03-02", "score": 9.0, "action": "买入", "price_at_report": 152.5, "reduce_price": 146.71, "name": "Exxon Mobil Corporation", "market": "美股"}
+{"ticker": "JNJ", "report_date": "2026-03-02", "score": 9.0, "action": "买入", "price_at_report": 248.43, "reduce_price": null, "name": "Johnson & Johnson", "market": "美股"}
+{"ticker": "PG", "report_date": "2026-03-02", "score": 9.0, "action": "买入", "price_at_report": 167.2, "reduce_price": null, "name": "Procter & Gamble Company (The)", "market": "美股"}
+{"ticker": "300316.SZ", "report_date": "2026-03-02", "score": 9.0, "action": "买入", "price_at_report": 55.75, "reduce_price": null, "name": "ZHEJIANG JINGSHENG", "market": "A股"}
+{"ticker": "002271.SZ", "report_date": "2026-03-02", "score": 9.0, "action": "买入", "price_at_report": 19.1, "reduce_price": 15.15, "name": "BEIJING ORIENTAL Y", "market": "A股"}
+{"ticker": "600309.SS", "report_date": "2026-03-02", "score": 9.0, "action": "买入", "price_at_report": 92.73, "reduce_price": null, "name": "WANHUA CHEMICAL GROUP CO LTD", "market": "A股"}
