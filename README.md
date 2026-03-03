@@ -83,6 +83,29 @@ python server.py
 | 分 K 超短线（15 分钟 K） | `/report?interval=15m&limit=10` |
 | 日 K + 盘前盘后涨跌幅 | `/report?interval=1d&prepost=1&limit=5` |
 
+### 报告生成流程
+
+```
+1. 解析参数 → 得到标的列表 ticker_list（传 tickers 或按 market+pool 取池）
+2. 对 ticker_list 逐只执行「单只分析」→ 得到多张「卡片」cards
+3. 用 LLM 根据所有卡片生成「报告总览」report_summary
+4. 既往推荐追踪：本期 9/10 分且「买入」写入记录，拉取过去 N 天推荐表现（胜率、收益、基准对比）
+5. 用 build_report_html 生成最终 HTML
+6. 可选：将本期卡片同步写入 RAG 向量库
+7. 返回 HTML；若 save_output=1 则另存 report/output/report-MMDD-HHMM.html
+```
+
+**单只分析**（按 `deep` 二选一）：
+
+| 模式 | 调用 | 流程 |
+|------|------|------|
+| **deep=0**（常规，快） | `run_full_analysis` | ① 技术面 ② 消息面 ③ 财报/估值 ④ 期权 ⑤ 可选 RAG → 拼 Prompt → 一次 LLM → 解析 10 项 → 卡片 |
+| **deep=1**（深度，慢） | `run_one_ticker_deep_report` | 先跑 deep=0 得基础卡片 → ⑤ 五类深度分析（①②③④⑤）→ 与上次对比 → LLM 评分微调 → 富卡片 |
+
+**常规模式数据流**：技术面（均线/MACD/KDJ/RSI/布林带/OBV/背离/量比）→ 消息面（新闻+LLM摘要）→ 财报（info+LLM解读）→ 期权多空 → 拼成【技术面】【消息面】【财报/估值/期权】→ LLM 输出 10 项（核心结论、趋势、MACD/KDJ、分析原因、评分、评分理由、交易动作、加仓价、减仓价）。
+
+> 完整流程详见 [docs/Report流程说明.md](docs/Report流程说明.md)
+
 ### 报告行为说明
 
 - **自动保存**：每次生成后会将 HTML 写入 `report/output/report-MMDD-HHMM.html`（如 `report-0130-1432.html`），无需手动下载。
@@ -122,8 +145,8 @@ python scripts/daily_report.py --force
 **1）综合评分（必做）**
 
 - 每只标的先拉取：**技术面**（均线、MACD、KDJ、RSI、布林带、OBV、背离、量比、入场/离场参考）、**消息面**（近期新闻约 5 条）、**财报/估值/期权**（公司、行业、市值、当前价、涨跌幅、PE、期权多空、财报摘要前 800 字）。
-- 上述内容拼成一段 **User Prompt**，再配上 **System**：「你是多维度分析师，按 9 项格式输出」。
-- 模型输出 9 项，其中一项为 **「评分：&lt;10-1 的数字&gt;」**。
+- 上述内容拼成一段 **User Prompt**，再配上 **System**：「你是多维度分析师，按 10 项格式输出」。
+- 模型输出 10 项，其中一项为 **「评分：&lt;10-1 的数字&gt;」**。
 - 代码从该行解析出数字，并 **截断到 [1, 10]**；若解析失败则用默认 **5**。  
 → 也就是说：**分数完全由 LLM 根据「技术 + 消息 + 财报/估值/期权」综合给出**，没有公式或规则分，只有 Prompt 里的「10=最强、1=最弱」的说明。
 
