@@ -1,7 +1,12 @@
-**筛选器**
-<img width="3160" height="1828" alt="image" src="https://github.com/user-attachments/assets/021529d0-9271-425b-b8fc-1ec35d008c09" />
-**整体分析**
-<img width="1584" height="1918" alt="image" src="https://github.com/user-attachments/assets/b3cc99a8-43a3-4db6-92ef-927d22478cae" />
+**页面预览**
+![img.png](img.png)
+
+**具体分析**
+![img_1.png](img_1.png)
+
+**回测管理**
+![img_2.png](img_2.png)
+
 
 ---
 
@@ -48,11 +53,12 @@ python server.py
 | **limit** | 不传 tickers 时取的数量 | 5 |
 | **market** | 市场：`us` 美股 / `cn` A股 / `hk` 港股 | us |
 | **pool** | 选股池：不传或 `sp500` 大盘；`nasdaq100` 纳斯达克100；`russell2000` 美股小盘；`csi2000` A股小盘；`hsi` 恒指；`hstech` 恒科 | — |
-
-选股池**优先从线上拉取**（Wikipedia 等）：纳斯达克100、恒生指数、恒生科技指数、沪深300、罗素2000（若有表）会先尝试线上成分表，失败再回退到项目内静态列表；美股大盘 `limit>10` 仍从 S&P 500 线上拉取后按市值+近期增长排序。`limit` 上限已放宽到 500，便于做全量或大批量分析。
 | **deep** | 1=每只跑深度分析①②③④⑤+与上次对比；0=仅技术+消息+财报+期权+综合评分 | 0 |
 | **interval** | K 线：`1d` 日 K；`5m`/`15m`/`10m`/`1m` 分 K（10m 内部用 15m） | 1d |
 | **prepost** | 1=含盘前盘后（日 K 时涨跌幅为盘前/盘后价） | 0 |
+| **save_output** | 1=将 HTML 保存到 report/output/；0=不保存 | 1 |
+
+选股池**优先从线上拉取**（Wikipedia 等）：纳斯达克100、恒生指数、恒生科技指数、沪深300、罗素2000（若有表）会先尝试线上成分表，失败再回退到项目内静态列表；美股大盘 `limit>10` 仍从 S&P 500 线上拉取后按市值+近期增长排序。`limit` 上限已放宽到 500，便于做全量或大批量分析。
 
 ### 股票代码格式
 
@@ -95,8 +101,13 @@ python server.py
 # 手动执行
 python scripts/daily_report.py
 
-# 定时（crontab -e 添加）
+# 定时（crontab -e 添加，路径按需修改）
 0 9 * * * cd /path/to/stock-agent && python scripts/daily_report.py
+
+# macOS 推荐用 LaunchAgent（详见 scripts/README_定时任务.md）
+cp scripts/com.stock-agent.server.plist scripts/com.stock-agent.daily.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.stock-agent.server.plist
+launchctl load ~/Library/LaunchAgents/com.stock-agent.daily.plist
 
 # 周末/节假日强制运行
 python scripts/daily_report.py --force
@@ -110,7 +121,7 @@ python scripts/daily_report.py --force
 
 **1）综合评分（必做）**
 
-- 每只标的先拉取：**技术面**（均线、MACD、KDJ、入场/离场参考）、**消息面**（近期新闻约 5 条）、**财报/估值/期权**（公司、行业、市值、当前价、涨跌幅、PE、期权多空、财报摘要前 800 字）。
+- 每只标的先拉取：**技术面**（均线、MACD、KDJ、RSI、布林带、OBV、背离、量比、入场/离场参考）、**消息面**（近期新闻约 5 条）、**财报/估值/期权**（公司、行业、市值、当前价、涨跌幅、PE、期权多空、财报摘要前 800 字）。
 - 上述内容拼成一段 **User Prompt**，再配上 **System**：「你是多维度分析师，按 9 项格式输出」。
 - 模型输出 9 项，其中一项为 **「评分：&lt;10-1 的数字&gt;」**。
 - 代码从该行解析出数字，并 **截断到 [1, 10]**；若解析失败则用默认 **5**。  
@@ -132,7 +143,7 @@ python scripts/daily_report.py --force
 **小结**
 
 - **谁在评**：综合评分 = 一次 LLM（技术+消息+财报+期权）；深度微调 = 再一次 LLM（五段深度摘要）。
-- **依据什么**：综合阶段看的是均线/MACD/K DJ、新闻、市值/PE/涨跌幅/期权/财报摘要；微调阶段看的是五段深度摘要的短文。
+- **依据什么**：综合阶段看的是均线/MACD/KDJ/RSI、新闻、市值/PE/涨跌幅/期权/财报摘要；微调阶段看的是五段深度摘要的短文。
 - **分数范围**：始终 1～10，解析后会做截断；无公式，全靠模型在 Prompt 约束下输出。
 
 ---
@@ -198,10 +209,22 @@ nohup python server.py > server.log 2>&1 &
 |------|------|
 | 温度、max_tokens、PROMPT_TONE | `config/llm_config.py` |
 | 模型/后端/超时 | `llm.py` |
-| Report 9 项格式与综合 Prompt | `agents/full_analysis.py` |
+| Report 10 项格式与综合 Prompt | `agents/full_analysis.py` |
 | 深度分析 ①②③④⑤ 模板 | `agents/prompts.py`、`chains/chains.py` |
 | 选股池、A股/港股代码规范化 | `config/tickers.py` |
+| 技术指标参数、ATR 止损、放量突破阈值 | `config/analysis_config.py` |
 | 报告 HTML 与筛选逻辑 | `report/build_html.py` |
+
+---
+
+## 文档
+
+| 文档 | 说明 |
+|------|------|
+| [docs/技术指标说明与智能体提示词.md](docs/技术指标说明与智能体提示词.md) | 技术指标定义、计算方式、解读规则、智能体提示词 |
+| [docs/Report流程说明.md](docs/Report流程说明.md) | 报告生成完整流程、数据来源、工具调用 |
+| [docs/blog/](docs/blog/) | 从背景到实现的博客式教程 |
+| [scripts/README_定时任务.md](scripts/README_定时任务.md) | 每日定时报告配置（LaunchAgent / crontab） |
 
 ---
 

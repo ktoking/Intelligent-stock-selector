@@ -88,12 +88,12 @@
 
 **做什么**：
 
-- 计算 **均线** MA5/10/20/60，**MACD(12,26,9)**，**KDJ(9,3,3)**，**RSI(14)**，**ATR(14)** 与 **ATR%**。
+- 计算 **均线** MA5/10/20/60，**MACD(12,26,9)**，**KDJ(9,3,3)**，**RSI(14)**，**ATR(14)** 与 **ATR%**，**布林带**，**OBV 能量潮**，**MACD/RSI 背离**。
 - 算 **量能**：近期成交量 / 20 日均量（量比）。
-- 生成 **一句技术面状态摘要**（如：日线多头排列；MACD金叉；KDJ中性；RSI中性(45)；量比1.2；ATR%2.5%）。
+- 生成 **一句技术面状态摘要**（如：日线多头排列；MACD金叉；KDJ中性；RSI中性(45)；布林带60%；量比1.2；ATR%2.5%；顶背离）。
 - 按可配置规则生成 **入场/离场参考**（MA20/MA60、ATR 止损倍数、放量突破阈值等）。
 
-**输出**：`technical` dict（trend_ma, macd_summary, kdj_summary, rsi_summary, volume_context, tech_levels, tech_status_one_line 等），供后面拼进 Prompt。
+**输出**：`technical` dict（trend_ma, macd_summary, kdj_summary, rsi_summary, bb_summary, obv_summary, divergence_summary, volume_context, tech_levels, tech_status_one_line 等），供后面拼进 Prompt。
 
 ### 2. 消息面（agents/news.py）
 
@@ -143,7 +143,7 @@
 
 **怎么做**：
 
-- 把上述 **技术面一句摘要 + 均线/MACD/KDJ/RSI/量能/ATR% + 入场离场参考**、**消息面（含 LLM 新闻摘要）**、**财报/估值/期权**、**RAG 历史** 拼成一大段 **【技术面】【消息面】【财报/估值/期权】** 的 Prompt。
+- 把上述 **技术面一句摘要 + 均线/MACD/KDJ/RSI/布林带/OBV/背离/量能/ATR% + 入场离场参考**、**消息面（含 LLM 新闻摘要）**、**财报/估值/期权**、**RAG 历史** 拼成一大段 **【技术面】【消息面】【财报/估值/期权】** 的 Prompt。
 - **System**：要求 LLM 按固定 10 项格式输出（核心结论、趋势结构、MACD状态、KDJ状态、分析原因、评分、评分理由、交易动作、加仓价格、减仓价格）。
 - **调用**：优先 **LangChain with_structured_output(FullAnalysisOutput)**（Pydantic），失败则 **ask_llm**（Ollama/OpenAI 等）+ 按行解析。
 
