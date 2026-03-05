@@ -7,9 +7,11 @@ import warnings
 warnings.filterwarnings("ignore", module="urllib3")
 
 import os
+import subprocess
+import sys
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 
 from fastapi import FastAPI, HTTPException, Query, Body, WebSocket
@@ -40,6 +42,7 @@ from config.tickers import (
     MARKET_HK,
     POOL_NASDAQ100,
     POOL_SMALL_US,
+    POOL_CSI300,
     POOL_SMALL_CN,
 )
 from report.build_html import build_report_html
@@ -115,6 +118,8 @@ def _run_report_impl(
         pool_label = "纳斯达克100"
     elif pool == POOL_SMALL_US:
         pool_label = "小盘/潜力股（罗素2000）"
+    elif pool == POOL_CSI300:
+        pool_label = "沪深300"
     elif pool == POOL_SMALL_CN:
         pool_label = "小盘/潜力股（中证2000）"
     prefix = f"{market_label}{pool_label}" if pool_label else market_label
@@ -179,6 +184,63 @@ def _run_report_impl(
 app = FastAPI(title="Stock Agent", description="美股基本面分析（默认本地 Ollama）")
 
 
+def _seconds_until_9am() -> float:
+    """计算距离下一个 9:00 的秒数（本地时间）。"""
+    now = datetime.now()
+    today_9am = now.replace(hour=9, minute=0, second=0, microsecond=0)
+    if now >= today_9am:
+        today_9am += timedelta(days=1)
+    return (today_9am - now).total_seconds()
+
+
+def _run_daily_report_job() -> None:
+    """执行每日报告脚本（子进程，复用 scripts/daily_report.py 逻辑）。"""
+    root = os.path.dirname(os.path.abspath(__file__))
+    script = os.path.join(root, "scripts", "daily_report.py")
+    if not os.path.isfile(script):
+        print("[DailyReport] 未找到 scripts/daily_report.py，跳过", flush=True)
+        return
+    try:
+        proc = subprocess.run(
+            [sys.executable, script],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=21600,  # 3 份报告最多 6 小时
+        )
+        if proc.stdout:
+            print(f"[DailyReport] stdout: {proc.stdout[:500]}", flush=True)
+        if proc.stderr:
+            print(f"[DailyReport] stderr: {proc.stderr[:500]}", flush=True)
+        if proc.returncode != 0:
+            print(f"[DailyReport] 退出码 {proc.returncode}", flush=True)
+        else:
+            print("[DailyReport] 完成", flush=True)
+    except subprocess.TimeoutExpired:
+        print("[DailyReport] 超时", flush=True)
+    except Exception as e:
+        print(f"[DailyReport] 异常: {e}", flush=True)
+
+
+def _daily_report_scheduler_loop() -> None:
+    """后台线程：每天 9 点执行 daily_report.py，跨平台不依赖 crontab。"""
+    while True:
+        secs = _seconds_until_9am()
+        print(f"[DailyReport] 下次执行: {datetime.now() + timedelta(seconds=secs)}", flush=True)
+        time.sleep(secs)
+        print("[DailyReport] 开始执行", flush=True)
+        _run_daily_report_job()
+
+
+@app.on_event("startup")
+def _startup_daily_scheduler() -> None:
+    """启动内置 9 点定时任务（纯 Python，不依赖 crontab）。设 DAILY_REPORT_SCHEDULE=0 可关闭。"""
+    if os.environ.get("DAILY_REPORT_SCHEDULE", "1").strip() != "0":
+        t = threading.Thread(target=_daily_report_scheduler_loop, daemon=True)
+        t.start()
+        print("[DailyReport] 已启用内置定时任务（每天 9:00）", flush=True)
+
+
 @app.websocket("/socketcluster/")
 async def websocket_socketcluster(websocket: WebSocket):
     """兼容浏览器扩展等对 /socketcluster/ 的 WebSocket 请求，接受后立即关闭，避免 403 刷屏。"""
@@ -194,7 +256,7 @@ def root():
         "health": "/health",
         "report_page": "GET /report/page 报告在线页：打开后点「生成报告」即可在此页看到进度与结果，无需复制到浏览器",
         "analyze": "/analyze?ticker=AAPL",
-        "report": "/report?limit=5&market=us（美股）或 market=cn（A股）或 market=hk（港股）；pool=nasdaq100（纳斯达克100）/ russell2000（美股小盘）/ csi2000（A股小盘）；?tickers=600519.SS,0700.HK 可混用",
+        "report": "/report?limit=5&market=us（美股）或 market=cn（A股）或 market=hk（港股）；pool=nasdaq100/csi300/csi2000/russell2000；?tickers=600519.SS,0700.HK 可混用",
         "report_progress": "GET /report/progress 轮询查看报告生成进度（当前第几只、成功数、失败列表）",
         "深度分析（6 类）": {
             "1_基本面深度": "GET /analyze/deep?ticker=AAPL",
@@ -395,7 +457,7 @@ def report_page(
     interval: str = Query("1d", description="K线周期：1d=日K，5m/15m/10m/1m=分K（10m 用 15m 数据）"),
     prepost: int = Query(0, description="是否含盘前盘后：0=否，1=是（分K时常用）"),
     market: str = Query("us", description="市场选股：us=美股，cn=A股，hk=港股（不传 tickers 时生效）"),
-    pool: str = Query("", description="选股池：不传或 sp500=大盘；nasdaq100=纳斯达克100；russell2000=美股小盘；csi2000=A股小盘；hsi=恒指；hstech=恒科，不传 tickers 时生效"),
+    pool: str = Query("", description="选股池：不传或 sp500=大盘；nasdaq100=纳斯达克100；russell2000=美股小盘；csi300=A股沪深300；csi2000=A股中证2000；hsi=恒指；hstech=恒科，不传 tickers 时生效"),
     save_output: int = Query(1, description="1=将报告 HTML 保存到 report/output/；0=不保存（前端页面触发时传 0）"),
 ):
     """
@@ -403,7 +465,7 @@ def report_page(
     deep=0：每只仅做技术面+消息面+财报+期权+一次 LLM 综合（快）。
     deep=1：每只额外跑 ①②③④⑤ 深度分析（仅日K），结合记忆做「与上次对比」。
     market=us/cn/hk：不传 tickers 时从对应市场池取前 limit 只。
-    pool=sp500（默认）/ nasdaq100（纳斯达克100）/ russell2000（美股小盘）/ csi2000（A股小盘）：不传 tickers 时生效。
+    pool=sp500（默认）/ nasdaq100 / russell2000（美股小盘）/ csi300（A股沪深300）/ csi2000（A股中证2000）：不传 tickers 时生效。
     interval=1d：日K；interval=5m/15m/10m/1m：分K超短线（10m 以 15m 数据代替）。prepost=1：含盘前盘后。
     进度可轮询 GET /report/progress。
     """

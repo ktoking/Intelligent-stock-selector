@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-每日定时跑三份报告：SP500 100只、A股中证2000 100只、港股恒指 100只。
+每日定时跑四份报告：美股SP500、A股沪深300、A股中证2000、港股恒指，各 100 只。
 deep=0（不跑深度分析），报告保存到 report/output/。
 周末及中国法定节假日自动跳过（可 --force 强制执行）。
 
@@ -42,6 +42,7 @@ def _should_skip_today(force: bool) -> bool:
 
 JOBS = [
     {"market": "us", "pool": "sp500", "limit": 100, "label": "美股SP500"},
+    {"market": "cn", "pool": "csi300", "limit": 100, "label": "A股沪深300"},
     {"market": "cn", "pool": "csi2000", "limit": 100, "label": "A股中证2000"},
     {"market": "hk", "pool": "hsi", "limit": 100, "label": "港股恒指"},
 ]
@@ -66,7 +67,7 @@ def main():
         label = job.get("label", "")
         params = {k: v for k, v in job.items() if k != "label"}
         params.update(limit=limit, deep=0, save_output=1)
-        print(f"[{i + 1}/3] 开始: {label} (market={params['market']} pool={params['pool']} limit={params['limit']})", flush=True)
+        print(f"[{i + 1}/{len(JOBS)}] 开始: {label} (market={params['market']} pool={params['pool']} limit={params['limit']})", flush=True)
         try:
             r = requests.get(f"{base}/report", params=params, timeout=args.timeout)
             if r.status_code != 200:

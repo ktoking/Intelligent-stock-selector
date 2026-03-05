@@ -117,13 +117,19 @@ def get_hstech_tickers_from_web() -> Optional[List[str]]:
 
 # ---------- A股选股池：AKShare（可选依赖），失败返回 None ----------
 
+# 指数代码（非成分股），AKShare 可能误返回，需过滤
+_INDEX_CODES_SKIP = {"000300", "399300", "932000", "000905", "000852"}  # 沪深300、中证500、中证1000等
+
+
 def _akshare_code_to_yfinance(code: str) -> Optional[str]:
-    """将 AKShare 的 6 位代码转为 yfinance 格式（.SS / .SZ）。北交所 8 位暂不转换。"""
+    """将 AKShare 的 6 位代码转为 yfinance 格式（.SS / .SZ）。北交所 8 位暂不转换。指数代码过滤。"""
     if not code or not isinstance(code, str):
         return None
     c = "".join(str(code).strip().split())
     if not c.isdigit() or len(c) != 6:
         return None
+    if c in _INDEX_CODES_SKIP:
+        return None  # 指数代码非成分股，跳过
     if c.startswith("60") or c.startswith("68"):
         return c + ".SS"
     if c.startswith("00") or c.startswith("30"):
@@ -162,10 +168,7 @@ def get_csi300_tickers_akshare() -> Optional[List[str]]:
 
 def get_csi2000_tickers_akshare() -> Optional[List[str]]:
     """用 AKShare 拉取中证2000 成分股（yfinance 格式）。指数代码 932000。未装 akshare 或接口变更时返回 None。"""
-    try:
-        import akshare as ak
-        # 中证2000 指数代码 932000；成份股权重接口含成分券代码
-        df = ak.index_stock_cons_weight_csindex(symbol="932000")
+    def _parse_df(df) -> Optional[List[str]]:
         if df is None or df.empty:
             return None
         code_col = None
@@ -179,9 +182,21 @@ def get_csi2000_tickers_akshare() -> Optional[List[str]]:
         for _, row in df.iterrows():
             raw = row.get(code_col) or ""
             t = _akshare_code_to_yfinance(str(raw).strip())
-            if t:
+            if t and t not in out:
                 out.append(t)
-        if len(out) >= 100:
+        return out if len(out) >= 100 else None
+
+    try:
+        import akshare as ak
+        # 优先：成份股权重接口
+        df = ak.index_stock_cons_weight_csindex(symbol="932000")
+        out = _parse_df(df)
+        if out:
+            return out
+        # 备选：成份股列表接口
+        df = ak.index_stock_cons_csindex(symbol="932000")
+        out = _parse_df(df)
+        if out:
             return out
     except Exception:
         pass

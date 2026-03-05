@@ -61,3 +61,8 @@
 {"ticker": "CTAS", "report_date": "2026-03-03", "score": 9.0, "action": "买入", "price_at_report": 201.6, "reduce_price": null, "name": "Cintas Corporation", "market": "美股"}
 {"ticker": "GFS", "report_date": "2026-03-03", "score": 9.0, "action": "买入", "price_at_report": 49.87, "reduce_price": 41.66, "name": "GlobalFoundries Inc.", "market": "美股"}
 {"ticker": "002078.SZ", "report_date": "2026-03-03", "score": 9.0, "action": "买入", "price_at_report": 17.34, "reduce_price": null, "name": "SHANDONG SUNPAPER", "market": "A股"}
+{"ticker": "JNJ", "report_date": "2026-03-04", "score": 9.0, "action": "买入", "price_at_report": 246.75, "reduce_price": null, "name": "Johnson & Johnson", "market": "美股"}
+{"ticker": "COP", "report_date": "2026-03-04", "score": 9.0, "action": "买入", "price_at_report": 118.52, "reduce_price": null, "name": "ConocoPhillips", "market": "美股"}
+{"ticker": "CME", "report_date": "2026-03-04", "score": 9.0, "action": "买入", "price_at_report": 325.13, "reduce_price": 314.47, "name": "CME Group Inc.", "market": "美股"}
+{"ticker": "300763.SZ", "report_date": "2026-03-04", "score": 9.0, "action": "买入", "price_at_report": 93.88, "reduce_price": null, "name": "GINLONG TECHNOLOGI", "market": "A股"}
+{"ticker": "LNW", "report_date": "2026-03-05", "score": 9.0, "action": "买入", "price_at_report": 93.0, "reduce_price": null, "name": "Light & Wonder, Inc.", "market": "美股"}

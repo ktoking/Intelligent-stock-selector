@@ -21,6 +21,7 @@ def normalize_ticker(t: str) -> str:
     """
     将手动输入的股票代码规范为 yfinance 可识别的格式。
     - A股 6 位数字：60xxxx/68xxxx → xxx.SS（上海），00xxxx/002xxx/300xxx → xxx.SZ（深圳）。
+    - 000300 沪深300指数 → 000300.SS（Yahoo 用上海代码）。
     - 港股 4 位数字：补 .HK，如 0700 → 0700.HK。
     - 已有 .SS/.SZ/.HK 或美股代码（字母）则原样返回（仅统一大小写）。
     """
@@ -31,6 +32,8 @@ def normalize_ticker(t: str) -> str:
         return s
     if s.isdigit():
         if len(s) == 6:
+            if s == "000300":
+                return "000300.SS"  # 沪深300指数，Yahoo 用 .SS
             if s.startswith("60") or s.startswith("68"):
                 return s + ".SS"
             if s.startswith("00") or s.startswith("30"):
@@ -52,6 +55,7 @@ MARKETS = [MARKET_US, MARKET_CN, MARKET_HK]
 POOL_LARGE = "sp500"       # 美股默认；A股为沪深龙头
 POOL_NASDAQ100 = "nasdaq100"    # 美股纳斯达克100（科技/成长大盘）
 POOL_SMALL_US = "russell2000"   # 美股小盘（罗素2000 风格）
+POOL_CSI300 = "csi300"           # A股沪深300（大盘蓝筹）
 POOL_SMALL_CN = "csi2000"       # A股小盘/潜力（中证2000 风格）
 POOL_HK_HSI = "hsi"             # 港股恒生指数（恒指）
 POOL_HK_HSTECH = "hstech"       # 港股恒生科技指数（恒科）
@@ -175,7 +179,7 @@ def get_report_tickers(
     """
     按市场与选股池取前 limit 只。优先从线上拉取成分股（Wikipedia 等），失败则回退到静态列表，便于全量分析。
     market: us=美股，cn=A股，hk=港股。
-    pool: 不传或 sp500=大盘（美股 S&P500 / A股沪深龙头）；nasdaq100=美股纳斯达克100；russell2000=美股小盘（罗素2000）；csi2000=A股小盘/潜力（中证2000）。
+    pool: 不传或 sp500=大盘；nasdaq100=纳斯达克100；russell2000=美股小盘；csi300=A股沪深300；csi2000=A股中证2000。
     """
     market = (market or MARKET_US).strip().lower()
     pool = (pool or "").strip().lower()
@@ -189,9 +193,20 @@ def get_report_tickers(
     if market == MARKET_US and pool == POOL_SMALL_US:
         tickers = get_russell2000_tickers_from_web()
         return (tickers[:n] if tickers else RUSSELL_2000_TICKERS_FALLBACK[:n])
-    # A股小盘/潜力：中证2000，优先 AKShare，失败用静态
+    # A股沪深300：优先 AKShare
+    if market == MARKET_CN and pool == POOL_CSI300:
+        tickers = get_csi300_tickers_akshare()
+        return (tickers[:n] if tickers else CN_QUALITY_TICKERS_FALLBACK[:n])
+    # A股小盘/潜力：中证2000，优先 AKShare，失败用沪深300+全A 扩充
     if market == MARKET_CN and pool == POOL_SMALL_CN:
         tickers = get_csi2000_tickers_akshare()
+        if tickers:
+            return tickers[:n]
+        # 中证2000 拉取失败时：用沪深300 + 全A市值 扩充，避免仅 64 只
+        tickers = get_csi300_tickers_akshare()
+        if tickers and len(tickers) >= n:
+            return tickers[:n]
+        tickers = get_cn_spot_tickers_akshare(limit=max(n, 200), sort_by="总市值")
         return (tickers[:n] if tickers else CN_CSI2000_TICKERS_FALLBACK[:n])
 
     # A股：优先 AKShare（沪深300 或 全A按市值），再 Wikipedia，再静态

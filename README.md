@@ -24,6 +24,8 @@ pip install -r requirements.txt
 
 # 本地模型（需先安装 Ollama 并拉取模型）
 ollama pull qwen2.5:3b
+
+# 启动服务（默认启用 9 点定时任务，设 DAILY_REPORT_SCHEDULE=0 可关闭）
 python server.py
 ```
 
@@ -52,7 +54,7 @@ python server.py
 | **tickers** | 逗号分隔股票代码；不传则按 market+pool 取池 | — |
 | **limit** | 不传 tickers 时取的数量 | 5 |
 | **market** | 市场：`us` 美股 / `cn` A股 / `hk` 港股 | us |
-| **pool** | 选股池：不传或 `sp500` 大盘；`nasdaq100` 纳斯达克100；`russell2000` 美股小盘；`csi2000` A股小盘；`hsi` 恒指；`hstech` 恒科 | — |
+| **pool** | 选股池：不传或 `sp500` 大盘；`nasdaq100` 纳斯达克100；`russell2000` 美股小盘；`csi300` A股沪深300；`csi2000` A股中证2000；`hsi` 恒指；`hstech` 恒科 | — |
 | **deep** | 1=每只跑深度分析①②③④⑤+与上次对比；0=仅技术+消息+财报+期权+综合评分 | 0 |
 | **interval** | K 线：`1d` 日 K；`5m`/`15m`/`10m`/`1m` 分 K（10m 内部用 15m） | 1d |
 | **prepost** | 1=含盘前盘后（日 K 时涨跌幅为盘前/盘后价） | 0 |
@@ -75,7 +77,8 @@ python server.py
 | 美股大盘前 20 只（日 K） | `/report?market=us&limit=20` |
 | 美股纳斯达克100 前 20 只 | `/report?market=us&pool=nasdaq100&limit=20` |
 | 美股小盘（罗素2000 风格）前 10 只 | `/report?market=us&pool=russell2000&limit=10` |
-| A股小盘（中证2000 风格）前 10 只 | `/report?market=cn&pool=csi2000&limit=10` |
+| A股沪深300 前 20 只 | `/report?market=cn&pool=csi300&limit=20` |
+| A股中证2000 前 10 只 | `/report?market=cn&pool=csi2000&limit=10` |
 | 港股恒指前 20 只 | `/report?market=hk&pool=hsi&limit=20` |
 | 港股恒科前 20 只 | `/report?market=hk&pool=hstech&limit=20` |
 | 指定 A 股（6 位自动补 .SS/.SZ） | `/report?tickers=001317,603767,600882` |
@@ -116,18 +119,20 @@ python server.py
 
 ### 每日定时报告（9 点自动跑三份）
 
-脚本 `scripts/daily_report.py` 可每日自动跑三份报告：**美股 SP500 100 只**、**A 股中证 2000 100 只**、**港股恒指 100 只**，`deep=0` 不跑深度分析。
+脚本 `scripts/daily_report.py` 可每日自动跑四份报告：**美股 SP500 100 只**、**A 股沪深 300 100 只**、**A 股中证 2000 100 只**、**港股恒指 100 只**，`deep=0` 不跑深度分析。
 
 **前置**：服务需已启动（`python server.py`），可配合 systemd / screen 常驻。**周末及中国法定节假日自动跳过**（可 `--force` 强制执行）；节假日判断需 `pip install chinese_calendar`。
 
 ```bash
+# 默认：python server.py 启动即启用 9 点定时任务（设 DAILY_REPORT_SCHEDULE=0 可关闭）
+
 # 手动执行
 python scripts/daily_report.py
 
-# 定时（crontab -e 添加，路径按需修改）
-0 9 * * * cd /path/to/stock-agent && python scripts/daily_report.py
+# 方式二：Crontab（路径按需修改）
+0 9 * * * cd /path/to/stock-agent && python scripts/daily_report.py >> report/output/daily_report.log 2>&1
 
-# macOS 推荐用 LaunchAgent（详见 scripts/README_定时任务.md）
+# 方式三：macOS LaunchAgent（详见 scripts/README_定时任务.md）
 cp scripts/com.stock-agent.server.plist scripts/com.stock-agent.daily.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/com.stock-agent.server.plist
 launchctl load ~/Library/LaunchAgents/com.stock-agent.daily.plist
@@ -225,6 +230,7 @@ nohup python server.py > server.log 2>&1 &
 | `LLM_BACKEND` | ollama / deepseek / openai | 按 Key 推断 |
 | `LLM_TIMEOUT` | 请求超时（秒） | 120 |
 | `DEEP_PARALLEL` | 深度分析是否并行，0=顺序 | 1 |
+| `DAILY_REPORT_SCHEDULE` | 0=关闭 9 点定时任务；默认启用 | 1 |
 
 ### 可编辑文件速查
 
