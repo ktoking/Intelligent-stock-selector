@@ -158,10 +158,13 @@ def _run_report_impl(
     # 既往推荐追踪：记录本期 9/10 分且「买入」的标的（每份报告最多 3 条），并拉取过去 N 天推荐的表现与胜率
     report_date = gen_time[:10]
     try:
-        from data.recommendations import save_recommendation, get_past_recommendations_with_returns
+        from data.recommendations import save_recommendation, get_past_recommendations_with_returns, is_sideways_market
+        from config.analysis_config import RECOMMEND_SIDEWAYS_MIN_SCORE
+        sideways = is_sideways_market(lookback_days=20)
+        min_score_override = float(RECOMMEND_SIDEWAYS_MIN_SCORE) if sideways else None
         buy_9_10 = [c for c in cards if (c.get("score") or 0) >= 9 and (c.get("action") or "").strip() == "买入"]
         for c in buy_9_10[:3]:  # 每份报告最多记录 3 条
-            save_recommendation(c, report_date)
+            save_recommendation(c, report_date, min_score_override=min_score_override)
         backtest_rows, backtest_summary = get_past_recommendations_with_returns(since_days=90)
     except Exception as e:
         print(f"[Report] 既往推荐追踪失败: {e}", flush=True)
@@ -451,7 +454,7 @@ def report_progress():
 
 @app.get("/report", response_class=HTMLResponse)
 def report_page(
-    tickers: str = Query(None, description="逗号分隔股票代码；A股可传 6 位如 001317,603767（自动补 .SZ/.SS），港股可传 4 位如 0700（自动补 .HK）；不传则按 market+pool 取池"),
+    tickers: str = Query(None, description="逗号分隔股票代码；A股可传 6 位（自动补 .SZ/.SS），港股可传 4/5 位（5 位只去第一位补 .HK，如 00100→0100.HK）；不传则按 market+pool 取池"),
     limit: int = Query(5, ge=1, le=200, description="当不传 tickers 时取的数量，默认 5（调试快；可传 100 跑全量）"),
     deep: int = Query(0, description="1=每只标的跑深度分析①②③④⑤+与上次对比，形成大方向/近期趋势；0=仅技术+消息+财报+期权"),
     interval: str = Query("1d", description="K线周期：1d=日K，5m/15m/10m/1m=分K（10m 用 15m 数据）"),

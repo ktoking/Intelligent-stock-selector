@@ -67,10 +67,12 @@ ATR_STOP_MULT = _float_env("TECH_ATR_STOP_MULT", 1.5)
 VOLUME_BREAKOUT_RATIO = _float_env("TECH_VOLUME_BREAKOUT_RATIO", 1.5)
 
 # ---------- 推荐记录条件 ----------
-# 写入 recommendations.jsonl 的最低评分
+# 写入 recommendations.jsonl 的最低评分（若胜率偏低可改为 10 仅记录最强信号）
 RECOMMEND_MIN_SCORE = _float_env("RECOMMEND_MIN_SCORE", 9)
 # 写入 recommendations.jsonl 的动作
 RECOMMEND_ACTION = os.environ.get("RECOMMEND_ACTION", "买入").strip()
+# 震荡市（基准 N 日涨跌幅在熊牛阈值之间）时，仅记录不低于该分的买入；设为 9 表示与平时一致，设为 10 则震荡市只记 10 分（若几乎没有标的达 10 分可保持 9）
+RECOMMEND_SIDEWAYS_MIN_SCORE = _float_env("RECOMMEND_SIDEWAYS_MIN_SCORE", 9.0)
 
 # ---------- 诊断脚本 ----------
 # 默认诊断回溯天数

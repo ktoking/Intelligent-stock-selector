@@ -1,6 +1,6 @@
 """
 多市场选股：美股（S&P 500 / 罗素2000）、A股（龙头 / 中证2000）、港股。支持按市场+池取静态/动态池。
-手动传入 tickers 时，A股 6 位代码会自动补交易所后缀（上海 .SS、深圳 .SZ），港股 4 位可补 .HK。
+手动传入 tickers 时，A股 6 位补 .SS/.SZ，港股 4/5 位：5 位只去第一位后补 .HK（如 00100→0100.HK），4 位直接补 .HK。
 """
 from typing import List
 
@@ -22,7 +22,7 @@ def normalize_ticker(t: str) -> str:
     将手动输入的股票代码规范为 yfinance 可识别的格式。
     - A股 6 位数字：60xxxx/68xxxx → xxx.SS（上海），00xxxx/002xxx/300xxx → xxx.SZ（深圳）。
     - 000300 沪深300指数 → 000300.SS（Yahoo 用上海代码）。
-    - 港股 4 位数字：补 .HK，如 0700 → 0700.HK。
+    - 港股 4 位或 5 位数字：Yahoo 使用 4 位 + .HK（保留前导零）。5 位码只去掉第一位，4 位码原样，如 00100→0100.HK（Minimax），01810→1810.HK，0700→0700.HK。
     - 已有 .SS/.SZ/.HK 或美股代码（字母）则原样返回（仅统一大小写）。
     """
     s = (t or "").strip().upper()
@@ -38,8 +38,10 @@ def normalize_ticker(t: str) -> str:
                 return s + ".SS"
             if s.startswith("00") or s.startswith("30"):
                 return s + ".SZ"
-        if len(s) == 4:
-            return s + ".HK"
+        if len(s) == 4 or len(s) == 5:
+            # Yahoo 港股：4 位 .HK 格式。5 位码只去掉第一位（如 00100→0100.HK），4 位码原样（0700→0700.HK）
+            code = (s[1:] if len(s) == 5 else s) + ".HK"
+            return code
     return s
 
 # 报告默认分析数量
@@ -60,7 +62,7 @@ POOL_SMALL_CN = "csi2000"       # A股小盘/潜力（中证2000 风格）
 POOL_HK_HSI = "hsi"             # 港股恒生指数（恒指）
 POOL_HK_HSTECH = "hstech"       # 港股恒生科技指数（恒科）
 
-# 美股纳斯达克100：科技/成长大盘（yfinance 代码），常见成分股静态列表
+# 美股纳斯达克100：科技/成长大盘（yfinance 代码），常见成分股静态列表；WBA 已退市(2025-08)已移除
 NASDAQ_100_TICKERS_FALLBACK = [
     "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "NVDA", "META", "TSLA", "AVGO", "COST",
     "PEP", "ADBE", "NFLX", "CSCO", "AMD", "INTC", "QCOM", "TXN", "INTU", "AMGN",
@@ -69,7 +71,7 @@ NASDAQ_100_TICKERS_FALLBACK = [
     "MNST", "ORLY", "PCAR", "CTAS", "PAYX", "KDP", "KHC", "MAR", "MELI", "AEP",
     "CHTR", "CPRT", "FTNT", "ODFL", "FAST", "EXC", "XEL", "FANG", "CCEP", "IDXX",
     "AZN", "WBD", "EA", "CTSH", "VRSK", "DDOG", "ZS", "TEAM", "ANSS", "MCHP",
-    "BKR", "GEHC", "CDW", "CPT", "ROST", "CSGP", "WBA", "DLTR", "TTD", "NXPI",
+    "BKR", "GEHC", "CDW", "CPT", "ROST", "CSGP", "DLTR", "TTD", "NXPI",
     "MDB", "APP", "SMCI", "ARM", "CEG", "LULU", "HON", "VOD", "GFS",
 ]
 

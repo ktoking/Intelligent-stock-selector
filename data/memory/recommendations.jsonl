@@ -66,3 +66,10 @@
 {"ticker": "CME", "report_date": "2026-03-04", "score": 9.0, "action": "买入", "price_at_report": 325.13, "reduce_price": 314.47, "name": "CME Group Inc.", "market": "美股"}
 {"ticker": "300763.SZ", "report_date": "2026-03-04", "score": 9.0, "action": "买入", "price_at_report": 93.88, "reduce_price": null, "name": "GINLONG TECHNOLOGI", "market": "A股"}
 {"ticker": "LNW", "report_date": "2026-03-05", "score": 9.0, "action": "买入", "price_at_report": 93.0, "reduce_price": null, "name": "Light & Wonder, Inc.", "market": "美股"}
+{"ticker": "ROST", "report_date": "2026-03-05", "score": 9.0, "action": "买入", "price_at_report": 213.52, "reduce_price": null, "name": "Ross Stores, Inc.", "market": "美股"}
+{"ticker": "HON", "report_date": "2026-03-05", "score": 9.0, "action": "买入", "price_at_report": 245.97, "reduce_price": 238.74, "name": "Honeywell International Inc.", "market": "美股"}
+{"ticker": "ADBE", "report_date": "2026-03-06", "score": 9.0, "action": "买入", "price_at_report": 281.74, "reduce_price": null, "name": "Adobe Inc.", "market": "美股"}
+{"ticker": "CSCO", "report_date": "2026-03-06", "score": 9.0, "action": "买入", "price_at_report": 80.01, "reduce_price": null, "name": "Cisco Systems, Inc.", "market": "美股"}
+{"ticker": "FANG", "report_date": "2026-03-06", "score": 9.0, "action": "买入", "price_at_report": 179.04, "reduce_price": null, "name": "Diamondback Energy, Inc.", "market": "美股"}
+{"ticker": "0316.HK", "report_date": "2026-03-06", "score": 9.0, "action": "买入", "price_at_report": 156.5, "reduce_price": 142.87, "name": "OOIL", "market": "港股"}
+{"ticker": "0836.HK", "report_date": "2026-03-06", "score": 9.0, "action": "买入", "price_at_report": 18.7, "reduce_price": null, "name": "CHINA RES POWER", "market": "港股"}

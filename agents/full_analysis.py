@@ -159,11 +159,15 @@ ATR%: {atr_pct}%（ATR/收盘价×100，用于止损与仓位参考）
     role = "美股多维度分析师（日K技术面+消息面+财报+期权）" if not is_intraday else "美股超短线/日内分析师（分K技术面+消息面+期权，侧重短线信号）"
     time_scope = "日线维度" if not is_intraday else f"{interval}分K/短线维度{prepost_note}"
     trend_hint = "日K均线排列与趋势，是否多头排列" if not is_intraday else "分K均线排列与短线趋势"
+    # 美股标的：震荡市下胜率偏低，9 分必须技术面明确支持（多头排列或 MACD 金叉/零轴上）
+    ticker_upper = (ticker or "").strip().upper()
+    is_us = not (ticker_upper.endswith(".SS") or ticker_upper.endswith(".SZ") or ".HK" in ticker_upper)
+    us_extra = "美股标的：9分必须满足日线多头排列或MACD金叉/零轴上，否则最高8分。" if is_us else ""
 
     return f"""
 你是一位{role}。请以{time_scope}，根据下面【技术面】【消息面】【财报/估值/期权】数据，用中文输出以下 10 项，每项单独一行，格式严格如下（不要多写其他内容）：
 
-【评分与动作要求】9分应极少给出，每份报告建议不超过3只；10分保留给极罕见的最优标的。加仓价、减仓价必须与上方【技术面入场/离场参考】中的 entry_note、exit_note 一致或在其基础上略作说明。
+【评分与动作要求】9分应极少给出，每份报告建议不超过3只；10分保留给极罕见的最优标的。9分必须同时满足：① 日线多头排列或趋势明确向上 ② 基本面无重大利空 ③ 消息面无重大利空；任一项不满足则最高给8分。{us_extra}加仓价、减仓价必须与上方【技术面入场/离场参考】中的 entry_note、exit_note 一致或在其基础上略作说明。
 
 核心结论：<一句话总结该标的当前是否值得关注及主要理由>
 趋势结构：<一句话描述{trend_hint}>

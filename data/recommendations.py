@@ -21,10 +21,63 @@ def _file_path() -> Path:
     return _STORE_DIR / _FILENAME
 
 
-def save_recommendation(card: Dict[str, Any], report_date: str) -> None:
+def _benchmark_return_pct(lookback_days: int = 20, ticker: str = "^GSPC") -> Optional[float]:
+    """拉取基准指数过去 lookback_days 天的涨跌幅（%）。失败返回 None。"""
+    try:
+        import logging
+        _log = logging.getLogger("yfinance")
+        _log.setLevel(logging.ERROR)
+        _log.propagate = False
+        import yfinance as yf
+    except Exception:
+        return None
+    try:
+        end = datetime.now().date() + timedelta(days=1)
+        start = end - timedelta(days=lookback_days + 10)
+        h = yf.Ticker(ticker).history(start=start, end=end)
+        if h is None or h.empty or "Close" not in h.columns or len(h) < 2:
+            return None
+        close_first = float(h["Close"].iloc[0])
+        close_last = float(h["Close"].iloc[-1])
+        if close_first and close_first > 0:
+            return round((close_last - close_first) / close_first * 100, 2)
+    except Exception:
+        pass
+    return None
+
+
+def is_sideways_market(
+    lookback_days: int = 20,
+    bench_ticker: str = "^GSPC",
+    low_pct: Optional[float] = None,
+    high_pct: Optional[float] = None,
+) -> bool:
+    """
+    判断当前是否处于震荡市：基准指数 lookback_days 日涨跌幅在 [low_pct, high_pct] 之间。
+    若未传 low_pct/high_pct，则使用 config 中 DIAGNOSE_BEAR_THRESHOLD_PCT / DIAGNOSE_BULL_THRESHOLD_PCT（默认 -5 / +5）。
+    """
+    try:
+        from config.analysis_config import DIAGNOSE_BEAR_THRESHOLD_PCT, DIAGNOSE_BULL_THRESHOLD_PCT
+    except ImportError:
+        DIAGNOSE_BEAR_THRESHOLD_PCT = -5.0
+        DIAGNOSE_BULL_THRESHOLD_PCT = 5.0
+    low = low_pct if low_pct is not None else DIAGNOSE_BEAR_THRESHOLD_PCT
+    high = high_pct if high_pct is not None else DIAGNOSE_BULL_THRESHOLD_PCT
+    ret = _benchmark_return_pct(lookback_days=lookback_days, ticker=bench_ticker)
+    if ret is None:
+        return False
+    return low <= ret <= high
+
+
+def save_recommendation(
+    card: Dict[str, Any],
+    report_date: str,
+    min_score_override: Optional[float] = None,
+) -> None:
     """
     若卡片达到最低评分且动作为「买入」，则追加一条推荐记录。
     条件见 config/analysis_config（RECOMMEND_MIN_SCORE、RECOMMEND_ACTION）。
+    min_score_override：若提供（如震荡市下传 10），则用其替代 RECOMMEND_MIN_SCORE 作为最低记录分。
     report_date 建议为 YYYY-MM-DD（与报告生成日一致）。
     """
     try:
@@ -32,13 +85,14 @@ def save_recommendation(card: Dict[str, Any], report_date: str) -> None:
     except ImportError:
         RECOMMEND_MIN_SCORE = 9
         RECOMMEND_ACTION = "买入"
+    effective_min = min_score_override if min_score_override is not None else RECOMMEND_MIN_SCORE
     score = card.get("score")
     try:
         s = float(score) if score is not None else 0
     except (TypeError, ValueError):
         s = 0
     action = (card.get("action") or "").strip()
-    if s < RECOMMEND_MIN_SCORE or action != RECOMMEND_ACTION:
+    if s < effective_min or action != RECOMMEND_ACTION:
         return
     ticker = (card.get("ticker") or "").upper().strip()
     if not ticker:
@@ -187,8 +241,8 @@ def get_past_recommendations_with_returns(
         except Exception:
             hist_by_ticker[t] = None
 
-    # 基准：标普500 / 沪深300 / 恒生 / 恒科（港股双基准）
-    bench_tickers = {"美股": "^GSPC", "A股": "000300.SS", "港股": "^HSI", "恒科": "^HSTECH"}
+    # 基准：标普500 / 沪深300 / 恒生 / 恒科（Yahoo 港股指数用 HSTECH.HK 非 ^HSTECH）
+    bench_tickers = {"美股": "^GSPC", "A股": "000300.SS", "港股": "^HSI", "恒科": "HSTECH.HK"}
     bench_hist: Dict[str, Any] = {}
     for _m, bt in bench_tickers.items():
         try:
@@ -280,7 +334,7 @@ def get_past_recommendations_with_returns(
         # 港股额外：恒科同期收益（用于报告双列展示）
         r["benchmark_hstech_return_pct"] = None
         if market == "港股":
-            bh_hstech = bench_hist.get("^HSTECH")
+            bh_hstech = bench_hist.get("HSTECH.HK")
             if bh_hstech is not None:
                 close_then = _close_on_or_after(bh_hstech, report_d)
                 close_now = _latest_close(bh_hstech)
