@@ -3,6 +3,8 @@
 支持 MACD/RSI 背离自动检测。支持日K（1d）与分K（1m/5m/15m），可选盘前盘后（prepost）。
 入场/离场规则可配置：ATR 止损倍数、放量突破阈值（见 config/analysis_config）。
 """
+from config.yf_suppress import suppress_yf_noise
+suppress_yf_noise()
 import pandas as pd
 import yfinance as yf
 from typing import Optional, Tuple, List

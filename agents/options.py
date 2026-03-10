@@ -1,8 +1,9 @@
 """
 近日多空期权：从 yfinance 期权链取 put/call 成交量或持仓，计算多空比供报告。
 """
+from config.yf_suppress import suppress_yf_noise
+suppress_yf_noise()
 from typing import Dict, Any
-
 import yfinance as yf
 
 

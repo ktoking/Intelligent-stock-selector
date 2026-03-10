@@ -1,0 +1,307 @@
+{
+  "$schema": "报告分析所用全部指标与源数据，供其他项目消费",
+  "version": "1.0",
+  "report_展示字段_to_源数据映射": {
+    "交易动作": "card.action (LLM)",
+    "所属板块": "card.sector ← fundamental.industry|sector",
+    "当前价格": "card.current_price ← fundamental.current_price",
+    "涨跌幅": "card.change_pct ← fundamental.change_pct",
+    "市值": "card.market_cap ← fundamental.market_cap",
+    "市盈率PE": "card.pe ← fundamental.pe",
+    "日线多头排列": "card.daily_long_align ← technical.daily_long_align",
+    "近日多空期权": "card.put_call ← options.description",
+    "市场": "card.market (由 ticker 后缀推断)",
+    "加仓价格": "card.add_price (LLM)",
+    "减仓价格": "card.reduce_price (LLM)",
+    "技术面入场参考": "card.tech_entry_note ← technical.tech_levels.entry_note",
+    "技术面离场参考": "card.tech_exit_note ← technical.tech_levels.exit_note",
+    "数据截至日": "card.last_date ← technical.last_date",
+    "52周低/高": "card.week52_low, week52_high ← fundamental",
+    "量比": "card.volume_ratio ← fundamental.volume_ratio",
+    "ATR%": "card.atr_pct ← technical.tech_levels.atr_pct",
+    "股息率": "card.dividend_yield ← fundamental.dividend_yield",
+    "机构倾向": "card.recommendation ← fundamental.recommendation",
+    "下次财报日": "card.next_earnings ← fundamental.next_earnings",
+    "核心结论": "card.core_conclusion (LLM)",
+    "评分": "card.score (LLM)",
+    "评分理由": "card.score_reason (LLM)",
+    "技术面摘要": "card.tech_status_one_line ← technical",
+    "趋势结构": "card.trend_structure (LLM)",
+    "MACD状态": "card.macd_status (LLM)",
+    "KDJ状态": "card.kdj_status (LLM)",
+    "分析原因": "card.analysis_reason (LLM)"
+  },
+  "data_sources": {
+    "technical": {
+      "module": "agents/technical.py",
+      "api": "yfinance Ticker.history()",
+      "fields": {
+        "ok": "bool，是否成功",
+        "reason": "str，失败原因（当 ok=false）",
+        "trend_ma": {
+          "price": "float，最新收盘价",
+          "ma5": "float",
+          "ma10": "float",
+          "ma20": "float",
+          "ma60": "float",
+          "above_ma5": "bool",
+          "above_ma20": "bool",
+          "above_ma60": "bool",
+          "daily_long_align": "bool，日线多头排列(价>MA5>MA10>MA20>MA60)"
+        },
+        "macd_summary": {
+          "macd": "float",
+          "signal": "float",
+          "histogram": "float",
+          "above_zero": "bool",
+          "golden_cross": "bool"
+        },
+        "kdj_summary": {
+          "k": "float",
+          "d": "float",
+          "j": "float",
+          "overbought": "bool",
+          "oversold": "bool"
+        },
+        "rsi_summary": {
+          "rsi": "float",
+          "overbought": "bool",
+          "oversold": "bool"
+        },
+        "bb_summary": {
+          "upper": "float，布林带上轨",
+          "middle": "float，中轨",
+          "lower": "float，下轨",
+          "above_upper": "bool",
+          "below_lower": "bool",
+          "bollinger_pct": "float，0-100，价格在布林带中的位置%"
+        },
+        "obv_summary": {
+          "obv": "float，能量潮",
+          "obv_ma": "float，OBV均线",
+          "obv_above_ma": "bool，量价配合"
+        },
+        "divergence_summary": {
+          "macd_top": "bool，MACD顶背离",
+          "macd_bottom": "bool",
+          "rsi_top": "bool",
+          "rsi_bottom": "bool"
+        },
+        "volume_context": {
+          "volume_ratio": "float，量比(近期/20日均量)",
+          "volume_ma20": "float"
+        },
+        "tech_levels": {
+          "support_ma20": "float",
+          "support_ma60": "float",
+          "resistance_high": "float，近期高点",
+          "atr_pct": "float，ATR/收盘价×100",
+          "entry_note": "str，入场参考",
+          "exit_note": "str，离场参考"
+        },
+        "tech_status_one_line": "str，一句技术面摘要",
+        "last_date": "str，数据截至日",
+        "interval": "str，1d/5m/15m等",
+        "prepost": "bool"
+      }
+    },
+    "news": {
+      "module": "agents/news.py",
+      "api": "yfinance Ticker.news",
+      "fields": {
+        "ok": "bool",
+        "ticker": "str",
+        "news": [
+          {
+            "title": "str",
+            "link": "str",
+            "publisher": "str",
+            "published": "str"
+          }
+        ]
+      }
+    },
+    "fundamental": {
+      "module": "agents/fundamental.py",
+      "api": "yfinance Ticker.info, financials, calendar, get_earnings_dates",
+      "fields": {
+        "ticker": "str",
+        "short_name": "str",
+        "sector": "str",
+        "industry": "str",
+        "market_cap": "str，格式化如 8802.94亿",
+        "market_cap_raw": "float，原始市值",
+        "current_price": "float",
+        "change_pct": "float",
+        "trailing_pe": "float",
+        "forward_pe": "float",
+        "pe": "str，格式化",
+        "financials_str": "str，财报摘要文本",
+        "gross_margins": "float",
+        "earnings_growth": "float",
+        "week52_high": "float",
+        "week52_low": "float",
+        "volume_ratio": "float，量比",
+        "dividend_yield": "float，股息率(小数)",
+        "recommendation": "str，机构倾向",
+        "next_earnings": "str，下次财报日 YYYY-MM-DD"
+      }
+    },
+    "options": {
+      "module": "agents/options.py",
+      "api": "yfinance Ticker.options, option_chain()",
+      "fields": {
+        "ok": "bool",
+        "ratio": "float，put/call成交量比",
+        "description": "str，偏多/偏空/中性",
+        "put_vol": "int",
+        "call_vol": "int"
+      }
+    }
+  },
+  "card_输出结构": {
+    "description": "run_full_analysis 返回的 card，供 build_report_html 生成报告",
+    "base_fields": {
+      "ticker": "str",
+      "name": "str",
+      "core_conclusion": "str，LLM结论",
+      "score": "int，1-10",
+      "score_reason": "str",
+      "action": "str，买入/观察/离场",
+      "sector": "str",
+      "current_price": "str",
+      "change_pct": "str",
+      "change_pct_raw": "float",
+      "market_cap": "str",
+      "market": "str，美股/A股/港股",
+      "add_price": "str",
+      "reduce_price": "str",
+      "tech_entry_note": "str",
+      "tech_exit_note": "str",
+      "tech_status_one_line": "str",
+      "trend_structure": "str",
+      "macd_status": "str",
+      "kdj_status": "str",
+      "analysis_reason": "str",
+      "daily_long_align": "bool",
+      "pe": "str",
+      "put_call": "str",
+      "last_date": "str",
+      "atr_pct": "float",
+      "week52_high": "float",
+      "week52_low": "float",
+      "volume_ratio": "float",
+      "dividend_yield": "float",
+      "recommendation": "str",
+      "next_earnings": "str",
+      "interval_label": "str",
+      "interval": "str",
+      "prepost": "bool"
+    },
+    "deep_fields": {
+      "fundamental_deep_summary": "str，①基本面深度",
+      "moat_summary": "str，②护城河",
+      "peers_summary": "str，③同行对比",
+      "short_summary": "str，④空头视角",
+      "narrative_summary": "str，⑤叙事变化",
+      "comparison_reason": "str，与上次对比",
+      "recent_trend": "str，近期对比趋势",
+      "direction_unchanged": "bool，大方向是否不变"
+    }
+  },
+  "report_元数据": {
+    "title": "str",
+    "gen_time": "str，YYYY-MM-DD HH:MM:SS",
+    "report_summary": "str，LLM生成总览",
+    "backtest_rows": "array，既往推荐明细",
+    "backtest_summary": "object"
+  },
+  "backtest_源数据": {
+    "module": "data/recommendations.py",
+    "api": "yfinance Ticker.history()",
+    "source": "data/memory/recommendations.jsonl",
+    "record_fields": {
+      "ticker": "str",
+      "report_date": "str",
+      "score": "float",
+      "action": "str",
+      "price_at_report": "float",
+      "reduce_price": "float",
+      "name": "str",
+      "market": "str"
+    },
+    "computed_fields": {
+      "current_price": "float",
+      "return_pct": "float，持有至今涨跌",
+      "holding_days": "int",
+      "return_1w_pct": "float",
+      "return_1m_pct": "float",
+      "return_2m_pct": "float",
+      "return_3m_pct": "float",
+      "benchmark_return_pct": "float",
+      "benchmark_hstech_return_pct": "float",
+      "triggered_exit": "bool"
+    }
+  },
+  "技术指标计算参数": {
+    "source": "config/analysis_config.py",
+    "MA_PERIODS": {"ma5": 5, "ma10": 10, "ma20": 20, "ma60": 60},
+    "MACD": {"fast": 12, "slow": 26, "signal": 9},
+    "RSI_PERIOD": 14,
+    "RSI_OVERBOUGHT": 70,
+    "RSI_OVERSOLD": 30,
+    "KDJ_N": 9,
+    "BB_PERIOD": 20,
+    "BB_STD_MULT": 2.0,
+    "ATR_PERIOD": 14,
+    "ATR_STOP_MULT": 1.5,
+    "VOLUME_MA_PERIOD": 20,
+    "VOLUME_BREAKOUT_RATIO": 1.5,
+    "DIVERGENCE_LOOKBACK": 30,
+    "DIVERGENCE_MIN_BARS": 20
+  },
+  "示例_单只标的完整源数据": {
+    "ticker": "1810.HK",
+    "technical": {
+      "ok": true,
+      "trend_ma": {"price": 33.96, "ma5": 34.2, "ma10": 34.5, "ma20": 34.9, "ma60": 37.35, "daily_long_align": false},
+      "macd_summary": {"macd": -0.05, "signal": -0.03, "histogram": -0.02, "above_zero": false, "golden_cross": false},
+      "kdj_summary": {"k": 45, "d": 42, "j": 51, "overbought": false, "oversold": false},
+      "rsi_summary": {"rsi": 44, "overbought": false, "oversold": false},
+      "bb_summary": {"upper": 38.5, "middle": 35.2, "lower": 31.9, "bollinger_pct": 36},
+      "obv_summary": {"obv_above_ma": false},
+      "divergence_summary": {"macd_top": false, "macd_bottom": false, "rsi_top": false, "rsi_bottom": false},
+      "volume_context": {"volume_ratio": 0.81},
+      "tech_levels": {"atr_pct": 3.56, "entry_note": "突破/站稳 MA20 约 34.90 可考虑入场", "exit_note": "跌破 MA20 约 34.90 考虑减仓"},
+      "tech_status_one_line": "非多头排列；MACD零轴下方；KDJ中性；RSI中性(44)；布林带36%；OBV下穿均量；量比0.81；ATR%3.56%",
+      "last_date": "2026-03-06"
+    },
+    "news": {
+      "ok": true,
+      "news": [{"title": "...", "link": "...", "publisher": "...", "published": "..."}]
+    },
+    "fundamental": {
+      "ticker": "1810.HK",
+      "short_name": "XIAOMI-W",
+      "sector": "Consumer Electronics",
+      "industry": "Consumer Electronics",
+      "market_cap": "8802.94亿",
+      "current_price": 33.96,
+      "change_pct": 5.47,
+      "pe": "20.83",
+      "week52_high": 61.45,
+      "week52_low": 31.2,
+      "volume_ratio": 0.79,
+      "dividend_yield": null,
+      "recommendation": "买入",
+      "next_earnings": "2026-03-24"
+    },
+    "options": {
+      "ok": false,
+      "description": "无期权数据",
+      "ratio": null,
+      "put_vol": 0,
+      "call_vol": 0
+    }
+  }
+}

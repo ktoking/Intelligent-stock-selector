@@ -2,9 +2,10 @@
 单标的综合分析：技术面 + 消息面 + 财报，调用 LLM 输出趋势结构、MACD、KDJ、分析原因、评分、交易动作、加仓/减仓价。
 优先使用 LangChain with_structured_output(Pydantic)，失败时回退到 ask_llm + 按行解析。
 """
+from config.yf_suppress import suppress_yf_noise
+suppress_yf_noise()
 import re
 from typing import Dict, Any, Optional
-
 import yfinance as yf
 from llm import ask_llm
 
@@ -284,6 +285,41 @@ def _run_llm_and_parse(system: str, prompt: str) -> Dict[str, Any]:
     return _parse_llm_output(raw)
 
 
+def _to_json_safe(obj):
+    """将对象转为 JSON 可序列化形式（处理 numpy/pandas 等）。"""
+    if obj is None:
+        return None
+    if isinstance(obj, (bool, int, float, str)):
+        return obj
+    if isinstance(obj, dict):
+        return {k: _to_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_json_safe(x) for x in obj]
+    try:
+        import numpy as np
+        if isinstance(obj, (np.integer, np.floating)):
+            return float(obj)
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+    except Exception:
+        pass
+    return str(obj)
+
+
+def _build_source_data(ticker: str, interval: str) -> dict:
+    """
+    构建单只标的的完整源数据，采用「股票分析工作流 - 外部数据JSON模板」格式，
+    供报告展示或下游消费。结构：stock_code, market_type, stock_data, historical_data,
+    financial_data, news_data, options_data。
+    """
+    try:
+        from agents.external_data_fetcher import fetch_external_data_json
+        period = "6mo" if interval == "1d" else "5d"
+        return fetch_external_data_json(ticker, period=period, interval=interval)
+    except Exception:
+        return {"stock_code": ticker, "market_type": "us", "error": "源数据拉取失败"}
+
+
 def run_full_analysis(
     ticker: str,
     interval: str = "1d",
@@ -372,4 +408,5 @@ def run_full_analysis(
         "interval_label": _interval_label(interval, include_prepost),
         "interval": interval,
         "prepost": include_prepost,
+        "source_data": _build_source_data(ticker, interval),
     }

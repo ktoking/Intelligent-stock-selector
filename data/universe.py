@@ -6,6 +6,8 @@ import time
 from typing import List, Optional
 
 import pandas as pd
+from config.yf_suppress import suppress_yf_noise
+suppress_yf_noise()
 import yfinance as yf
 
 

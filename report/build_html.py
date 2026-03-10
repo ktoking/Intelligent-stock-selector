@@ -1,6 +1,7 @@
 """
 根据综合分析结果列表，生成与参考同风格的 HTML 报告（技术面/消息面/财报、筛选、排序）。
 """
+import json
 import re
 import html as html_module
 from datetime import datetime
@@ -424,6 +425,24 @@ def build_report_html(
         no_history_note = (comp_reason_raw == "无历史对比" and (not recent_trend_raw or recent_trend_raw == "—"))
         has_deep = fd_summary or moat_summary or peers_summary or short_summary or narrative_summary or comp_reason or recent_trend or deep_disabled_reason or deep_error
 
+        # 源数据 JSON 区块（与交易动作、评分同级的格子，可展开查看）
+        source_data = c.get("source_data")
+        source_data_block = ""
+        if source_data:
+            try:
+                source_json = json.dumps(source_data, ensure_ascii=False, indent=2)
+                source_escaped = html_module.escape(source_json)
+                source_data_block = f'''
+                <div class="card-section">
+                    <div class="card-section-title">源数据 (JSON)</div>
+                    <details class="card-section-content" style="padding:0;">
+                        <summary style="cursor:pointer;padding:12px;background:#f7fafc;border-radius:8px;font-weight:600;color:#4a5568;">查看源数据 (stock_data / historical_data / financial_data / news_data / options_data)</summary>
+                        <pre style="margin:0;padding:12px;font-size:11px;line-height:1.4;max-height:400px;overflow:auto;background:#1e293b;color:#e2e8f0;border-radius:0 0 8px 8px;white-space:pre-wrap;word-break:break-all;">{source_escaped}</pre>
+                    </details>
+                </div>'''
+            except Exception:
+                source_data_block = '<div class="card-section"><div class="card-section-title">源数据 (JSON)</div><div class="card-section-content">—</div></div>'
+
         action_escaped = _escape(action)
         core_block = f'<div class="card-core-conclusion">{core_conclusion}</div>' if (core_conclusion and core_conclusion != "—") else ""
         last_date_val = last_date or "—"
@@ -591,6 +610,7 @@ def build_report_html(
                     <div class="card-section-title">分析原因</div>
                     <div class="card-section-content">{reason}</div>
                 </div>
+                {source_data_block}
                 {deep_block}
             </div>''')
 

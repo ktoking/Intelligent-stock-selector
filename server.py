@@ -3,8 +3,9 @@
 
 启动：python server.py  或  uvicorn server:app --reload --host 0.0.0.0 --port 8000
 """
-import warnings
-warnings.filterwarnings("ignore", module="urllib3")
+# 最早执行：抑制 yfinance 拉取失败时的噪音（404、possibly delisted、timezone 等）
+from config.yf_suppress import suppress_yf_noise
+suppress_yf_noise()
 
 import os
 import subprocess
@@ -187,13 +188,13 @@ def _run_report_impl(
 app = FastAPI(title="Stock Agent", description="美股基本面分析（默认本地 Ollama）")
 
 
-def _seconds_until_9am() -> float:
-    """计算距离下一个 9:00 的秒数（本地时间）。"""
+def _seconds_until_8am() -> float:
+    """计算距离下一个 8:00 的秒数（本地时间）。"""
     now = datetime.now()
-    today_9am = now.replace(hour=9, minute=0, second=0, microsecond=0)
-    if now >= today_9am:
-        today_9am += timedelta(days=1)
-    return (today_9am - now).total_seconds()
+    today_8am = now.replace(hour=8, minute=0, second=0, microsecond=0)
+    if now >= today_8am:
+        today_8am += timedelta(days=1)
+    return (today_8am - now).total_seconds()
 
 
 def _run_daily_report_job() -> None:
@@ -226,9 +227,9 @@ def _run_daily_report_job() -> None:
 
 
 def _daily_report_scheduler_loop() -> None:
-    """后台线程：每天 9 点执行 daily_report.py，跨平台不依赖 crontab。"""
+    """后台线程：每天 8 点执行 daily_report.py，跨平台不依赖 crontab。"""
     while True:
-        secs = _seconds_until_9am()
+        secs = _seconds_until_8am()
         print(f"[DailyReport] 下次执行: {datetime.now() + timedelta(seconds=secs)}", flush=True)
         time.sleep(secs)
         print("[DailyReport] 开始执行", flush=True)
@@ -237,11 +238,11 @@ def _daily_report_scheduler_loop() -> None:
 
 @app.on_event("startup")
 def _startup_daily_scheduler() -> None:
-    """启动内置 9 点定时任务（纯 Python，不依赖 crontab）。设 DAILY_REPORT_SCHEDULE=0 可关闭。"""
+    """启动内置 8 点定时任务（纯 Python，不依赖 crontab）。设 DAILY_REPORT_SCHEDULE=0 可关闭。"""
     if os.environ.get("DAILY_REPORT_SCHEDULE", "1").strip() != "0":
         t = threading.Thread(target=_daily_report_scheduler_loop, daemon=True)
         t.start()
-        print("[DailyReport] 已启用内置定时任务（每天 9:00）", flush=True)
+        print("[DailyReport] 已启用内置定时任务（每天 8:00）", flush=True)
 
 
 @app.websocket("/socketcluster/")
@@ -375,6 +376,30 @@ def analyze_thesis(
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
         raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/external-data")
+def get_external_data(
+    ticker: str = Query(..., description="股票代码，如 AAPL、0700.HK"),
+    period: str = Query("6mo", description="历史数据周期，默认 6mo"),
+    interval: str = Query("1d", description="K线周期：1d=日K"),
+    max_news: int = Query(10, ge=1, le=30, description="新闻条数"),
+):
+    """
+    获取股票分析工作流所需的外部数据 JSON 模板格式。
+    供下游项目直接消费，无需再调用外部 API。
+    返回结构：stock_code, market_type, stock_data, historical_data, financial_data, news_data, options_data。
+    """
+    try:
+        from agents.external_data_fetcher import fetch_external_data_json
+        return fetch_external_data_json(
+            ticker=ticker.upper().strip(),
+            period=period,
+            interval=interval,
+            max_news=max_news,
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -73,3 +73,8 @@
 {"ticker": "FANG", "report_date": "2026-03-06", "score": 9.0, "action": "买入", "price_at_report": 179.04, "reduce_price": null, "name": "Diamondback Energy, Inc.", "market": "美股"}
 {"ticker": "0316.HK", "report_date": "2026-03-06", "score": 9.0, "action": "买入", "price_at_report": 156.5, "reduce_price": 142.87, "name": "OOIL", "market": "港股"}
 {"ticker": "0836.HK", "report_date": "2026-03-06", "score": 9.0, "action": "买入", "price_at_report": 18.7, "reduce_price": null, "name": "CHINA RES POWER", "market": "港股"}
+{"ticker": "LMT", "report_date": "2026-03-09", "score": 9.0, "action": "买入", "price_at_report": 671.77, "reduce_price": null, "name": "Lockheed Martin Corporation", "market": "美股"}
+{"ticker": "NOC", "report_date": "2026-03-09", "score": 9.0, "action": "买入", "price_at_report": 756.13, "reduce_price": null, "name": "Northrop Grumman Corporation", "market": "美股"}
+{"ticker": "VLO", "report_date": "2026-03-09", "score": 9.0, "action": "买入", "price_at_report": 224.63, "reduce_price": null, "name": "Valero Energy Corporation", "market": "美股"}
+{"ticker": "600887.SS", "report_date": "2026-03-09", "score": 9.0, "action": "买入", "price_at_report": 26.21, "reduce_price": null, "name": "伊利股份", "market": "A股"}
+{"ticker": "600309.SS", "report_date": "2026-03-09", "score": 9.0, "action": "买入", "price_at_report": 93.0, "reduce_price": null, "name": "WANHUA CHEMICAL GROUP CO LTD", "market": "A股"}

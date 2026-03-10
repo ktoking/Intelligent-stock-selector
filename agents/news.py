@@ -1,6 +1,8 @@
 """
 消息面：从 yfinance 拉取新闻标题与链接，供 LLM 或报告展示。
 """
+from config.yf_suppress import suppress_yf_noise
+suppress_yf_noise()
 import yfinance as yf
 from typing import List, Dict, Any
 

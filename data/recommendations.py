@@ -3,6 +3,8 @@
 仅使用 JSONL 持久化，与 memory_store 同目录；不依赖外部 DB。
 记录条件见 config/analysis_config（RECOMMEND_MIN_SCORE、RECOMMEND_ACTION）。
 """
+from config.yf_suppress import suppress_yf_noise
+suppress_yf_noise()
 import os
 import json
 from datetime import datetime, timedelta

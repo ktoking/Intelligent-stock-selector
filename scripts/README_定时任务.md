@@ -33,7 +33,7 @@ launchctl unload ~/Library/LaunchAgents/com.stock-agent.server.plist
 ```
 
 - **server**：登录后自动启动并保持运行，崩溃会自动重启
-- **daily**：每天 9:00 执行一次（周末/节假日由脚本内部跳过）
+- **daily**：每天 8:00 执行一次（周末/节假日由脚本内部跳过）
 
 日志：`report/output/daily_report.log`、`daily_report.err`
 
