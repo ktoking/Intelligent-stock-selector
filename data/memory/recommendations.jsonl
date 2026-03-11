@@ -78,3 +78,25 @@
 {"ticker": "VLO", "report_date": "2026-03-09", "score": 9.0, "action": "买入", "price_at_report": 224.63, "reduce_price": null, "name": "Valero Energy Corporation", "market": "美股"}
 {"ticker": "600887.SS", "report_date": "2026-03-09", "score": 9.0, "action": "买入", "price_at_report": 26.21, "reduce_price": null, "name": "伊利股份", "market": "A股"}
 {"ticker": "600309.SS", "report_date": "2026-03-09", "score": 9.0, "action": "买入", "price_at_report": 93.0, "reduce_price": null, "name": "WANHUA CHEMICAL GROUP CO LTD", "market": "A股"}
+{"ticker": "COST", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 1005.3, "reduce_price": null, "name": "Costco Wholesale Corporation", "market": "美股"}
+{"ticker": "SBUX", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 99.77, "reduce_price": null, "name": "Starbucks Corporation", "market": "美股"}
+{"ticker": "MRVL", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 92.65, "reduce_price": null, "name": "Marvell Technology, Inc.", "market": "美股"}
+{"ticker": "300750.SZ", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 376.3, "reduce_price": null, "name": "宁德时代", "market": "A股"}
+{"ticker": "003816.SZ", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 4.23, "reduce_price": null, "name": "CGN POWER CO LTD", "market": "A股"}
+{"ticker": "688802.SS", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 529.0, "reduce_price": null, "name": "METAX INTEGRATED CIRCUITS SHANG", "market": "A股"}
+{"ticker": "003816.SZ", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 4.23, "reduce_price": null, "name": "CGN POWER CO LTD", "market": "A股"}
+{"ticker": "000001.SZ", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 10.81, "reduce_price": null, "name": "平安银行", "market": "A股"}
+{"ticker": "002384.SZ", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 108.06, "reduce_price": null, "name": "SUZHOU DONGSHAN PR", "market": "A股"}
+{"ticker": "300750.SZ", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 376.3, "reduce_price": null, "name": "宁德时代", "market": "A股"}
+{"ticker": "600276.SS", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 56.55, "reduce_price": null, "name": "恒瑞医药", "market": "A股"}
+{"ticker": "003816.SZ", "report_date": "2026-03-10", "score": 9.0, "action": "买入", "price_at_report": 4.23, "reduce_price": null, "name": "CGN POWER CO LTD", "market": "A股"}
+{"ticker": "CRM", "report_date": "2026-03-11", "score": 9.0, "action": "买入", "price_at_report": 194.91, "reduce_price": null, "name": "Salesforce, Inc.", "market": "美股"}
+{"ticker": "EW", "report_date": "2026-03-11", "score": 9.0, "action": "买入", "price_at_report": 85.78, "reduce_price": null, "name": "Edwards Lifesciences Corporatio", "market": "美股"}
+{"ticker": "601988.SS", "report_date": "2026-03-11", "score": 9.0, "action": "买入", "price_at_report": 5.33, "reduce_price": null, "name": "BANK OF CHINA LTD", "market": "A股"}
+{"ticker": "601328.SS", "report_date": "2026-03-11", "score": 9.0, "action": "买入", "price_at_report": 6.73, "reduce_price": null, "name": "BANK OF COMMUNICATIONS CO LTD", "market": "A股"}
+{"ticker": "003816.SZ", "report_date": "2026-03-11", "score": 9.0, "action": "买入", "price_at_report": 4.23, "reduce_price": null, "name": "CGN POWER CO LTD", "market": "A股"}
+{"ticker": "000001.SZ", "report_date": "2026-03-11", "score": 9.0, "action": "买入", "price_at_report": 10.81, "reduce_price": null, "name": "平安银行", "market": "A股"}
+{"ticker": "1299.HK", "report_date": "2026-03-11", "score": 9.0, "action": "买入", "price_at_report": 88.8, "reduce_price": null, "name": "友邦保险", "market": "港股"}
+{"ticker": "0836.HK", "report_date": "2026-03-11", "score": 9.0, "action": "买入", "price_at_report": 18.8, "reduce_price": null, "name": "CHINA RES POWER", "market": "港股"}
+{"ticker": "INTC", "report_date": "2026-03-11", "score": 9.0, "action": "买入", "price_at_report": 46.78, "reduce_price": null, "name": "Intel Corporation", "market": "美股"}
+{"ticker": "SBUX", "report_date": "2026-03-11", "score": 9.0, "action": "买入", "price_at_report": 100.77, "reduce_price": null, "name": "Starbucks Corporation", "market": "美股"}

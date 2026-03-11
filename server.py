@@ -77,6 +77,12 @@ def _run_report_impl(
         _report_progress["errors"] = []
     print(f"[Report] 开始: 共 {total} 只", flush=True)
     cards: List[Dict[str, Any]] = []
+    backtest_summary_prev: Dict[str, Any] = {}
+    try:
+        from data.recommendations import get_past_recommendations_with_returns
+        _, backtest_summary_prev = get_past_recommendations_with_returns(since_days=90)
+    except Exception:
+        pass
     try:
         for i, t in enumerate(ticker_list):
             with _report_progress_lock:
@@ -86,9 +92,9 @@ def _run_report_impl(
             t0 = time.time()
             try:
                 if deep == 1:
-                    one = run_one_ticker_deep_report(t, include_narrative=True)
+                    one = run_one_ticker_deep_report(t, include_narrative=True, backtest_summary=backtest_summary_prev)
                 else:
-                    one = run_full_analysis(t, interval=interval_internal, include_prepost=(prepost == 1))
+                    one = run_full_analysis(t, interval=interval_internal, include_prepost=(prepost == 1), backtest_summary=backtest_summary_prev)
                 elapsed = time.time() - t0
                 if one:
                     cards.append(one)

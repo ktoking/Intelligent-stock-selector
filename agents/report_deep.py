@@ -129,6 +129,7 @@ def run_one_ticker_deep_report(
     ticker: str,
     peers: Optional[str] = None,
     include_narrative: bool = True,
+    backtest_summary: Optional[Dict[str, Any]] = None,
 ) -> Optional[Dict[str, Any]]:
     """
     对单只标的：1) 跑 full_analysis 得卡片基础数据；2) 跑深度分析 ①②③④⑤；3) 取上次 full_deep_run；4) 跑对比得大方向/近期趋势；5) 合并为富卡片。
@@ -140,7 +141,7 @@ def run_one_ticker_deep_report(
     print(f"[Report] {ticker} 综合分析（技术+消息+财报+LLM）开始…", flush=True)
     t0 = time.time()
     try:
-        card = run_full_analysis(ticker)
+        card = run_full_analysis(ticker, backtest_summary=backtest_summary)
     except Exception as e:
         print(f"[Report] {ticker} 综合分析异常: {e}", flush=True)
         card = None

@@ -81,3 +81,9 @@ DIAGNOSE_SINCE_DAYS = _int_env("DIAGNOSE_SINCE_DAYS", 90)
 DIAGNOSE_BULL_THRESHOLD_PCT = _float_env("DIAGNOSE_BULL_THRESHOLD_PCT", 5.0)
 # 基准「熊市」判定：同期涨幅 <= 该值视为熊市环境
 DIAGNOSE_BEAR_THRESHOLD_PCT = _float_env("DIAGNOSE_BEAR_THRESHOLD_PCT", -5.0)
+
+# ---------- 自我进化：回测胜率反哺评分 ----------
+# 是否启用：当近期推荐胜率低于阈值时，在综合分析 prompt 中注入「请更保守给 9/10 分」
+EVOLVE_ENABLED = os.environ.get("EVOLVE_ENABLED", "1").strip() in ("1", "true", "yes")
+# 近期胜率低于该值（%）时触发收紧，默认 45
+EVOLVE_WIN_RATE_THRESHOLD = _float_env("EVOLVE_WIN_RATE_THRESHOLD", 45.0)

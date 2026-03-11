@@ -68,6 +68,7 @@ def _build_prompt(
     news_llm_summary: str = "",
     financials_interpretation: str = "",
     rag_context: str = "",
+    backtest_summary: Optional[Dict[str, Any]] = None,
 ) -> str:
     tech_text = "无数据"
     tech_levels = technical.get("tech_levels") or {}
@@ -165,10 +166,20 @@ ATR%: {atr_pct}%（ATR/收盘价×100，用于止损与仓位参考）
     is_us = not (ticker_upper.endswith(".SS") or ticker_upper.endswith(".SZ") or ".HK" in ticker_upper)
     us_extra = "美股标的：9分必须满足日线多头排列或MACD金叉/零轴上，否则最高8分。" if is_us else ""
 
+    strategy_feedback = ""
+    try:
+        from config.analysis_config import EVOLVE_ENABLED, EVOLVE_WIN_RATE_THRESHOLD
+        if EVOLVE_ENABLED and backtest_summary:
+            recent = backtest_summary.get("recent_win_rate_pct") or 0
+            if isinstance(recent, (int, float)) and recent < EVOLVE_WIN_RATE_THRESHOLD:
+                strategy_feedback = f"\n【策略反馈】近期推荐胜率偏低（{recent}%），本周期请更保守：仅对基本面+技术面+消息面均非常突出的标的给 9 分，10 分保留给极少数。"
+    except Exception:
+        pass
+
     return f"""
 你是一位{role}。请以{time_scope}，根据下面【技术面】【消息面】【财报/估值/期权】数据，用中文输出以下 10 项，每项单独一行，格式严格如下（不要多写其他内容）：
 
-【评分与动作要求】9分应极少给出，每份报告建议不超过3只；10分保留给极罕见的最优标的。9分必须同时满足：① 日线多头排列或趋势明确向上 ② 基本面无重大利空 ③ 消息面无重大利空；任一项不满足则最高给8分。{us_extra}加仓价、减仓价必须与上方【技术面入场/离场参考】中的 entry_note、exit_note 一致或在其基础上略作说明。
+【评分与动作要求】9分应极少给出，每份报告建议不超过3只；10分保留给极罕见的最优标的。9分必须同时满足：① 日线多头排列或趋势明确向上 ② 基本面无重大利空 ③ 消息面无重大利空；任一项不满足则最高给8分。{us_extra}加仓价、减仓价必须与上方【技术面入场/离场参考】中的 entry_note、exit_note 一致或在其基础上略作说明。{strategy_feedback}
 
 核心结论：<一句话总结该标的当前是否值得关注及主要理由>
 趋势结构：<一句话描述{trend_hint}>
@@ -324,6 +335,7 @@ def run_full_analysis(
     ticker: str,
     interval: str = "1d",
     include_prepost: bool = False,
+    backtest_summary: Optional[Dict[str, Any]] = None,
 ) -> Optional[Dict[str, Any]]:
     """
     对单只标的做技术+消息+财报+期权综合分析，返回报告卡片所需字段。
@@ -347,6 +359,7 @@ def run_full_analysis(
         interval=interval, include_prepost=include_prepost,
         news_llm_summary=news_llm, financials_interpretation=financials_interpretation,
         rag_context=rag_context,
+        backtest_summary=backtest_summary,
     )
     system = "你是美股多维度分析师。请严格按用户要求的 10 项格式输出，每行一项，不要遗漏。"
     try:

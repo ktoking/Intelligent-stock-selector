@@ -23,7 +23,7 @@
 pip install -r requirements.txt
 
 # 本地模型（需先安装 Ollama 并拉取模型）
-ollama pull qwen2.5:3b
+ollama pull qwen3.5:9b
 
 # 启动服务（默认启用 9 点定时任务，设 DAILY_REPORT_SCHEDULE=0 可关闭）
 python server.py
@@ -195,8 +195,8 @@ python scripts/daily_report.py --force
 
 ## 模型与后端
 
-- **默认**：本地 Ollama，模型名由环境变量 `OLLAMA_MODEL` 控制（默认 `qwen2.5:3b`）。
-- **切换模型**：`export OLLAMA_MODEL=qwen2.5:7b` 后启动；或 `ollama pull qwen2.5:7b` 再设环境变量。
+- **默认**：本地 Ollama，模型名由环境变量 `OLLAMA_MODEL` 控制（默认 `qwen3.5:9b`）。
+- **切换模型**：`export OLLAMA_MODEL=qwen2.5:7b` 后启动；或 `ollama pull qwen3.5:9b` 后不设即用默认。
 - **云端**：设置 `DEEPSEEK_API_KEY` 或 `OPENAI_API_KEY`，可选 `LLM_BACKEND=deepseek` / `openai`，详见 `llm.py` 注释。
 
 ---
@@ -226,7 +226,7 @@ nohup python server.py > server.log 2>&1 &
 |------|------|------|
 | `LLM_TEMPERATURE` | 采样温度，越低越稳定 | 0.3 |
 | `LLM_MAX_TOKENS` | 单次回复最大 token | 不设 |
-| `OLLAMA_MODEL` | Ollama 模型名 | qwen2.5:3b |
+| `OLLAMA_MODEL` | Ollama 模型名 | qwen3.5:9b |
 | `LLM_BACKEND` | ollama / deepseek / openai | 按 Key 推断 |
 | `LLM_TIMEOUT` | 请求超时（秒） | 120 |
 | `DEEP_PARALLEL` | 深度分析是否并行，0=顺序 | 1 |
