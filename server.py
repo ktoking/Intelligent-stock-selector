@@ -34,6 +34,7 @@ from agents.analysis_deep import (
     run_thesis,
     run_full_deep_combo,
 )
+from config.delisted import DELISTED_TICKERS
 from config.tickers import (
     get_report_tickers,
     normalize_ticker,
@@ -507,6 +508,7 @@ def report_page(
         ticker_list = [normalize_ticker(t) for t in tickers.split(",") if t.strip()][:200]
     else:
         ticker_list = get_report_tickers(limit=limit, market=market or MARKET_US, pool=pool or None)
+    ticker_list = [t for t in ticker_list if t not in DELISTED_TICKERS]
     if not ticker_list:
         raise HTTPException(status_code=400, detail="请提供 tickers 或使用默认列表（limit>0）")
     cards, title, html_content = _run_report_impl(ticker_list, interval, deep, market, prepost, pool=pool or "")

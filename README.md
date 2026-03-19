@@ -195,9 +195,15 @@ python scripts/daily_report.py --force
 
 ## 模型与后端
 
-- **默认**：本地 Ollama，模型名由环境变量 `OLLAMA_MODEL` 控制（默认 `qwen3.5:9b`）。
-- **切换模型**：`export OLLAMA_MODEL=qwen2.5:7b` 后启动；或 `ollama pull qwen3.5:9b` 后不设即用默认。
-- **云端**：设置 `DEEPSEEK_API_KEY` 或 `OPENAI_API_KEY`，可选 `LLM_BACKEND=deepseek` / `openai`，详见 `llm.py` 注释。
+- **默认**：本地 Ollama（`qwen3.5:9b`），无需 API Key。
+- **配置切换**：复制 `.env.example` 为 `.env` 或 `.env.local`，取消注释要用的预设块即可；或使用脚本：
+  ```bash
+  ./scripts/use-llm.sh ollama      # 本地 Ollama
+  ./scripts/use-llm.sh minimax     # MiniMax 云端（需在 .env.local 填 MINIMAX_API_KEY）
+  ./scripts/use-llm.sh deepseek     # DeepSeek
+  ./scripts/use-llm.sh openai      # OpenAI
+  ```
+- **优先级**：Shell 环境变量 > `.env.local` > `.env`；脚本 `use-llm.sh` 会设置 `LLM_BACKEND`，覆盖文件配置。
 
 ---
 
@@ -227,7 +233,9 @@ nohup python server.py > server.log 2>&1 &
 | `LLM_TEMPERATURE` | 采样温度，越低越稳定 | 0.3 |
 | `LLM_MAX_TOKENS` | 单次回复最大 token | 不设 |
 | `OLLAMA_MODEL` | Ollama 模型名 | qwen3.5:9b |
-| `LLM_BACKEND` | ollama / deepseek / openai | 按 Key 推断 |
+| `MINIMAX_API_KEY` | MiniMax API Key（云端推理） | — |
+| `MINIMAX_MODEL` | MiniMax 模型名 | MiniMax-M2.5 |
+| `LLM_BACKEND` | ollama / minimax / deepseek / openai | 按 Key 推断 |
 | `LLM_TIMEOUT` | 请求超时（秒） | 120 |
 | `DEEP_PARALLEL` | 深度分析是否并行，0=顺序 | 1 |
 | `DAILY_REPORT_SCHEDULE` | 0=关闭 9 点定时任务；默认启用 | 1 |
@@ -236,8 +244,8 @@ nohup python server.py > server.log 2>&1 &
 
 | 目的 | 文件 |
 |------|------|
+| LLM 后端切换预设 | `.env.example`、`config/llm_backend.py` |
 | 温度、max_tokens、PROMPT_TONE | `config/llm_config.py` |
-| 模型/后端/超时 | `llm.py` |
 | Report 10 项格式与综合 Prompt | `agents/full_analysis.py` |
 | 深度分析 ①②③④⑤ 模板 | `agents/prompts.py`、`chains/chains.py` |
 | 选股池、A股/港股代码规范化 | `config/tickers.py` |

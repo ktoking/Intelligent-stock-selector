@@ -15,13 +15,25 @@ OpenClaw **可以**接入本地模型，常见方式有两种：**Ollama**、**L
 
 你本机若已安装 **Ollama**（本项目默认也用 Ollama），可直接让 OpenClaw 走同一服务。
 
-### 1. 确认 Ollama 已运行
+### 1. 确认 Ollama 已运行（避免 LLM request timed out）
+
+**推荐**：用脚本启动并预热，避免冷启动超时：
+
+```bash
+# 一键启动（OLLAMA_KEEP_ALIVE + 预热 qwen2.5:3b）
+./scripts/start-ollama-for-openclaw.sh
+```
+
+或手动：
 
 ```bash
 # 若未安装：https://ollama.com 下载安装后执行
-ollama serve   # 若未自动启动
-ollama list    # 查看已拉取的模型，例如 qwen2.5:3b、qwen2.5:7b
+OLLAMA_KEEP_ALIVE=300 ollama serve   # 保持模型常驻 5 分钟，减少冷启动
+ollama run qwen2.5:3b "hi"           # 预热小模型（首次约 10-20 秒）
+ollama list                         # 查看已拉取模型
 ```
+
+**超时原因**：大模型（如 glm-4.7-flash 19GB）冷启动需 30-60 秒，OpenClaw 默认超时更短。建议用 **qwen2.5:3b**（1.9GB）或 qwen3.5:9b（6.6GB），并预热后再用 OpenClaw。
 
 Ollama 默认地址：` http://127.0.0.1:11434 `（**不要**在 OpenClaw 里加 `/v1`，否则工具调用可能异常）。
 

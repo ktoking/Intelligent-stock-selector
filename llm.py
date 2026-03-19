@@ -1,52 +1,46 @@
 """
-LLM 调用：默认使用本地免费的 Ollama，可选 DeepSeek 等云端 API。
-
-免费用法（推荐）：
-  1. 安装 Ollama：https://ollama.com
-  2. 拉取模型：ollama pull qwen3.5:9b  或  ollama pull qwen2.5:7b
-  3. 不设置任何 API Key，直接运行 python server.py
-
-云端用法（需付费/配额）：
-  export DEEPSEEK_API_KEY=your-key   # 使用 DeepSeek
-  或
-  export OPENAI_API_KEY=your-key    # 使用 OpenAI（base_url 需自行配置）
-
-调优（环境变量）：
-  LLM_TEMPERATURE=0.2   # 采样温度，越低输出越稳定，适合分析
-  LLM_MAX_TOKENS=2048   # 单次回复最大 token，不设则用模型默认
-  OLLAMA_MODEL=qwen3.5:9b   # Ollama 模型名（默认 qwen3.5:9b，可改为 qwen2.5:7b 等）
+LLM 调用：默认使用本地 Ollama，可选 MiniMax、DeepSeek、OpenAI。
+配置见 .env.example，复制为 .env 后取消注释对应预设即可切换。
 """
-import os
+import re
 from openai import OpenAI
 
 from config.llm_config import LLM_TEMPERATURE, LLM_MAX_TOKENS
+from config.llm_backend import (
+    LLM_BACKEND,
+    MINIMAX_API_KEY,
+    DEEPSEEK_API_KEY,
+    OPENAI_API_KEY,
+    OLLAMA_MODEL,
+    MINIMAX_API_BASE,
+    MINIMAX_MODEL,
+    DEEPSEEK_BASE,
+    DEEPSEEK_MODEL,
+    OPENAI_MODEL,
+    LLM_TIMEOUT,
+)
 
-# 后端选择：ollama（本地免费）| deepseek | openai
-_backend = os.environ.get("LLM_BACKEND", "").strip().lower()
-_deepseek_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
-_openai_key = os.environ.get("OPENAI_API_KEY", "").strip()
-
-# LLM 请求超时（秒），避免 report 一直转圈
-_LLM_TIMEOUT = float(os.environ.get("LLM_TIMEOUT", "120"))
-
-# 默认优先 Ollama（无 key 即用本地），有 key 时可按 LLM_BACKEND 或 key 推断
-if _backend == "deepseek" and _deepseek_key:
-    client = OpenAI(api_key=_deepseek_key, base_url="https://api.deepseek.com", timeout=_LLM_TIMEOUT)
-    DEFAULT_MODEL = "deepseek-chat"
-elif _backend == "openai" and _openai_key:
-    client = OpenAI(api_key=_openai_key, timeout=_LLM_TIMEOUT)
-    DEFAULT_MODEL = "gpt-4o-mini"
-elif _deepseek_key and _backend != "ollama":
-    client = OpenAI(api_key=_deepseek_key, base_url="https://api.deepseek.com", timeout=_LLM_TIMEOUT)
-    DEFAULT_MODEL = "deepseek-chat"
-elif _openai_key and _backend not in ("ollama", "deepseek"):
-    client = OpenAI(api_key=_openai_key, timeout=_LLM_TIMEOUT)
-    DEFAULT_MODEL = "gpt-4o-mini"
+if LLM_BACKEND == "minimax" and MINIMAX_API_KEY:
+    client = OpenAI(api_key=MINIMAX_API_KEY, base_url=MINIMAX_API_BASE, timeout=LLM_TIMEOUT)
+    DEFAULT_MODEL = MINIMAX_MODEL
+elif MINIMAX_API_KEY and LLM_BACKEND != "ollama":
+    client = OpenAI(api_key=MINIMAX_API_KEY, base_url=MINIMAX_API_BASE, timeout=LLM_TIMEOUT)
+    DEFAULT_MODEL = MINIMAX_MODEL
+elif LLM_BACKEND == "deepseek" and DEEPSEEK_API_KEY:
+    client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE, timeout=LLM_TIMEOUT)
+    DEFAULT_MODEL = DEEPSEEK_MODEL
+elif LLM_BACKEND == "openai" and OPENAI_API_KEY:
+    client = OpenAI(api_key=OPENAI_API_KEY, timeout=LLM_TIMEOUT)
+    DEFAULT_MODEL = OPENAI_MODEL
+elif DEEPSEEK_API_KEY and LLM_BACKEND not in ("ollama", "minimax"):
+    client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE, timeout=LLM_TIMEOUT)
+    DEFAULT_MODEL = DEEPSEEK_MODEL
+elif OPENAI_API_KEY and LLM_BACKEND not in ("ollama", "deepseek", "minimax"):
+    client = OpenAI(api_key=OPENAI_API_KEY, timeout=LLM_TIMEOUT)
+    DEFAULT_MODEL = OPENAI_MODEL
 else:
-    # 默认：Ollama 本地，免费，无需 API Key
-    client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama", timeout=_LLM_TIMEOUT)
-    # 默认 qwen3.5:9b（16GB 内存可跑）；可设 OLLAMA_MODEL=qwen2.5:7b 等（ollama pull qwen3.5:9b）
-    DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3.5:9b").strip() or "qwen3.5:9b"
+    client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama", timeout=LLM_TIMEOUT)
+    DEFAULT_MODEL = OLLAMA_MODEL
 
 
 def ask_llm(system, user, model=None, temperature=None, max_tokens=None):
@@ -66,7 +60,11 @@ def ask_llm(system, user, model=None, temperature=None, max_tokens=None):
         kwargs["max_tokens"] = max_tok
     try:
         resp = client.chat.completions.create(**kwargs)
-        return resp.choices[0].message.content or ""
+        text = resp.choices[0].message.content or ""
+        # MiniMax M2.1 等模型会返回 <think>...</think> 推理块，需剥离后返回
+        if text and "<think>" in text and "</think>" in text:
+            text = re.sub(r"<think>[\s\S]*?</think>", "", text, flags=re.DOTALL).strip()
+        return text
     except Exception as e:
         err_msg = str(e).strip()
         if "connection" in err_msg.lower() or "111" in err_msg or "localhost" in err_msg.lower():

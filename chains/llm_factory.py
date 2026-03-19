@@ -1,20 +1,25 @@
 """
-LangChain ChatModel 工厂：根据环境变量构建 Ollama / DeepSeek / OpenAI，与 llm.py 逻辑一致。
-温度与 max_tokens 从 config.llm_config 读取，便于与 llm.ask_llm 统一调优。
+LangChain ChatModel 工厂：根据 config.llm_backend 构建 Ollama/MiniMax/DeepSeek/OpenAI。
 """
-import os
 from typing import Optional
 
 from langchain_openai import ChatOpenAI
 from langchain_core.language_models.chat_models import BaseChatModel
 
 from config.llm_config import LLM_TEMPERATURE, LLM_MAX_TOKENS
+from config.llm_backend import (
+    LLM_BACKEND,
+    MINIMAX_API_KEY,
+    DEEPSEEK_API_KEY,
+    OPENAI_API_KEY,
+    OLLAMA_MODEL,
+    MINIMAX_API_BASE,
+    MINIMAX_MODEL,
+    DEEPSEEK_BASE,
+    DEEPSEEK_MODEL,
+    OPENAI_MODEL,
+)
 
-_backend = os.environ.get("LLM_BACKEND", "").strip().lower()
-_deepseek_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
-_openai_key = os.environ.get("OPENAI_API_KEY", "").strip()
-
-_default_model = "gpt-4o-mini"
 _llm_instance: Optional[BaseChatModel] = None
 
 
@@ -26,44 +31,24 @@ def _common_kwargs():
 
 
 def get_llm() -> BaseChatModel:
-    """单例：返回当前配置的 LangChain ChatModel（Ollama/DeepSeek/OpenAI）。"""
+    """单例：返回当前配置的 LangChain ChatModel。"""
     global _llm_instance
     if _llm_instance is not None:
         return _llm_instance
 
     common = _common_kwargs()
-    if _backend == "deepseek" and _deepseek_key:
-        _llm_instance = ChatOpenAI(
-            api_key=_deepseek_key,
-            base_url="https://api.deepseek.com",
-            model="deepseek-chat",
-            **common,
-        )
-    elif _backend == "openai" and _openai_key:
-        _llm_instance = ChatOpenAI(
-            api_key=_openai_key,
-            model="gpt-4o-mini",
-            **common,
-        )
-    elif _deepseek_key and _backend != "ollama":
-        _llm_instance = ChatOpenAI(
-            api_key=_deepseek_key,
-            base_url="https://api.deepseek.com",
-            model="deepseek-chat",
-            **common,
-        )
-    elif _openai_key and _backend not in ("ollama", "deepseek"):
-        _llm_instance = ChatOpenAI(
-            api_key=_openai_key,
-            model="gpt-4o-mini",
-            **common,
-        )
+    if LLM_BACKEND == "minimax" and MINIMAX_API_KEY:
+        _llm_instance = ChatOpenAI(api_key=MINIMAX_API_KEY, base_url=MINIMAX_API_BASE, model=MINIMAX_MODEL, **common)
+    elif MINIMAX_API_KEY and LLM_BACKEND != "ollama":
+        _llm_instance = ChatOpenAI(api_key=MINIMAX_API_KEY, base_url=MINIMAX_API_BASE, model=MINIMAX_MODEL, **common)
+    elif LLM_BACKEND == "deepseek" and DEEPSEEK_API_KEY:
+        _llm_instance = ChatOpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE, model=DEEPSEEK_MODEL, **common)
+    elif LLM_BACKEND == "openai" and OPENAI_API_KEY:
+        _llm_instance = ChatOpenAI(api_key=OPENAI_API_KEY, model=OPENAI_MODEL, **common)
+    elif DEEPSEEK_API_KEY and LLM_BACKEND not in ("ollama", "minimax"):
+        _llm_instance = ChatOpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE, model=DEEPSEEK_MODEL, **common)
+    elif OPENAI_API_KEY and LLM_BACKEND not in ("ollama", "deepseek", "minimax"):
+        _llm_instance = ChatOpenAI(api_key=OPENAI_API_KEY, model=OPENAI_MODEL, **common)
     else:
-        model = os.environ.get("OLLAMA_MODEL", "qwen2.5:7b").strip() or "qwen2.5:7b"
-        _llm_instance = ChatOpenAI(
-            base_url="http://localhost:11434/v1",
-            api_key="ollama",
-            model=model,
-            **common,
-        )
+        _llm_instance = ChatOpenAI(base_url="http://localhost:11434/v1", api_key="ollama", model=OLLAMA_MODEL, **common)
     return _llm_instance

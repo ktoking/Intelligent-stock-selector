@@ -234,7 +234,12 @@ def get_past_recommendations_with_returns(
     start = min_report_date - timedelta(days=5)
     end = today + timedelta(days=1)
 
+    try:
+        from config.delisted import DELISTED_TICKERS
+    except ImportError:
+        DELISTED_TICKERS = frozenset()
     tickers = list({(r.get("ticker") or "").upper().strip() for r in rows if r.get("ticker")})
+    tickers = [t for t in tickers if t not in DELISTED_TICKERS]
     hist_by_ticker: Dict[str, Any] = {}
     for t in tickers:
         try:

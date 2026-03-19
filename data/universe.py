@@ -7,8 +7,13 @@ from typing import List, Optional
 
 import pandas as pd
 from config.yf_suppress import suppress_yf_noise
+from config.delisted import DELISTED_TICKERS
 suppress_yf_noise()
 import yfinance as yf
+
+
+def _filter_delisted(tickers: List[str]) -> List[str]:
+    return [t for t in tickers if t not in DELISTED_TICKERS]
 
 
 # ---------- 线上成分股拉取（Wikipedia 等），失败则返回 None，由调用方回退静态列表 ----------
@@ -24,12 +29,12 @@ def get_nasdaq100_tickers_from_web() -> Optional[List[str]]:
             cols = [c for c in df.columns if isinstance(c, str)]
             if "Ticker" in cols:
                 symbols = df["Ticker"].astype(str).str.strip().str.replace(".", "-", regex=False)
-                out = [s for s in symbols.tolist() if s and len(s) <= 6 and s != "Ticker"]
+                out = _filter_delisted([s for s in symbols.tolist() if s and len(s) <= 6 and s != "Ticker"])
                 if len(out) >= 50:
                     return out
             if "Symbol" in cols:
                 symbols = df["Symbol"].astype(str).str.strip().str.replace(".", "-", regex=False)
-                out = [s for s in symbols.tolist() if s and len(s) <= 6 and s != "Symbol"]
+                out = _filter_delisted([s for s in symbols.tolist() if s and len(s) <= 6 and s != "Symbol"])
                 if len(out) >= 50:
                     return out
     except Exception:
@@ -286,7 +291,7 @@ def get_russell2000_tickers_from_web() -> Optional[List[str]]:
             for code_col in ["Symbol", "Ticker", "Company"]:
                 if code_col in df.columns:
                     symbols = df[code_col].astype(str).str.strip().str.replace(".", "-", regex=False)
-                    out = [s for s in symbols.tolist() if s and 1 <= len(s) <= 6 and s != code_col]
+                    out = _filter_delisted([s for s in symbols.tolist() if s and 1 <= len(s) <= 6 and s != code_col])
                     if len(out) >= 100:
                         return out
     except Exception:
@@ -307,9 +312,9 @@ def _get_sp500_tickers() -> List[str]:
         url = "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
         tables = pd.read_html(url)
         df = tables[0]
-        # 股票代码：Yahoo 用 - 代替 .
+        # 股票代码：Yahoo 用 - 代替 .；过滤已退市
         symbols = df["Symbol"].astype(str).str.replace(".", "-", regex=False).tolist()
-        return [s for s in symbols if s and len(s) <= 6]
+        return _filter_delisted([s for s in symbols if s and len(s) <= 6])
     except Exception:
         pass
     # 退回：多行业常见标的（科技/消费/医药/金融/工业等）
