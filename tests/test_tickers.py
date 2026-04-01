@@ -14,7 +14,7 @@ def test_normalize_ticker_already_suffix():
     assert normalize_ticker("AAPL") == "AAPL"
     assert normalize_ticker("600519.SS") == "600519.SS"
     assert normalize_ticker("000001.SZ") == "000001.SZ"
-    assert normalize_ticker("0700.HK") == "0700.HK")
+    assert normalize_ticker("0700.HK") == "0700.HK"
 
 
 def test_normalize_ticker_a_share():
@@ -28,9 +28,10 @@ def test_normalize_ticker_a_share():
 
 def test_normalize_ticker_hk():
     assert normalize_ticker("0700") == "0700.HK"
-    assert normalize_ticker("700") == "0700.HK"
+    # 3 位数字不自动补港股，须写 0700 或 4/5 位规则码
+    assert normalize_ticker("700") == "700"
     assert normalize_ticker("00100") == "0100.HK"
-    assert normalize_ticker("01810") == "1810.HK")
+    assert normalize_ticker("01810") == "1810.HK"
 
 
 def test_normalize_ticker_case():

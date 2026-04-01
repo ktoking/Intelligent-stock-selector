@@ -62,7 +62,7 @@ POOL_SMALL_CN = "csi2000"       # A股小盘/潜力（中证2000 风格）
 POOL_HK_HSI = "hsi"             # 港股恒生指数（恒指）
 POOL_HK_HSTECH = "hstech"       # 港股恒生科技指数（恒科）
 
-# 美股纳斯达克100：科技/成长大盘（yfinance 代码），常见成分股静态列表；WBA 已退市(2025-08)已移除
+# 美股纳斯达克100：线上优先 Nasdaq 官网 API（与 Yahoo 代码一致），失败 Wikipedia，再回退本列表；WBA 已退市(2025-08)已移除
 NASDAQ_100_TICKERS_FALLBACK = [
     "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "NVDA", "META", "TSLA", "AVGO", "COST",
     "PEP", "ADBE", "NFLX", "CSCO", "AMD", "INTC", "QCOM", "TXN", "INTU", "AMGN",

@@ -57,6 +57,20 @@ def _interval_label(interval: str, prepost: bool) -> str:
     return s
 
 
+def _momentum_text(technical: dict) -> str:
+    mom = technical.get("momentum_summary") or {}
+    if not mom:
+        return "—"
+    parts = []
+    if mom.get("return_20d_pct") is not None:
+        parts.append(f"近20根K收益率: {mom['return_20d_pct']}%")
+    if mom.get("return_60d_pct") is not None:
+        parts.append(f"近60根K收益率: {mom['return_60d_pct']}%")
+    if mom.get("dist_to_52w_high_pct") is not None:
+        parts.append(f"距窗口最高价: {mom['dist_to_52w_high_pct']}%")
+    return "；".join(parts) if parts else "—"
+
+
 def _build_prompt(
     ticker: str,
     technical: dict,
@@ -69,6 +83,7 @@ def _build_prompt(
     financials_interpretation: str = "",
     rag_context: str = "",
     backtest_summary: Optional[Dict[str, Any]] = None,
+    quant_block: str = "",
 ) -> str:
     tech_text = "无数据"
     tech_levels = technical.get("tech_levels") or {}
@@ -120,6 +135,9 @@ MACD顶背离: {div.get('macd_top')}  MACD底背离: {div.get('macd_bottom')}  R
 
 【波动】
 ATR%: {atr_pct}%（ATR/收盘价×100，用于止损与仓位参考）
+
+【动量（规则因子）】
+{_momentum_text(technical)}
 
 【技术面入场/离场参考（供你评估加仓价与减仓价）】
 入场参考: {tech_levels.get('entry_note') or '—'}
@@ -176,10 +194,13 @@ ATR%: {atr_pct}%（ATR/收盘价×100，用于止损与仓位参考）
     except Exception:
         pass
 
+    qb = (quant_block or "").strip()
+    quant_prefix = f"{qb}\n" if qb else ""
+
     return f"""
 你是一位{role}。请以{time_scope}，根据下面【技术面】【消息面】【财报/估值/期权】数据，用中文输出以下 10 项，每项单独一行，格式严格如下（不要多写其他内容）：
 
-【评分与动作要求】9分应极少给出，每份报告建议不超过3只；10分保留给极罕见的最优标的。9分必须同时满足：① 日线多头排列或趋势明确向上 ② 基本面无重大利空 ③ 消息面无重大利空；任一项不满足则最高给8分。{us_extra}加仓价、减仓价必须与上方【技术面入场/离场参考】中的 entry_note、exit_note 一致或在其基础上略作说明。{strategy_feedback}
+{quant_prefix}【评分与动作要求】9分应极少给出，每份报告建议不超过3只；10分保留给极罕见的最优标的。9分必须同时满足：① 日线多头排列或趋势明确向上 ② 基本面无重大利空 ③ 消息面无重大利空；任一项不满足则最高给8分。{us_extra}加仓价、减仓价必须与上方【技术面入场/离场参考】中的 entry_note、exit_note 一致或在其基础上略作说明。{strategy_feedback}
 
 核心结论：<一句话总结该标的当前是否值得关注及主要理由>
 趋势结构：<一句话描述{trend_hint}>
@@ -354,14 +375,41 @@ def run_full_analysis(
     options_summary = get_put_call_summary(ticker)
 
     rag_context = _get_rag_context(ticker)
+    quant_baseline_100: Optional[int] = None
+    quant_baseline_note = ""
+    quant_block = ""
+    try:
+        from config.analysis_config import ANALYSIS_QUANT_BASELINE_ENABLED
+        if ANALYSIS_QUANT_BASELINE_ENABLED:
+            from agents.score_baseline import compute_quant_baseline, baseline_to_score10_hint
+            quant_baseline_100, quant_baseline_note = compute_quant_baseline(
+                technical, fundamental, options_summary,
+            )
+            hint = baseline_to_score10_hint(quant_baseline_100)
+            quant_block = (
+                f"【定量参考分（0-100，规则汇总）】{quant_baseline_100} 分。{hint}。"
+                f"明细：{quant_baseline_note}\n"
+                "你的「评分」1-10 应与该参考大体一致，允许偏差±1；若定性理由充分可±2并须在评分理由中说明。\n"
+            )
+    except Exception:
+        quant_baseline_100, quant_baseline_note = None, ""
+
     prompt = _build_prompt(
         ticker, technical, news, fundamental, options_summary,
         interval=interval, include_prepost=include_prepost,
         news_llm_summary=news_llm, financials_interpretation=financials_interpretation,
         rag_context=rag_context,
         backtest_summary=backtest_summary,
+        quant_block=quant_block,
     )
-    system = "你是美股多维度分析师。请严格按用户要求的 10 项格式输出，每行一项，不要遗漏。"
+    from config.llm_config import PROMPT_TONE
+    _tone_map = {
+        "conservative": "偏保守、风险提示优先",
+        "aggressive": "可更积极表达对趋势与机会的判断",
+        "neutral": "平衡多空、证据优先",
+    }
+    tone_hint = _tone_map.get(PROMPT_TONE, _tone_map["neutral"])
+    system = f"你是多维度股票分析师（{tone_hint}）。请严格按用户要求的 10 项格式输出，每行一项，不要遗漏。"
     try:
         print(f"[Report] {ticker} LLM 综合评分开始（等待 Ollama/API）…", flush=True)
         parsed = _run_llm_and_parse(system, prompt)
@@ -422,4 +470,6 @@ def run_full_analysis(
         "interval": interval,
         "prepost": include_prepost,
         "source_data": _build_source_data(ticker, interval),
+        "quant_baseline_100": quant_baseline_100,
+        "quant_baseline_note": quant_baseline_note or "—",
     }

@@ -1,11 +1,16 @@
 """
 动态股票池：从市值、近期增长等维度拉取美股优质标的（默认 S&P 500 池内取 top N）。
 并支持从线上拉取纳斯达克100、恒生指数、沪深300 等成分股，便于全量分析。
+
+纳指 100 说明：Yahoo Finance 无公开发布的「完整指数成分」接口；其 query2 上 QQQ 的
+quoteSummary/topHoldings 仅含约 10 只重仓。完整列表优先使用指数编制方 Nasdaq 官网
+api.nasdaq.com（股票代码与 Yahoo/yfinance 一致），失败再回退 Wikipedia。
 """
 import time
 from typing import List, Optional
 
 import pandas as pd
+import requests
 from config.yf_suppress import suppress_yf_noise
 from config.delisted import DELISTED_TICKERS
 suppress_yf_noise()
@@ -16,9 +21,10 @@ def _filter_delisted(tickers: List[str]) -> List[str]:
     return [t for t in tickers if t not in DELISTED_TICKERS]
 
 
-# ---------- 线上成分股拉取（Wikipedia 等），失败则返回 None，由调用方回退静态列表 ----------
+# ---------- 线上成分股拉取（指数编制方 / Wikipedia 等），失败则返回 None，由调用方回退静态列表 ----------
 
-def get_nasdaq100_tickers_from_web() -> Optional[List[str]]:
+
+def _nasdaq100_tickers_from_wikipedia() -> Optional[List[str]]:
     """从 Wikipedia 拉取纳斯达克100 成分股，失败返回 None。"""
     try:
         url = "https://en.wikipedia.org/wiki/Nasdaq-100"
@@ -40,6 +46,55 @@ def get_nasdaq100_tickers_from_web() -> Optional[List[str]]:
     except Exception:
         pass
     return None
+
+
+def get_nasdaq100_tickers_from_nasdaq_api() -> Optional[List[str]]:
+    """
+    从纳斯达克官网 list-type 接口拉取 Nasdaq-100 成分（编制方数据）。
+    代码格式与 Yahoo Finance / yfinance 一致（如 BRK.B → BRK-B）。
+    """
+    try:
+        url = "https://api.nasdaq.com/api/quote/list-type/nasdaq100"
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            ),
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://www.nasdaq.com/",
+        }
+        resp = requests.get(url, headers=headers, timeout=30)
+        resp.raise_for_status()
+        body = resp.json()
+        rows = body.get("data", {}).get("data", {}).get("rows")
+        if not rows or not isinstance(rows, list):
+            return None
+        out: List[str] = []
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            sym = row.get("symbol")
+            if not sym:
+                continue
+            s = str(sym).strip().upper().replace(".", "-")
+            if s and 1 <= len(s) <= 6 and s not in out:
+                out.append(s)
+        out = _filter_delisted(out)
+        return out if len(out) >= 50 else None
+    except Exception:
+        return None
+
+
+def get_nasdaq100_tickers_from_web() -> Optional[List[str]]:
+    """
+    纳斯达克100：优先 Nasdaq 官网 API，失败则 Wikipedia。
+    （Yahoo 无完整成分 JSON；QQQ 的 topHoldings 仅约 10 只，不足以覆盖指数。）
+    """
+    tickers = get_nasdaq100_tickers_from_nasdaq_api()
+    if tickers:
+        return tickers
+    return _nasdaq100_tickers_from_wikipedia()
 
 
 def _parse_hk_code(raw: str) -> Optional[str]:

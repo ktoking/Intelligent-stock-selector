@@ -87,3 +87,11 @@ DIAGNOSE_BEAR_THRESHOLD_PCT = _float_env("DIAGNOSE_BEAR_THRESHOLD_PCT", -5.0)
 EVOLVE_ENABLED = os.environ.get("EVOLVE_ENABLED", "1").strip() in ("1", "true", "yes")
 # 近期胜率低于该值（%）时触发收紧，默认 45
 EVOLVE_WIN_RATE_THRESHOLD = _float_env("EVOLVE_WIN_RATE_THRESHOLD", 45.0)
+
+# ---------- 定量评分基准线（规则引擎 0–100，注入综合分析 Prompt） ----------
+# 设为 0 / false / no 关闭
+ANALYSIS_QUANT_BASELINE_ENABLED = os.environ.get("ANALYSIS_QUANT_BASELINE_ENABLED", "1").strip().lower() not in (
+    "0",
+    "false",
+    "no",
+)

@@ -20,17 +20,20 @@ OpenClaw **可以**接入本地模型，常见方式有两种：**Ollama**、**L
 **推荐**：用脚本启动并预热，避免冷启动超时：
 
 ```bash
-# 一键启动（OLLAMA_KEEP_ALIVE + 预热 qwen2.5:3b）
+# 一键启动（默认预热 qwen3.5:9b，与 OpenClaw primary 一致）
 ./scripts/start-ollama-for-openclaw.sh
+
+# 换小模型预热：MODEL=qwen2.5:3b ./scripts/start-ollama-for-openclaw.sh
 ```
 
 或手动：
 
 ```bash
 # 若未安装：https://ollama.com 下载安装后执行
+ollama pull qwen3.5:9b               # 未拉取时先执行
 OLLAMA_KEEP_ALIVE=300 ollama serve   # 保持模型常驻 5 分钟，减少冷启动
-ollama run qwen2.5:3b "hi"           # 预热小模型（首次约 10-20 秒）
-ollama list                         # 查看已拉取模型
+ollama run qwen3.5:9b "hi"           # 预热（首次约 20-40 秒）
+ollama list                          # 查看已拉取模型
 ```
 
 **超时原因**：大模型（如 glm-4.7-flash 19GB）冷启动需 30-60 秒，OpenClaw 默认超时更短。建议用 **qwen2.5:3b**（1.9GB）或 qwen3.5:9b（6.6GB），并预热后再用 OpenClaw。
@@ -75,6 +78,34 @@ Ollama 默认地址：` http://127.0.0.1:11434 `（**不要**在 OpenClaw 里加
 - **api**：必须为 ` "ollama" `，不要用 ` openai-completions `。
 - **id**：必须和 ` ollama list ` 里的模型名一致（含 tag），例如 ` qwen2.5:7b `、` qwen2.5:3b `。
 - 若希望同时保留云端模型作备用，保留 ` "mode": "merge" `，并在 ` providers ` 里继续配置其他提供商即可。
+
+### 3. Ollama Cloud：`minimax-m2.7:cloud`（本机 OpenClaw 调云端推理）
+
+OpenClaw 仍使用 **`baseUrl`: `http://127.0.0.1:11434`** + **`api`: `"ollama"`**，模型 id 写 **`minimax-m2.7:cloud`**；实际推理在 **Ollama 云端**，本机只跑 Ollama 客户端。
+
+**必须同时满足：**
+
+1. **Ollama 账号**：终端执行一次 `ollama signin`（浏览器登录 [ollama.com](https://ollama.com)）。
+2. **API Key**：在 [ollama.com/settings/keys](https://ollama.com/settings/keys) 创建密钥，本机环境变量：
+   ```bash
+   export OLLAMA_API_KEY="你的密钥"
+   ```
+   启动 **`ollama serve`** 的终端 / LaunchAgent 也要带上该变量（否则本地会 `unauthorized`）。
+3. **拉取 manifest**：`ollama pull minimax-m2.7:cloud`
+4. **`openclaw.json`** 示例：
+   ```json
+   "agents": {
+     "defaults": {
+       "model": { "primary": "ollama/minimax-m2.7:cloud" },
+       "models": { "ollama/minimax-m2.7:cloud": {} }
+     }
+   }
+   ```
+   并在 `models.providers.ollama.models` 里增加 id 为 `minimax-m2.7:cloud` 的条目（`contextWindow` 可写 `200000`）。
+
+5. 改配置后：`openclaw gateway restart`
+
+> 与 **MiniMax 开放平台**（`api.minimaxi.com` + `MINIMAX_API_KEY`）不是同一路；本项目 `stock-agent` 若用 minimax provider，与 Ollama Cloud 互不冲突。
 
 ---
 

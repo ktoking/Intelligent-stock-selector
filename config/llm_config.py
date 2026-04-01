@@ -32,3 +32,17 @@ else:
 # ---------- Prompt 风格（预留） ----------
 # conservative | neutral | aggressive：可后续在 full_analysis / fundamental 中根据该值微调 system 描述
 PROMPT_TONE = (os.environ.get("PROMPT_TONE", "conservative") or "conservative").strip().lower()
+
+# ---------- LLM 重试（tenacity） ----------
+def _int_env(key: str, default: int) -> int:
+    try:
+        v = os.environ.get(key, "").strip()
+        return int(v) if v else default
+    except (TypeError, ValueError):
+        return default
+
+
+# 最大尝试次数（含首次），设为 1 即关闭重试
+LLM_RETRY_ATTEMPTS = max(1, _int_env("LLM_RETRY_ATTEMPTS", 3))
+LLM_RETRY_MIN_WAIT = float(os.environ.get("LLM_RETRY_MIN_WAIT", "2") or "2")
+LLM_RETRY_MAX_WAIT = float(os.environ.get("LLM_RETRY_MAX_WAIT", "60") or "60")

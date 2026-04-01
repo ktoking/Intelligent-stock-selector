@@ -1,0 +1,3 @@
+# 可选：向量化回测（scripts/backtest_recommendations_vectorbt.py）
+# pip install -r requirements-optional.txt
+vectorbt>=0.26.0

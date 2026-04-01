@@ -103,3 +103,5 @@
 {"ticker": "CVX", "report_date": "2026-03-12", "score": 9.0, "action": "买入", "price_at_report": 191.79, "reduce_price": null, "name": "Chevron Corporation", "market": "美股"}
 {"ticker": "JNJ", "report_date": "2026-03-12", "score": 9.0, "action": "买入", "price_at_report": 242.99, "reduce_price": null, "name": "Johnson & Johnson", "market": "美股"}
 {"ticker": "RTX", "report_date": "2026-03-12", "score": 9.0, "action": "买入", "price_at_report": 207.26, "reduce_price": 195.09, "name": "RTX Corporation", "market": "美股"}
+{"ticker": "601998.SS", "report_date": "2026-03-30", "score": 9.0, "action": "买入", "price_at_report": 8.32, "reduce_price": null, "name": "CHINA CITIC BANK CORPORATION LT", "market": "A股"}
+{"ticker": "MRVL", "report_date": "2026-04-01", "score": 9.0, "action": "买入", "price_at_report": 99.05, "reduce_price": null, "name": "Marvell Technology, Inc.", "market": "美股"}

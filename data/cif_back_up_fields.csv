@@ -1,0 +1,333 @@
+﻿表名,字段名,数据类型,可空,说明
+cif_client_bak,CLIENT_KEY,"decimal(15,0)",否,Internal key customer relationships
+cif_client_bak,CLIENT_NO,varchar(20),是,client number
+cif_client_bak,CLIENT_TYPE,varchar(3),是,Customer Type
+cif_client_bak,CATEGORY_TYPE,varchar(3),是,Customer segmentation type
+cif_client_bak,CLIENT_GRP,varchar(20),是,Customer Group
+cif_client_bak,CLIENT_SHORT,varchar(200),是,Customer referred
+cif_client_bak,CH_CLIENT_NAME,varchar(200),是,Fang Zhongwen association name
+cif_client_bak,CLIENT_NAME,varchar(300),是,client name
+cif_client_bak,NAME_SUFFIX,varchar(5),是,Customer name suffix
+cif_client_bak,CLIENT_MNEMONIC,varchar(8),是,Mnemonic name
+cif_client_bak,CLIENT_ALIAS,varchar(300),是,Aliases
+cif_client_bak,ADDRESS,varchar(140),是,address
+cif_client_bak,ACCT_EXEC,varchar(30),是,account Manager
+cif_client_bak,COUNTRY_LOC,varchar(3),是,Country of Citizenship
+cif_client_bak,DECLARE_NATIONALITY,varchar(32),是,declare nationality
+cif_client_bak,STATE_LOC,varchar(10),是,province / State
+cif_client_bak,CLIENT_CITY,varchar(8),是,City Code
+cif_client_bak,COUNTRY_CITIZEN,varchar(100),是,Birthplace
+cif_client_bak,COUNTRY_RISK,varchar(3),是,National Risk Control
+cif_client_bak,CTRL_BRANCH,varchar(20),是,Control Branch
+cif_client_bak,PROFIT_CENTRE,varchar(12),是,Profit Center
+cif_client_bak,CLASS_1,varchar(6),是,Category 1
+cif_client_bak,CLASS_2,varchar(6),是,Category 2
+cif_client_bak,CLASS_3,varchar(6),是,Category 3
+cif_client_bak,CLASS_4,varchar(6),是,Category 4
+cif_client_bak,CLASS_5,varchar(6),是,Category 5
+cif_client_bak,NARRATIVE,text,是,"Abstract, use the account when the account, cancel the account when the cause of cancellation"
+cif_client_bak,INTERNAL_IND,varchar(1),是,Whether internal customers
+cif_client_bak,TAXABLE_IND,varchar(1),是,Are taxes
+cif_client_bak,CLIENT_SPREAD,"decimal(15,8)",是,The proportion of customers preferential exchange rate
+cif_client_bak,RISK_WEIGHT,"decimal(5,2)",是,Risk weight
+cif_client_bak,STATUS_INFO,varchar(80),是,status description
+cif_client_bak,CLIENT_STATUS,varchar(3),是,Customer Status
+cif_client_bak,TRAN_STATUS,varchar(1),是,Customer trading status
+cif_client_bak,CLOSED_DATE,varchar(8),是,Close Date
+cif_client_bak,CLIENT_INDICATOR,varchar(1),是,Customer Identification
+cif_client_bak,DISTRICT,varchar(40),是,Area Code
+cif_client_bak,POSTAL_CODE,varchar(6),是,Zip code
+cif_client_bak,CONTROL_DEPT,varchar(40),是,department
+cif_client_bak,SOURCE_TYPE,varchar(10),是,See channel type channels defined fm_channel table
+cif_client_bak,WRITTEN_LANGUAGE,varchar(1),是,Written language
+cif_client_bak,SPOKEN_LANGUAGE,varchar(1),是,Spoken language
+cif_client_bak,PRINT_LANGUAGE,varchar(1),是,Print Language
+cif_client_bak,INLAND_OFFSHORE,varchar(1),是,Overseas territory
+cif_client_bak,TEMP_CLIENT,varchar(1),是,Whether the customer is temporary
+cif_client_bak,PEP_IND,varchar(1),是,Incomplete identity
+cif_client_bak,INFO_LACK,varchar(1),是,PEP identification
+cif_client_bak,CLASS_LEVEL,varchar(4),是,Overall Rating parameter definition table: CIF_CLASS_LEVEL
+cif_client_bak,CLASS_LEVEL_DATE,varchar(8),是,Rating Date
+cif_client_bak,OLD_CLIENT_NO,varchar(20),是,The original system customer number
+cif_client_bak,CREATION_USER_ID,varchar(128),是,Create a teller
+cif_client_bak,CREATION_DATE,varchar(8),是,Creation Date
+cif_client_bak,LAST_CHANGE_USER_ID,varchar(128),是,Last Modified teller
+cif_client_bak,LAST_CHANGE_DATE,varchar(8),是,The last change date
+cif_client_bak,BLACKLIST_IND,varchar(1),是,Whether the customer blacklist
+cif_client_bak,COMPANY,varchar(20),是,Corporate code
+cif_client_bak,INDUSTRY,varchar(20),是,Universal Industry Code
+cif_client_bak,BUSINESS,varchar(20),是,Industry Code
+cif_client_bak,CR_RATING,varchar(4),是,Credit rating
+cif_client_bak,VOUCHER_TYPE,varchar(2),是,Types of
+cif_client_bak,TAXPAYER_TYPE,varchar(2),是,Tax Payer Category
+cif_client_bak,IS_FORMAL,varchar(1),是,Whether weak real-name clients
+cif_client_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+cif_client_bak,TRAN_TIME,bigint,是,transaction hour
+cif_client_bak,ROUTER_KEY,varchar(100),是,Sub-libraries routing keywords
+cif_client_bak,CREATION_CHANNEL,varchar(20),是,Create channels
+cif_client_bak,IS_FARMER,varchar(2),是,Whether farmers
+cif_client_bak,INDUSTRY_ONE,varchar(10),是,National Industry Type (a)
+cif_client_bak,INDUSTRY_TWO,varchar(10),是,State the type of industry (two)
+cif_client_bak,INDUSTRY_THREE,varchar(10),是,National industry type (three)
+cif_client_bak,INDUSTRY_FOUR,varchar(10),是,National industry types (four)
+cif_client_bak,PROOF,text,是,Proof Document
+cif_client_bak,OPEN_ACCT_NO,varchar(40),是,Account Opening Number
+cif_client_bak,ORGANIZATION_CODE,varchar(40),是,Organization Code Number
+cif_client_bak,INSTITUTIONAL_CODE,varchar(40),是,Institution Code Number
+cif_client_bak,COMPANY_NATURE,varchar(50),是,Corporate Nature Type
+cif_client_bak,CLIENT_REMARK,varchar(100),是,Customer Remark Information
+cif_client_bak,SOCIAL_RELATION,varchar(20),是,Social Relationship Type
+cif_client_bak,SPECIFIC_NATURAL_PERSON,varchar(10),是,Specific Individual Person Type
+cif_client_bak,SELF_PROOF_FLAG,varchar(5),是,Are obtain a witness statement
+cif_client_bak,RESIDENT_STATUS,varchar(5),是,Tax identity
+cif_client_bak,BASE_DEPT_ACCT_NO,varchar(50),是,Basic deposit account number
+cif_client_bak,APPLICATION_ID,varchar(18),是,Application Number
+cif_client_bak,BKE_USER_ID,varchar(128),是,BKE user ID
+cif_client_bak,BIRTHPLACE,varchar(150),是,City of birth
+cif_client_bak,VIDEO_VERIFY_TIME,varchar(20),是,Video verification time
+cif_client_bak,VIDEO_VERIFY_LINK,varchar(200),是,Video verification format
+cif_client_bak,AML_RISK_LEVEL,varchar(3),是,AML risk rating
+cif_client_bak,AML_NEXT_REVIEW_DATE,varchar(8),是,Anti-Money Laundering next review date
+cif_client_bak,AML_HIGH_RISK_BUSINESS,varchar(1),是,Whether high-risk
+cif_client_bak,AML_ADVERSE_NEWS_MENTIONS,varchar(1),是,Are there negative news
+cif_client_bak,OFFICE_NAME,varchar(100),是,office
+cif_client_bak,OFFICE_NUMBER_PREFIX,varchar(5),是,Office number prefix
+cif_client_bak,OFFICE_NUMBER,varchar(13),是,Office number
+cif_client_bak,CLIENT_INACTIVE_DATE,varchar(8),是,Does not hold customers to switch accounts (not including closed accounts) customer status date
+cif_client_bak,RELATED_PARTY,varchar(5),是,Related party
+cif_client_bak,AC_ID,varchar(10),是,Anti-Money Laundering customer ID
+cif_client_bak,AR_ID,varchar(10),是,AML customer identification ID
+cif_client_bak,EXIT_AML_REASON,varchar(1),是,Exit AML reason
+cif_client_bak,AML_EX_PEP_STATUS,varchar(1),是,Last sensitive person status
+cif_client_bak,ADDITIONAL_AML1,varchar(200),是,Additional AML Information Field 1
+cif_client_bak,ADDITIONAL_AML2,varchar(200),是,Additional AML Information Field 2
+cif_client_bak,ADDITIONAL_AML3,varchar(200),是,Additional AML Information Field 3
+cif_client_bak,ADDITIONAL_AML4,varchar(200),是,Additional AML Information Field 4
+cif_client_bak,ADDITIONAL_AML5,varchar(200),是,Additional AML Information Field 5
+cif_client_bak,AML_LAST_REVIEW_DATE,varchar(8),是,Aml last review date
+cif_client_bak,COUNTRY_OF_BIRTH,varchar(150),是,Country Of Birth
+cif_client_bak,OPTION_SOURCE,varchar(20),是,OPTION SOURCE
+cif_client_bak,KYC_FLAG,varchar(20),是,KYC Flag
+cif_client_bak,HANYU_PINYIN_NAME,varchar(300),是,hanyu pinyin name
+cif_client_bak,HANYU_PINYIN_ALIAS_NAME,varchar(300),是,hanyu pinyin alias name
+cif_client_bak,MARRIED_NAME,varchar(300),是,married name
+cif_client_bak,AML_CRP_ID,varchar(10),是,aml cpr id (abandoned)
+cif_client_bak,EDD_ASSESSMENT,varchar(300),是,aml assessment url
+cif_client_bak,SEGMENT,varchar(3),是,cif class
+cif_client_bak,SUB_SEGMENT,varchar(3),是,cif sub class
+cif_client_bak,CREATE_TIME,varchar(17),否,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+cif_client_bak,MODIFY_TIME,varchar(17),否,Timestamp of data updation
+cif_client_bak,ASSOCIATED_PARTY_FLAG,varchar(1),是,Core Banking
+cif_client_bak,SEAMLESS_ID,bigint,是,SEAMLESS ID
+cif_client_bak,LAST_SCREENING_CONCLUSION,varchar(200),是,AML Last Screening Conclusion
+cif_client_bak,PERIODIC_REVIEW_STATUS,varchar(64),是,AML Periodic Review Status
+cif_client_bak,ULTIMATE_PARENT,varchar(32),是,Ultimate Parent Company Code
+cif_client_bak,NTB_FLAG,varchar(1),是,New To Bank Flag Indicator
+cif_client_bak,LAST_RETRIEVAL_TIME,varchar(32),是,Last Retrieval Timestamp
+cif_client_bak,CLOSE_TYPE,varchar(1),是,Closing Type Code
+cif_client_bak,CLOSE_REASON,varchar(300),是,Closing Reason Description
+cif_client_document_bak,CLIENT_NO,varchar(20),否,client number
+cif_client_document_bak,ISS_COUNTRY,varchar(3),否,Issuing country
+cif_client_document_bak,DOCUMENT_TYPE,varchar(3),否,type of certificate
+cif_client_document_bak,DOCUMENT_ID,varchar(150),否,ID Number
+cif_client_document_bak,BIRTHDAY,varchar(8),是,Date of birth
+cif_client_document_bak,ISS_DATE,varchar(8),是,Date of issue
+cif_client_document_bak,EXPIRY_DATE,varchar(8),是,Date of Expiry
+cif_client_document_bak,ISS_PLACE,varchar(30),是,Place of Issue
+cif_client_document_bak,ISS_AUTHORITY,varchar(30),是,Issuing authority
+cif_client_document_bak,PREF_FLAG,varchar(1),是,Whether it is the preferred address
+cif_client_document_bak,LAST_CHANGE_DATE,varchar(8),是,The last change date
+cif_client_document_bak,LAST_CHANGE_USER_ID,varchar(128),是,Last Modified teller
+cif_client_document_bak,DIST_CODE,varchar(6),是,Area Codes
+cif_client_document_bak,ISS_STATE,varchar(10),是,"Issued by provincial, state"
+cif_client_document_bak,ISS_CITY,varchar(8),是,Issued by city
+cif_client_document_bak,NEW_DOCUMENT_ID,varchar(40),是,ID Number 2
+cif_client_document_bak,COMPANY,varchar(20),是,Corporate code
+cif_client_document_bak,INSPECT_DATE,varchar(8),是,Last Verification Date
+cif_client_document_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+cif_client_document_bak,TRAN_TIME,bigint,是,transaction hour
+cif_client_document_bak,ROUTER_KEY,varchar(100),是,Sub-libraries routing keywords
+cif_client_document_bak,PHOTO,varchar(140),是,Photos address
+cif_client_document_bak,NAME,varchar(300),是,first name
+cif_client_document_bak,CREATE_TIME,varchar(17),否,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+cif_client_document_bak,MODIFY_TIME,varchar(17),否,Timestamp of data updation
+cif_client_document_bak,PASS_STATUS,varchar(30),是,Live/Approved
+cif_client_document_bak,PASS_TYPE,varchar(30),是,pass type
+cif_client_common_info_bak,ID,int,否,id
+cif_client_common_info_bak,CLIENT_NO,varchar(20),否,client no
+cif_client_common_info_bak,CLIENT_INFO_TYPE,varchar(20),否,client no
+cif_client_common_info_bak,SUB_TYPE,varchar(20),是,client no
+cif_client_common_info_bak,JSON_VALUE,json,是,client no
+cif_client_common_info_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+cif_client_common_info_bak,TRAN_TIME,bigint,是,transaction hour
+cif_client_common_info_bak,CREATE_TIME,varchar(17),是,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+cif_client_common_info_bak,MODIFY_TIME,varchar(17),是,Timestamp of data updation
+corp_associated_party_bak,CLIENT_NO,varchar(20),否,non-individual client no
+corp_associated_party_bak,ASSOCIATED_CLIENT_NO,varchar(20),否,associated party client no
+corp_associated_party_bak,UBO_INDICATOR,varchar(1),是,UBO indicator
+corp_associated_party_bak,APPOINTMENT_FLAG,varchar(1),是,is appointment
+corp_associated_party_bak,SHAREHOLDER_FLAG,varchar(1),是,is Shareholder
+corp_associated_party_bak,LEGAL_ROLE_FLAG,varchar(1),是,is legal role
+corp_associated_party_bak,OTHER_ROLE_FLAG,varchar(1),是,is other role
+corp_associated_party_bak,COMMON_OTHER_ROLE_FLAG,varchar(4),是,common other flag
+corp_associated_party_bak,PRIMARY_CONTACT,varchar(1),是,is primary contact
+corp_associated_party_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+corp_associated_party_bak,TRAN_TIME,bigint,是,transaction hour
+corp_associated_party_bak,CREATE_TIME,varchar(17),是,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+corp_associated_party_bak,MODIFY_TIME,varchar(17),是,Timestamp of data updation
+corp_other_role_bak,CLIENT_NO,varchar(20),否,company client no
+corp_other_role_bak,OPTION_SOURCE,varchar(20),是,option source
+corp_other_role_bak,OTHER_CLIENT_NO,varchar(20),否,individual client no
+corp_other_role_bak,OTHER_ROLE_TYPE,varchar(10),否,other Role Type
+corp_other_role_bak,OTHER_ROLE_ADD_DATE,varchar(8),是,other Role1 Add Date
+corp_other_role_bak,OTHER_ROLE_REMOVE_DATE,varchar(8),是,other Role1 Remove Date
+corp_other_role_bak,FLAG,varchar(1),是,delete flag
+corp_other_role_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+corp_other_role_bak,TRAN_TIME,bigint,是,transaction hour
+corp_other_role_bak,CREATE_TIME,varchar(17),是,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+corp_other_role_bak,MODIFY_TIME,varchar(17),是,Timestamp of data updation
+corp_common_other_role_bak,ID,int,否,seq no
+corp_common_other_role_bak,CLIENT_NO,varchar(20),否,client no
+corp_common_other_role_bak,OTHER_CLIENT_NO,varchar(20),否,client no
+corp_common_other_role_bak,OPTION_SOURCE,varchar(20),是,client no
+corp_common_other_role_bak,ROLE_TYPE,varchar(16),是,Employer who paid the Contribution.
+corp_common_other_role_bak,ROLE_VALUE,varchar(32),是,Date of Contribution Paid
+corp_common_other_role_bak,ROLE_SUB_VALUE,varchar(32),是,Month for which CPF Contribution was paid
+corp_common_other_role_bak,OTHER_INFO,json,是,Amount of contribution in SGD
+corp_common_other_role_bak,ROLE_ADD_DATE,varchar(8),是,Month for which CPF Contribution was paid
+corp_common_other_role_bak,ROLE_REMOVE_DATE,varchar(8),是,Month for which CPF Contribution was paid
+corp_common_other_role_bak,FLAG,varchar(1),是,Month for which CPF Contribution was paid
+corp_common_other_role_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+corp_common_other_role_bak,TRAN_TIME,bigint,是,transaction hour
+corp_common_other_role_bak,CREATE_TIME,varchar(17),是,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+corp_common_other_role_bak,MODIFY_TIME,varchar(17),是,Timestamp of data updation
+corp_legal_role_bak,CLIENT_NO,varchar(20),否,company client no
+corp_legal_role_bak,OPTION_SOURCE,varchar(20),是,option source
+corp_legal_role_bak,ROLE_CLIENT_NO,varchar(20),否,individual client no
+corp_legal_role_bak,ROLE_TYPE,varchar(4),否,Legal Role Type
+corp_legal_role_bak,ROLE_ADD_DATE,varchar(8),是,Legal Role1 Add Date
+corp_legal_role_bak,ROLE_REMOVE_DATE,varchar(8),是,Legal Role1 Remove Date
+corp_legal_role_bak,FLAG,varchar(1),是,delete flag
+corp_legal_role_bak,ROLE_POSITION,varchar(4),否,Legal Role Position Code
+corp_legal_role_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+corp_legal_role_bak,TRAN_TIME,bigint,是,transaction hour
+corp_legal_role_bak,CREATE_TIME,varchar(17),是,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+corp_legal_role_bak,MODIFY_TIME,varchar(17),是,Timestamp of data updation
+corp_appointment_bak,CLIENT_NO,varchar(20),否,company client no
+corp_appointment_bak,OPTION_SOURCE,varchar(20),是,option source
+corp_appointment_bak,APPOINTMENT_STATUS,varchar(1),是,Appointment Status
+corp_appointment_bak,APPOINTMENT_POSITION,varchar(4),否,Appointment Position
+corp_appointment_bak,CATEGORY,varchar(4),否,Appointment Category
+corp_appointment_bak,APPOINTMENT_CLIENT_NO,varchar(20),否,individual client no
+corp_appointment_bak,APPOINTED_DATE,varchar(8),是,Appointment Appointed Date
+corp_appointment_bak,APPOINTMENT_ADD_DATE,varchar(8),是,Appointment Added Date
+corp_appointment_bak,APPOINTMENT_REMOVE_DATE,varchar(8),是,Appointment Remove Date
+corp_appointment_bak,FLAG,varchar(1),是,delete flag
+corp_appointment_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+corp_appointment_bak,TRAN_TIME,bigint,是,transaction hour
+corp_appointment_bak,CREATE_TIME,varchar(17),是,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+corp_appointment_bak,MODIFY_TIME,varchar(17),是,Timestamp of data updation
+corp_shareholder_bak,CLIENT_NO,varchar(20),否,company client no
+corp_shareholder_bak,OPTION_SOURCE,varchar(20),是,option source
+corp_shareholder_bak,SHAREHOLDER_CLIENT_NO,varchar(20),否,individual client no
+corp_shareholder_bak,CATEGORY,varchar(4),否,Shareholder Category
+corp_shareholder_bak,SHAREHOLDER_TYPE,varchar(4),否,Shareholder Type
+corp_shareholder_bak,ALLOCATION,"decimal(30,6)",是,Shareholder Allocation
+corp_shareholder_bak,SHARE_PERCENTAGE,"decimal(30,6)",是,Percentage of Share
+corp_shareholder_bak,CURRENCY,varchar(3),是,Shareholder Currency
+corp_shareholder_bak,SHAREHOLDER_ADD_DATE,varchar(8),是,Shareholder Added Date
+corp_shareholder_bak,SHAREHOLDER_REMOVE_DATE,varchar(8),是,Shareholder Removed Date
+corp_shareholder_bak,FLAG,varchar(1),是,delete flag
+corp_shareholder_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+corp_shareholder_bak,TRAN_TIME,bigint,是,transaction hour
+corp_shareholder_bak,CREATE_TIME,varchar(17),是,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+corp_shareholder_bak,MODIFY_TIME,varchar(17),是,Timestamp of data updation
+corp_company_info_bak,CLIENT_NO,varchar(20),否,non-individual client no
+corp_company_info_bak,UNIQUE_ENTITY_NO,varchar(30),否,Unique Entity Number (UEN)
+corp_company_info_bak,REGISTERED_BUSINESS_NAME,varchar(300),是,Registered Business Name
+corp_company_info_bak,INCORPORATION_COUNTRY,varchar(8),是,Country of Incorporation
+corp_company_info_bak,BUSINESS_STATUS,varchar(8),是,Business Status
+corp_company_info_bak,REGISTRATION_DATE,varchar(10),是,Registration Date
+corp_company_info_bak,BUSINESS_ENTITY_TYPE,varchar(8),是,business entity type
+corp_company_info_bak,OWNERSHIP,varchar(2),是,Ownership
+corp_company_info_bak,OWNERSHIP_LAYER,varchar(2),是,layer of ownership
+corp_company_info_bak,BUSINESS_EXPIRY_DATE,varchar(10),是,Business Expiry Date
+corp_company_info_bak,BOARD_RESOLUTION_FILE_NO,varchar(50),是,Board Resolution File NO for find from file_address_info
+corp_company_info_bak,PRI_OPERATE_COUNTRY,varchar(3),是,Primary Country of Operation
+corp_company_info_bak,CORPORATE_AVATAR,varchar(512),是,company avatar
+corp_company_info_bak,COUNTERPARTY_TYPE,varchar(3),是,Counterparty Type
+corp_company_info_bak,PRIMARY_BUSINESS_ACTIVITY,varchar(20),是,Primary Business Activity
+corp_company_info_bak,SWIFT_CODE,varchar(30),是,SWIFT BIC
+corp_company_info_bak,ALIAS_NAME,varchar(300),是,Alias Name
+corp_company_info_bak,SHORT_NAME,varchar(300),是,Short Name
+corp_company_info_bak,EMAIL,varchar(100),是,Email Address
+corp_company_info_bak,MOBILE_PREFIX,varchar(5),是,Entity Contact Number (Prefix)
+corp_company_info_bak,MOBILE_NUMBER,varchar(30),是,Entity Contact Number
+corp_company_info_bak,FAX,varchar(30),是,Entity Fax
+corp_company_info_bak,LEGAL_ENTITY_TYPE,varchar(5),是,Legal Entity Type
+corp_company_info_bak,ULTIMATE_TYPE,varchar(2),是,Ultimate Type
+corp_company_info_bak,SG_RESIDENCE_INDICATOR,varchar(2),是,757 Residence Indicator SG
+corp_company_info_bak,W8BENE_DATE,varchar(8),是,W-8BEN-E Date
+corp_company_info_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+corp_company_info_bak,TRAN_TIME,bigint,是,transaction hour
+corp_company_info_bak,CREATE_TIME,varchar(17),是,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+corp_company_info_bak,MODIFY_TIME,varchar(17),是,Timestamp of data updation
+shopee_shop_info_bak,ID,bigint,否,primary id
+shopee_shop_info_bak,CLIENT_NO,varchar(20),否,client no
+shopee_shop_info_bak,SHOP_ID,varchar(200),是,shop id
+shopee_shop_info_bak,SHOP_USER_ID,varchar(50),否,Shop userid
+shopee_shop_info_bak,SHOP_AVATAR_FILE_NO,varchar(256),是,Shop Avatar
+shopee_shop_info_bak,SHOP_USER_NAME,varchar(500),是,Shop user name
+shopee_shop_info_bak,SHOP_NAME,varchar(200),是,Shop  name
+shopee_shop_info_bak,SHOP_STATUS,varchar(3),是,Shop status
+shopee_shop_info_bak,SHOP_REGISTRATION_DATE,varchar(8),是,Shop Registration Date
+shopee_shop_info_bak,EMAIL,varchar(128),是,email
+shopee_shop_info_bak,MOBILE_PREFIX,varchar(8),是,mobile prefix
+shopee_shop_info_bak,MOBILE_NUMBER,varchar(20),是,mobile number
+shopee_shop_info_bak,ACCESS_TOKEN,varchar(300),是,access token
+shopee_shop_info_bak,REFRESH_TOKEN,varchar(300),是,refresh token
+shopee_shop_info_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+shopee_shop_info_bak,TRAN_TIME,bigint,是,transaction hour
+shopee_shop_info_bak,CREATE_TIME,varchar(17),是,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+shopee_shop_info_bak,MODIFY_TIME,varchar(17),是,Timestamp of data updation
+cif_client_restraints_bak,RES_SEQ_NO,varchar(35),否,No. restrictions
+cif_client_restraints_bak,CLIENT_NO,varchar(20),否,client number
+cif_client_restraints_bak,RESTRAINT_TYPE,varchar(3),否,Limit Type
+cif_client_restraints_bak,START_DATE,varchar(8),是,effective date
+cif_client_restraints_bak,TERM,varchar(5),是,Deposit period
+cif_client_restraints_bak,TERM_TYPE,varchar(1),是,Type of deposit
+cif_client_restraints_bak,END_DATE,varchar(8),是,End Date
+cif_client_restraints_bak,STATUS,varchar(1),是,status
+cif_client_restraints_bak,USER_ID,varchar(128),是,Use teller
+cif_client_restraints_bak,LAST_CHANGE_DATE,varchar(8),是,The last change date
+cif_client_restraints_bak,LAST_CHANGE_USER_ID,varchar(128),是,Last Modified teller
+cif_client_restraints_bak,AUTH_USER_ID,varchar(128),是,Authorization teller
+cif_client_restraints_bak,NARRATIVE,text,是,"Abstract, use the account when the account, cancel the account when the cause of cancellation"
+cif_client_restraints_bak,SERVICE_TICKET_NUMBER,varchar(100),是,service opertion id
+cif_client_restraints_bak,COMPANY,varchar(20),是,Corporate code
+cif_client_restraints_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+cif_client_restraints_bak,TRAN_TIME,bigint,是,transaction hour
+cif_client_restraints_bak,ROUTER_KEY,varchar(100),是,Sub-libraries routing keywords
+cif_client_restraints_bak,TRAN_BRANCH,varchar(50),是,Transaction Branch Code
+cif_client_restraints_bak,SOURCE_TYPE,varchar(8),是,Channel Type
+cif_client_restraints_bak,OPTION_FLAG,varchar(2),是,A- M- modify operation identifying new solution limit D-
+cif_client_restraints_bak,CREATE_TIME,varchar(17),否,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+cif_client_restraints_bak,MODIFY_TIME,varchar(17),否,Timestamp of data updation
+cif_account_info_bak,CLIENT_NO,varchar(32),否,client number
+cif_account_info_bak,SYSTEM_ID,varchar(4),否,system id
+cif_account_info_bak,PRODUCT_TYPE,varchar(16),否,product type
+cif_account_info_bak,BASE_ACCT_NO,varchar(256),否,base acct number
+cif_account_info_bak,ACCOUNT_STATUS,varchar(1),是,account status
+cif_account_info_bak,OTHER_INFO,json,是,other info
+cif_account_info_bak,TRAN_TIME,bigint,是,transaction hour
+cif_account_info_bak,TRAN_TIMESTAMP,varchar(20),是,Timestamp
+cif_account_info_bak,CREATE_TIME,varchar(17),是,create time
+cif_account_info_bak,MODIFY_TIME,varchar(17),是,modify time
+corp_unique_entity_hist_bak,CLIENT_NO,varchar(20),否,non-individual client no
+corp_unique_entity_hist_bak,PRE_UNIQUE_ENTITY_NO,varchar(30),否,Previous UEN
+corp_unique_entity_hist_bak,HISTORY_NAME,varchar(100),是,History Name
+corp_unique_entity_hist_bak,EFFECTIVE_DATE,varchar(10),是,History Name Effective Date
+corp_unique_entity_hist_bak,TRAN_TIMESTAMP,varchar(17),是,Timestamp
+corp_unique_entity_hist_bak,TRAN_TIME,bigint,是,transaction hour
+corp_unique_entity_hist_bak,CREATE_TIME,varchar(17),是,"The UNIX timestamp of the data insertion, 13 digs GMT timestamp"
+corp_unique_entity_hist_bak,MODIFY_TIME,varchar(17),是,Timestamp of data updation

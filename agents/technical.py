@@ -492,6 +492,37 @@ def get_technical_summary(
         divergence_summary=divergence_summary,
     )
 
+    # 动量摘要：N 根 K 收益率、相对窗口内最高价的距离（供定量基准与 Prompt）
+    momentum_summary = None
+    try:
+        n = len(close)
+        ret_20d_pct = None
+        if n >= 21:
+            c0 = float(close.iloc[-1])
+            c20 = float(close.iloc[-21])
+            if c20 and c20 > 0:
+                ret_20d_pct = round((c0 / c20 - 1) * 100, 2)
+        ret_60d_pct = None
+        if n >= 61:
+            c0 = float(close.iloc[-1])
+            c60 = float(close.iloc[-61])
+            if c60 and c60 > 0:
+                ret_60d_pct = round((c0 / c60 - 1) * 100, 2)
+        win = min(252, n) if is_daily else min(120, n)
+        dist_to_52w_high_pct = None
+        if win >= 20:
+            hh = float(high.iloc[-win:].max())
+            if hh > 0:
+                dist_to_52w_high_pct = round((float(price) / hh - 1) * 100, 2)
+        momentum_summary = {
+            "return_20d_pct": ret_20d_pct,
+            "return_60d_pct": ret_60d_pct,
+            "dist_to_52w_high_pct": dist_to_52w_high_pct,
+            "momentum_window_bars": win,
+        }
+    except Exception:
+        momentum_summary = None
+
     return {
         "ok": True,
         "trend_ma": trend_ma,
@@ -508,4 +539,5 @@ def get_technical_summary(
         "prepost": prepost,
         "tech_levels": tech_levels,
         "tech_status_one_line": tech_status_one_line,
+        "momentum_summary": momentum_summary,
     }

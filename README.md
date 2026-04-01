@@ -237,6 +237,11 @@ nohup python server.py > server.log 2>&1 &
 | `MINIMAX_MODEL` | MiniMax 模型名 | MiniMax-M2.5 |
 | `LLM_BACKEND` | ollama / minimax / deepseek / openai | 按 Key 推断 |
 | `LLM_TIMEOUT` | 请求超时（秒） | 120 |
+| `LLM_RETRY_ATTEMPTS` | `ask_llm` 遇到网络/429 等时的最大尝试次数 | 3 |
+| `LLM_RETRY_MIN_WAIT` / `LLM_RETRY_MAX_WAIT` | 重试指数退避上下限（秒） | 2 / 60 |
+| `LLM_CALL_LOG_PATH` | 若设置，将每次 `ask_llm` 延迟与成败追加写入该 JSONL 文件 | 不设 |
+| `ANALYSIS_QUANT_BASELINE_ENABLED` | 综合分析是否注入规则引擎定量分（0-100）；`0` 关闭 | 1 |
+| `PROMPT_TONE` | `conservative` / `neutral` / `aggressive`，影响综合 system 语气 | conservative |
 | `DEEP_PARALLEL` | 深度分析是否并行，0=顺序 | 1 |
 | `DAILY_REPORT_SCHEDULE` | 0=关闭 9 点定时任务；默认启用 | 1 |
 
@@ -249,8 +254,11 @@ nohup python server.py > server.log 2>&1 &
 | Report 10 项格式与综合 Prompt | `agents/full_analysis.py` |
 | 深度分析 ①②③④⑤ 模板 | `agents/prompts.py`、`chains/chains.py` |
 | 选股池、A股/港股代码规范化 | `config/tickers.py` |
-| 技术指标参数、ATR 止损、放量突破阈值 | `config/analysis_config.py` |
+| 技术指标参数、ATR 止损、放量突破阈值、定量基准开关 | `config/analysis_config.py` |
+| OpenAI 兼容后端统一解析（Ollama/MiniMax 等） | `config/llm_resolve.py` |
+| 定量评分基准线（0–100） | `agents/score_baseline.py` |
 | 报告 HTML 与筛选逻辑 | `report/build_html.py` |
+| 可选向量化回测示例（需 `pip install -r requirements-optional.txt`） | `scripts/backtest_recommendations_vectorbt.py` |
 
 ---
 
