@@ -4,10 +4,22 @@
 """
 from config.yf_suppress import suppress_yf_noise
 suppress_yf_noise()
+import math
 import re
 from typing import Dict, Any, Optional
 import yfinance as yf
 from llm import ask_llm
+
+
+def _is_valid_number(v) -> bool:
+    """检查值是否为有效数字（非 None / NaN / Inf）。"""
+    if v is None:
+        return False
+    try:
+        f = float(v)
+        return not (math.isnan(f) or math.isinf(f))
+    except (TypeError, ValueError):
+        return False
 
 from agents.technical import get_technical_summary
 
@@ -165,10 +177,12 @@ ATR%: {atr_pct}%（ATR/收盘价×100，用于止损与仓位参考）
     if financials_interpretation and financials_interpretation.strip():
         fund_intro = f"财报解读：{financials_interpretation.strip()}\n"
     fund_raw = (fund.get("financials_str") or "")[:600]
+    _price_disp = f"{fund.get('current_price'):.2f}" if _is_valid_number(fund.get('current_price')) else "—"
+    _pct_disp = f"{fund.get('change_pct'):+.2f}%" if _is_valid_number(fund.get('change_pct')) else "—"
     fund_text = f"""
 公司: {fund.get('short_name')} ({fund.get('ticker')})
 行业: {fund.get('industry')}  板块: {fund.get('sector')}
-市值: {fund.get('market_cap')}  当前价: {fund.get('current_price')}  涨跌幅: {fund.get('change_pct')}%
+市值: {fund.get('market_cap')}  当前价: {_price_disp}  涨跌幅: {_pct_disp}
 市盈率PE: {pe_str}
 近日多空期权: {opt_str}
 {fund_intro}财报原始摘要(参考): {fund_raw}...
@@ -374,6 +388,23 @@ def run_full_analysis(
     financials_interpretation = get_financials_interpretation(ticker, fundamental.get("financials_str") or "")
     options_summary = get_put_call_summary(ticker)
 
+    # ── 数据质量卡口：价格无效则中止，不浪费 LLM token ──────────────────────
+    price_raw = fundamental.get("current_price")
+    change_pct_raw = fundamental.get("change_pct")
+    if not _is_valid_number(price_raw):
+        print(
+            f"[Report] {ticker} 数据质量检查失败：current_price={price_raw!r}（NaN/None/无效）"
+            "，跳过 LLM 分析。",
+            flush=True,
+        )
+        return None
+    if not _is_valid_number(change_pct_raw):
+        print(
+            f"[Report] {ticker} 数据质量检查警告：change_pct={change_pct_raw!r}（NaN/None/无效），"
+            "涨跌幅将显示为 —。",
+            flush=True,
+        )
+
     rag_context = _get_rag_context(ticker)
     quant_baseline_100: Optional[int] = None
     quant_baseline_note = ""
@@ -420,12 +451,8 @@ def run_full_analysis(
 
     price = fundamental.get("current_price")
     change_pct = fundamental.get("change_pct")
-    if price is not None and change_pct is not None:
-        price_str = f"{price:.2f}"
-        change_str = f"{change_pct:+.2f}%"
-    else:
-        price_str = "—"
-        change_str = "—"
+    price_str = f"{price:.2f}" if _is_valid_number(price) else "—"
+    change_str = f"{change_pct:+.2f}%" if _is_valid_number(change_pct) else "—"
 
     market = _market_from_ticker(ticker)
     # A股/港股展示中文名称（有映射用映射，否则用 yfinance short_name）

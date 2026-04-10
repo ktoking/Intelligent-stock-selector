@@ -2,12 +2,18 @@
 技术面：从 yfinance 历史数据计算 MA、MACD、KDJ、RSI、布林带、OBV、量能、ATR%，并给出数值摘要供 LLM 解读。
 支持 MACD/RSI 背离自动检测。支持日K（1d）与分K（1m/5m/15m），可选盘前盘后（prepost）。
 入场/离场规则可配置：ATR 止损倍数、放量突破阈值（见 config/analysis_config）。
+指标计算使用 ta 库（Python>=3.10，pip install ta）。
 """
 from config.yf_suppress import suppress_yf_noise
 suppress_yf_noise()
 import pandas as pd
 import yfinance as yf
 from typing import Optional, Tuple, List
+from ta.trend import MACD as _TaMacd
+from utils.yf_cache import get_history as _yf_get_history
+from ta.momentum import RSIIndicator as _TaRsi, StochasticOscillator as _TaStoch
+from ta.volatility import BollingerBands as _TaBb
+from ta.volume import OnBalanceVolumeIndicator as _TaObv
 
 from config.analysis_config import (
     ATR_STOP_MULT,
@@ -26,36 +32,6 @@ _MIN_BARS_DAILY = 60
 _MIN_BARS_INTRADAY = 30
 
 
-def _macd(close: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
-    ema_fast = close.ewm(span=fast, adjust=False).mean()
-    ema_slow = close.ewm(span=slow, adjust=False).mean()
-    macd_line = ema_fast - ema_slow
-    signal_line = macd_line.ewm(span=signal, adjust=False).mean()
-    hist = macd_line - signal_line
-    return macd_line, signal_line, hist
-
-
-def _kdj(high: pd.Series, low: pd.Series, close: pd.Series, n: int = 9, m1: int = 3, m2: int = 3):
-    low_min = low.rolling(n).min()
-    high_max = high.rolling(n).max()
-    rsv = (close - low_min) / (high_max - low_min + 1e-10) * 100
-    k = rsv.ewm(com=m1 - 1, adjust=False).mean()
-    d = k.ewm(com=m2 - 1, adjust=False).mean()
-    j = 3 * k - 2 * d
-    return k, d, j
-
-
-def _rsi(close: pd.Series, period: int = 14) -> pd.Series:
-    """RSI(14)：相对强弱，>70 超买，<30 超卖。"""
-    delta = close.diff()
-    gain = delta.where(delta > 0, 0.0)
-    loss = (-delta).where(delta < 0, 0.0)
-    avg_gain = gain.ewm(alpha=1.0 / period, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1.0 / period, adjust=False).mean()
-    rs = avg_gain / (avg_loss + 1e-10)
-    return 100 - (100 / (1 + rs))
-
-
 def _atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
     """ATR(14)，用于止损参考。"""
     prev_close = close.shift(1)
@@ -65,22 +41,6 @@ def _atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) ->
         (low - prev_close).abs(),
     ], axis=1).max(axis=1)
     return tr.rolling(period).mean()
-
-
-def _bollinger(close: pd.Series, period: int = 20, std_mult: float = 2.0) -> Tuple[pd.Series, pd.Series, pd.Series]:
-    """布林带：中轨=SMA(period)，上下轨=中轨±std_mult×标准差。"""
-    middle = close.rolling(period).mean()
-    std = close.rolling(period).std()
-    upper = middle + std_mult * std
-    lower = middle - std_mult * std
-    return upper, middle, lower
-
-
-def _obv(close: pd.Series, volume: pd.Series) -> pd.Series:
-    """OBV 能量潮：涨日加量、跌日减量。"""
-    direction = close.diff().apply(lambda x: 1 if x > 0 else (-1 if x < 0 else 0))
-    obv = (direction * volume).fillna(0).cumsum()
-    return obv
 
 
 def _find_swing_highs(series: pd.Series, window: int = 3) -> List[int]:
@@ -294,16 +254,12 @@ def get_technical_summary(
     interval: 1d=日K，5m/15m/1m=分K（超短线）。
     prepost: 是否含盘前盘后数据。
     """
-    stock = yf.Ticker(ticker)
     interval = (interval or "1d").strip().lower()
     period = period or _INTERVAL_DEFAULT_PERIOD.get(interval, "6mo")
     is_daily = interval == "1d"
     min_bars = _MIN_BARS_DAILY if is_daily else _MIN_BARS_INTRADAY
 
-    try:
-        hist = stock.history(period=period, interval=interval, prepost=prepost)
-    except Exception:
-        hist = None
+    hist = _yf_get_history(ticker, period=period, interval=interval, prepost=prepost)
     if hist is None or len(hist) < min_bars:
         return {
             "ok": False,
@@ -359,54 +315,62 @@ def get_technical_summary(
     ma60 = close.rolling(60).mean().iloc[-1] if len(close) >= 60 else None
     price = close.iloc[-1]
 
-    # MACD
-    macd_line, signal_line, macd_hist = _macd(close)
-    macd_val = macd_line.iloc[-1]
-    signal_val = signal_line.iloc[-1]
-    hist_val = macd_hist.iloc[-1]
+    # MACD（ta 库：fast=12, slow=26, signal=9）
+    _macd_ind = _TaMacd(close=close)
+    macd_line = _macd_ind.macd().fillna(0)
+    signal_line = _macd_ind.macd_signal().fillna(0)
+    macd_hist_s = _macd_ind.macd_diff().fillna(0)
+    macd_val = float(macd_line.iloc[-1])
+    signal_val = float(signal_line.iloc[-1])
+    hist_val = float(macd_hist_s.iloc[-1])
     macd_above_zero = macd_val > 0
-    macd_golden = macd_line.iloc[-1] > signal_line.iloc[-1] and (macd_line.iloc[-2] <= signal_line.iloc[-2] if len(macd_line) > 1 else False)
+    macd_golden = (macd_val > signal_val) and (
+        len(macd_line) > 1 and float(macd_line.iloc[-2]) <= float(signal_line.iloc[-2])
+    )
 
-    # KDJ
-    k, d, j = _kdj(high, low, close)
-    k_val = k.iloc[-1]
-    d_val = d.iloc[-1]
-    j_val = j.iloc[-1]
+    # KDJ：ta StochasticOscillator → K/D，J=3K-2D
+    _stoch_ind = _TaStoch(high=high, low=low, close=close)
+    k = _stoch_ind.stoch().fillna(50)
+    d = _stoch_ind.stoch_signal().fillna(50)
+    j = 3 * k - 2 * d
+    k_val = float(k.iloc[-1])
+    d_val = float(d.iloc[-1])
+    j_val = float(j.iloc[-1])
     kdj_overbought = k_val > 80
     kdj_oversold = k_val < 20
 
-    # RSI(14)
-    rsi_series = _rsi(close, 14)
-    rsi_val = float(rsi_series.iloc[-1]) if len(rsi_series) >= 14 else None
+    # RSI(14)（ta 库 Wilder 平滑，与原公式一致）
+    rsi_series = _TaRsi(close=close).rsi()
+    rsi_val = float(rsi_series.iloc[-1]) if len(rsi_series) >= 14 and pd.notna(rsi_series.iloc[-1]) else None
     rsi_overbought = rsi_val is not None and rsi_val > 70
     rsi_oversold = rsi_val is not None and rsi_val < 30
 
-    # 布林带
-    bb_upper, bb_middle, bb_lower = _bollinger(close, BB_PERIOD, BB_STD_MULT)
+    # 布林带（ta 库：window=BB_PERIOD, window_dev=BB_STD_MULT）
+    _bb_ind = _TaBb(close=close, window=BB_PERIOD, window_dev=BB_STD_MULT)
     bb_summary = None
     if len(close) >= BB_PERIOD:
-        u = float(bb_upper.iloc[-1])
-        m = float(bb_middle.iloc[-1])
-        l = float(bb_lower.iloc[-1])
+        u = float(_bb_ind.bollinger_hband().iloc[-1])
+        m = float(_bb_ind.bollinger_mavg().iloc[-1])
+        l = float(_bb_ind.bollinger_lband().iloc[-1])
         bb_summary = {
             "upper": round(u, 2),
             "middle": round(m, 2),
             "lower": round(l, 2),
             "above_upper": price > u,
             "below_lower": price < l,
-            "bollinger_pct": round((price - l) / (u - l) * 100, 1) if (u - l) and (u - l) > 0 else None,  # 0~100，越近上轨越超买
+            "bollinger_pct": round((price - l) / (u - l) * 100, 1) if (u - l) > 0 else None,
         }
 
-    # OBV 能量潮
+    # OBV 能量潮（ta 库）
     obv_summary = None
     if volume is not None and len(volume) >= 5:
-        obv_series = _obv(close, volume)
+        obv_series = _TaObv(close=close, volume=volume.astype(float)).on_balance_volume()
         obv_now = float(obv_series.iloc[-1])
         obv_ma = float(obv_series.rolling(VOLUME_MA_PERIOD).mean().iloc[-1]) if len(obv_series) >= VOLUME_MA_PERIOD else None
         obv_summary = {
             "obv": round(obv_now, 0),
             "obv_ma": round(obv_ma, 0) if obv_ma is not None else None,
-            "obv_above_ma": obv_now > obv_ma if obv_ma is not None else None,  # 量价配合偏多
+            "obv_above_ma": obv_now > obv_ma if obv_ma is not None else None,
         }
 
     # MACD/RSI 背离检测

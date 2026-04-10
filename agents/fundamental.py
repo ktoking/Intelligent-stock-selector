@@ -1,8 +1,22 @@
 from config.yf_suppress import suppress_yf_noise
 suppress_yf_noise()
+import math
 import yfinance as yf
 from llm import ask_llm
 from typing import Optional, Dict, Any
+from utils.yf_cache import get_history as _yf_get_history
+from utils.av_fallback import get_quote as _av_get_quote
+
+
+def _safe_float(v) -> Optional[float]:
+    """将值转为 float，若结果为 NaN/Inf 则返回 None。"""
+    if v is None:
+        return None
+    try:
+        f = float(v)
+        return None if (math.isnan(f) or math.isinf(f)) else f
+    except (TypeError, ValueError):
+        return None
 
 
 def get_fundamental_data(ticker: str, use_prepost: bool = False) -> Dict[str, Any]:
@@ -29,11 +43,11 @@ def get_fundamental_data(ticker: str, use_prepost: bool = False) -> Dict[str, An
             pre_pct = info.get("preMarketChangePercent")
             try:
                 if post_price is not None and str(post_price).strip() != "":
-                    current = float(post_price)
-                    change_pct = float(post_pct) if post_pct is not None else None
+                    current = _safe_float(post_price)
+                    change_pct = _safe_float(post_pct)
                 elif pre_price is not None and str(pre_price).strip() != "":
-                    current = float(pre_price)
-                    change_pct = float(pre_pct) if pre_pct is not None else None
+                    current = _safe_float(pre_price)
+                    change_pct = _safe_float(pre_pct)
                 else:
                     current = None
                     change_pct = None
@@ -44,39 +58,45 @@ def get_fundamental_data(ticker: str, use_prepost: bool = False) -> Dict[str, An
                 # 有盘前/盘后价但无现成涨跌幅：用昨收推算
                 prev_close = info.get("regularMarketPreviousClose") or info.get("previousClose")
                 if prev_close is not None:
-                    try:
-                        prev = float(prev_close)
-                        change_pct = (current - prev) / prev * 100 if prev else None
-                    except (TypeError, ValueError):
-                        pass
+                    prev = _safe_float(prev_close)
+                    if prev and prev != 0:
+                        change_pct = (current - prev) / prev * 100
         else:
             current = None
             change_pct = None
 
         if current is None or (not use_prepost):
-            hist = stock.history(period="5d", prepost=use_prepost)
+            hist = _yf_get_history(ticker, period="5d", interval="1d", prepost=use_prepost)
             if hist is not None and len(hist) >= 2 and hasattr(hist, "columns") and "Close" in hist.columns:
-                current = float(hist["Close"].iloc[-1])
-                prev = float(hist["Close"].iloc[-2])
-                change_pct = (current - prev) / prev * 100 if prev else 0
+                current = _safe_float(hist["Close"].iloc[-1])
+                prev = _safe_float(hist["Close"].iloc[-2])
+                if current is not None and prev is not None and prev != 0:
+                    change_pct = (current - prev) / prev * 100
+                else:
+                    change_pct = None
             elif not use_prepost:
-                current = info.get("currentPrice") or info.get("regularMarketPrice")
-                current = float(current) if current is not None else None
-                change_pct = info.get("regularMarketChangePercent")
-                change_pct = float(change_pct) if change_pct is not None else None
+                current = _safe_float(info.get("currentPrice") or info.get("regularMarketPrice"))
+                change_pct = _safe_float(info.get("regularMarketChangePercent"))
     except Exception:
         if current is None:
-            current = info.get("currentPrice") or info.get("regularMarketPrice")
             try:
-                current = float(current) if current is not None else None
+                current = _safe_float(info.get("currentPrice") or info.get("regularMarketPrice"))
             except (TypeError, ValueError):
                 current = None
         if change_pct is None:
             pct = info.get("regularMarketChangePercent")
             try:
-                change_pct = float(pct) if pct is not None else None
+                change_pct = _safe_float(pct)
             except (TypeError, ValueError):
                 change_pct = None
+
+    # yfinance 全部失败时，尝试 Alpha Vantage fallback（仅美股，需 ALPHA_VANTAGE_API_KEY）
+    if current is None:
+        av_price, av_pct = _av_get_quote(ticker)
+        if av_price is not None:
+            current = av_price
+            if change_pct is None and av_pct is not None:
+                change_pct = av_pct
 
     # 52周高低
     week52_high = info.get("fiftyTwoWeekHigh")
