@@ -12,14 +12,16 @@ import subprocess
 import sys
 import threading
 import time
+import uuid
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 
 from fastapi import FastAPI, HTTPException, Query, Body, WebSocket
 from fastapi.responses import PlainTextResponse, HTMLResponse, FileResponse
 
-# Report 进度：单次运行期间可被 GET /report/progress 轮询
-_report_progress: Dict[str, Any] = {"running": False, "current_index": 0, "total": 0, "current_ticker": "", "done_count": 0, "errors": []}
+# Report 进度：按 job_id 维护，避免并发请求互相覆盖
+_report_progress: Dict[str, Dict[str, Any]] = {}
+_latest_report_job_id: str = ""
 _report_progress_lock = threading.Lock()
 
 from agents.fundamental import analyze_fundamental
@@ -64,18 +66,22 @@ def _run_report_impl(
     deep: int,
     market: str,
     prepost: int,
+    job_id: str,
     pool: str = "",
 ) -> tuple:
     """内部：跑报告循环，返回 (cards, title, html_content)。interval 可为 10m（内部用 15m）。"""
     interval_internal = _normalize_interval(interval)
     total = len(ticker_list)
     with _report_progress_lock:
-        _report_progress["running"] = True
-        _report_progress["total"] = total
-        _report_progress["current_index"] = 0
-        _report_progress["current_ticker"] = ""
-        _report_progress["done_count"] = 0
-        _report_progress["errors"] = []
+        _report_progress[job_id] = {
+            "job_id": job_id,
+            "running": True,
+            "current_index": 0,
+            "total": total,
+            "current_ticker": "",
+            "done_count": 0,
+            "errors": [],
+        }
     print(f"[Report] 开始: 共 {total} 只", flush=True)
     cards: List[Dict[str, Any]] = []
     backtest_summary_prev: Dict[str, Any] = {}
@@ -87,35 +93,51 @@ def _run_report_impl(
     try:
         for i, t in enumerate(ticker_list):
             with _report_progress_lock:
-                _report_progress["current_index"] = i + 1
-                _report_progress["current_ticker"] = t
+                progress = _report_progress.get(job_id)
+                if progress is not None:
+                    progress["current_index"] = i + 1
+                    progress["current_ticker"] = t
             print(f"[Report] [{i + 1}/{total}] 正在处理: {t}", flush=True)
             t0 = time.time()
             try:
                 if deep == 1:
-                    one = run_one_ticker_deep_report(t, include_narrative=True, backtest_summary=backtest_summary_prev)
+                    one = run_one_ticker_deep_report(
+                        t,
+                        include_narrative=True,
+                        interval=interval_internal,
+                        include_prepost=(prepost == 1),
+                        backtest_summary=backtest_summary_prev,
+                    )
                 else:
                     one = run_full_analysis(t, interval=interval_internal, include_prepost=(prepost == 1), backtest_summary=backtest_summary_prev)
                 elapsed = time.time() - t0
                 if one:
                     cards.append(one)
                     with _report_progress_lock:
-                        _report_progress["done_count"] = len(cards)
+                        progress = _report_progress.get(job_id)
+                        if progress is not None:
+                            progress["done_count"] = len(cards)
                     print(f"[Report] [{i + 1}/{total}] 完成: {t} (已成功 {len(cards)} 只) 耗时 {elapsed:.1f}s", flush=True)
                 else:
                     print(f"[Report] [{i + 1}/{total}] 跳过: {t} (无数据) 耗时 {elapsed:.1f}s", flush=True)
                     with _report_progress_lock:
-                        _report_progress["errors"].append({"ticker": t, "error": "无数据"})
+                        progress = _report_progress.get(job_id)
+                        if progress is not None:
+                            progress["errors"].append({"ticker": t, "error": "无数据"})
             except Exception as e:
                 elapsed = time.time() - t0
                 err_msg = str(e).strip() or type(e).__name__
                 with _report_progress_lock:
-                    _report_progress["errors"].append({"ticker": t, "error": err_msg})
+                    progress = _report_progress.get(job_id)
+                    if progress is not None:
+                        progress["errors"].append({"ticker": t, "error": err_msg})
                 print(f"[Report] [{i + 1}/{total}] 失败: {t} - {err_msg[:80]} 耗时 {elapsed:.1f}s", flush=True)
     finally:
         with _report_progress_lock:
-            _report_progress["running"] = False
-            _report_progress["current_ticker"] = ""
+            progress = _report_progress.get(job_id)
+            if progress is not None:
+                progress["running"] = False
+                progress["current_ticker"] = ""
         n_ok, n_err = len(cards), total - len(cards)
         print(f"[Report] 结束: 成功 {n_ok} 只, 跳过/失败 {n_err} 只", flush=True)
 
@@ -475,13 +497,19 @@ def report_console_page():
 
 
 @app.get("/report/progress")
-def report_progress():
+def report_progress(job_id: Optional[str] = Query(None, description="报告任务 ID；不传则返回最近一次任务的进度")):
     """
     报告生成进度（轮询此接口可知当前执行到哪一只）。
     running: 是否正在跑；current_index/total: 第几只/共几只；current_ticker: 当前标的；done_count: 已成功数；errors: 失败列表 [{ticker, error}, ...]。
     """
     with _report_progress_lock:
-        return dict(_report_progress)
+        target_job_id = (job_id or "").strip() or _latest_report_job_id
+        if not target_job_id:
+            return {"job_id": "", "running": False, "current_index": 0, "total": 0, "current_ticker": "", "done_count": 0, "errors": []}
+        progress = _report_progress.get(target_job_id)
+        if progress is None:
+            raise HTTPException(status_code=404, detail=f"job_id not found: {target_job_id}")
+        return dict(progress)
 
 
 @app.get("/report", response_class=HTMLResponse)
@@ -494,6 +522,7 @@ def report_page(
     market: str = Query("us", description="市场选股：us=美股，cn=A股，hk=港股（不传 tickers 时生效）"),
     pool: str = Query("", description="选股池：不传或 sp500=大盘；nasdaq100=纳斯达克100；russell2000=美股小盘；csi300=A股沪深300；csi2000=A股中证2000；hsi=恒指；hstech=恒科，不传 tickers 时生效"),
     save_output: int = Query(1, description="1=将报告 HTML 保存到 report/output/；0=不保存（前端页面触发时传 0）"),
+    job_id: Optional[str] = Query(None, description="报告任务 ID；前端轮询进度时建议传固定值"),
 ):
     """
     多市场选股报告：美股（S&P 500 / 罗素2000）/ A股（龙头 / 中证2000）/ 港股。
@@ -511,13 +540,25 @@ def report_page(
     ticker_list = [t for t in ticker_list if t not in DELISTED_TICKERS]
     if not ticker_list:
         raise HTTPException(status_code=400, detail="请提供 tickers 或使用默认列表（limit>0）")
-    cards, title, html_content = _run_report_impl(ticker_list, interval, deep, market, prepost, pool=pool or "")
+    report_job_id = ((job_id or "").strip() or uuid.uuid4().hex)
+    global _latest_report_job_id
+    with _report_progress_lock:
+        _latest_report_job_id = report_job_id
+    cards, title, html_content = _run_report_impl(
+        ticker_list,
+        interval,
+        deep,
+        market,
+        prepost,
+        job_id=report_job_id,
+        pool=pool or "",
+    )
     # 仅当 save_output=1 时保存到 report/output/（前端页面触发时传 save_output=0 不写盘）
     if save_output == 1:
         out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report", "output")
         os.makedirs(out_dir, exist_ok=True)
-        ts = datetime.now().strftime("%m%d-%H%M")
-        out_path = os.path.join(out_dir, f"report-{ts}.html")
+        ts = datetime.now().strftime("%m%d-%H%M%S")
+        out_path = os.path.join(out_dir, f"report-{ts}-{report_job_id[:8]}.html")
         try:
             with open(out_path, "w", encoding="utf-8") as f:
                 f.write(html_content)

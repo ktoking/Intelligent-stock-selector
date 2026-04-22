@@ -13,6 +13,7 @@ from agents.full_analysis import run_full_analysis
 from llm import ask_llm
 
 # 可选 LangChain 链与记忆
+_CHAINS_IMPORT_ERROR = ""
 try:
     from chains.chains import chain_full_deep, run_comparison
     from chains.memory_store import retrieve
@@ -129,6 +130,8 @@ def run_one_ticker_deep_report(
     ticker: str,
     peers: Optional[str] = None,
     include_narrative: bool = True,
+    interval: str = "1d",
+    include_prepost: bool = False,
     backtest_summary: Optional[Dict[str, Any]] = None,
 ) -> Optional[Dict[str, Any]]:
     """
@@ -141,7 +144,12 @@ def run_one_ticker_deep_report(
     print(f"[Report] {ticker} 综合分析（技术+消息+财报+LLM）开始…", flush=True)
     t0 = time.time()
     try:
-        card = run_full_analysis(ticker, backtest_summary=backtest_summary)
+        card = run_full_analysis(
+            ticker,
+            interval=interval,
+            include_prepost=include_prepost,
+            backtest_summary=backtest_summary,
+        )
     except Exception as e:
         print(f"[Report] {ticker} 综合分析异常: {e}", flush=True)
         card = None

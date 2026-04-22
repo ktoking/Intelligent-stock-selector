@@ -118,6 +118,11 @@
             var linkOpenNew = document.getElementById('link-open-new');
             var progressTimer = null;
             var lastReportHtml = '';
+            var currentJobId = '';
+
+            function newJobId() {
+                return 'job-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+            }
 
             function buildReportUrl() {
                 var fd = new FormData(form);
@@ -132,12 +137,14 @@
                 params.set('deep', fd.get('deep') || '0');
                 params.set('interval', fd.get('interval') || '1d');
                 params.set('prepost', fd.get('prepost') || '0');
+                params.set('job_id', currentJobId);
                 params.set('save_output', '0');  /* 前端页面触发不落盘，减轻代理压力 */
                 return '/report?' + params.toString();
             }
 
             function updateProgress() {
-                fetch('/report/progress')
+                if (!currentJobId) return;
+                fetch('/report/progress?job_id=' + encodeURIComponent(currentJobId))
                     .then(function (r) { return r.json(); })
                     .then(function (d) {
                         var total = d.total || 0;
@@ -161,6 +168,7 @@
 
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
+                currentJobId = newJobId();
                 var url = buildReportUrl();
                 btn.disabled = true;
                 progressEl.classList.add('show');
