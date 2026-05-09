@@ -224,6 +224,37 @@ nohup python server.py > server.log 2>&1 &
 
 ---
 
+## GitLab MR 自动 CR
+
+仓库已内置一个最小可用的 GitLab MR 自动 Code Review 流程：
+
+- [`.gitlab-ci.yml`](/Users/kaiyi.wang/PycharmProjects/stock-agent/.gitlab-ci.yml) 会在 `merge_request_event` 时触发 `ai_code_review`
+- [`scripts/ai_cr.py`](/Users/kaiyi.wang/PycharmProjects/stock-agent/scripts/ai_cr.py) 会读取当前 MR 相对目标分支的 diff
+- 脚本调用 OpenAI Responses API 做 review，并把结果回写成一条 MR 评论
+
+在 GitLab 项目里配置以下 CI/CD Variables 后即可启用：
+
+| 变量 | 说明 |
+|------|------|
+| `OPENAI_API_KEY` | OpenAI API Key |
+| `GITLAB_TOKEN` | 用于读写 MR 评论的 GitLab Token，建议使用 bot/personal access token，并授予 `api` scope |
+| `AI_CR_MODEL` | 可选，默认 `gpt-5.3-codex` |
+| `AI_CR_MAX_DIFF_CHARS` | 可选，默认 `120000` |
+
+工作方式：
+
+- 仅在 **Merge Request pipeline** 触发，避免普通分支 push 反复刷评论
+- 每次 MR 新推送后会重新生成 review
+- 脚本会先删除旧的 AI 评论，再发最新结果，避免评论堆积
+
+如果你们要更进一步，可以在这个基础上继续扩展：
+
+- 改成按文件分段 review，减少大 diff 截断
+- 接 GitLab Discussions API，发成行内评论
+- 加白名单/黑名单目录，只 review 核心业务代码
+
+---
+
 ## AI 与报告调优
 
 ### 环境变量（模型与行为）

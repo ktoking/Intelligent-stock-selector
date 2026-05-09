@@ -62,6 +62,18 @@ def _escape(s: Any) -> str:
     return html_module.escape(str(s).strip())
 
 
+def _is_empty_display(v: Any) -> bool:
+    s = str(v or "").strip()
+    return not s or s in {"—", "-", "None", "none", "N/A", "n/a"}
+
+
+def _first_display(*values: Any) -> str:
+    for v in values:
+        if not _is_empty_display(v):
+            return _escape(v)
+    return "—"
+
+
 def _score_display(score: Any) -> str:
     try:
         f = float(score)
@@ -370,10 +382,25 @@ def build_report_html(
             change_span = _escape(change_pct)
         mcap = _escape(c.get("market_cap"))
         sector = _escape(sector_zh)
-        add_price = _escape(c.get("add_price"))
-        reduce_price = _escape(c.get("reduce_price"))
-        tech_entry_note = _escape(c.get("tech_entry_note") or "—")
-        tech_exit_note = _escape(c.get("tech_exit_note") or "—")
+        raw_add_price = c.get("add_price")
+        raw_reduce_price = c.get("reduce_price")
+        raw_tech_entry_note = c.get("tech_entry_note") or "—"
+        raw_tech_exit_note = c.get("tech_exit_note") or "—"
+        add_label = "加仓价格"
+        reduce_label = "减仓价格"
+        tech_entry_label = "技术面入场参考"
+        tech_exit_label = "技术面离场参考"
+        add_price = _escape(raw_add_price)
+        reduce_price = _escape(raw_reduce_price)
+        tech_entry_note = _escape(raw_tech_entry_note)
+        tech_exit_note = _escape(raw_tech_exit_note)
+        if action == "观察":
+            add_label = "观察触发条件"
+            reduce_label = "观察失效条件"
+            tech_entry_label = "技术面关注触发"
+            tech_exit_label = "技术面风险参考"
+            add_price = _first_display(raw_add_price, raw_tech_entry_note)
+            reduce_price = _first_display(raw_reduce_price, raw_tech_exit_note)
         trend = _escape(c.get("trend_structure"))
         macd = _escape(c.get("macd_status"))
         kdj = _escape(c.get("kdj_status"))
@@ -420,6 +447,8 @@ def build_report_html(
         narrative_summary = _markdown_to_html(c.get("narrative_summary") or "")
         deep_disabled_reason = _escape(c.get("deep_disabled_reason"))
         deep_error = _escape(c.get("deep_error"))
+        data_quality_issue = bool(c.get("data_quality_issue"))
+        data_quality_note = _escape(c.get("data_quality_note"))
         comp_reason_raw = (c.get("comparison_reason") or "").strip()
         recent_trend_raw = (c.get("recent_trend") or "").strip()
         no_history_note = (comp_reason_raw == "无历史对比" and (not recent_trend_raw or recent_trend_raw == "—"))
@@ -445,6 +474,11 @@ def build_report_html(
 
         action_escaped = _escape(action)
         core_block = f'<div class="card-core-conclusion">{core_conclusion}</div>' if (core_conclusion and core_conclusion != "—") else ""
+        quality_class = " data-quality-issue" if data_quality_issue else ""
+        quality_badge = (
+            f'<div class="quality-badge">数据质量提示：{data_quality_note or "分析不完整，已降权为观察。"}</div>'
+            if data_quality_issue else ""
+        )
         last_date_val = last_date or "—"
         rec_val = recommendation or "—"
         next_earn_val = next_earnings or "—"
@@ -487,7 +521,7 @@ def build_report_html(
                 </div>"""
 
         card_html_list.append(f'''
-            <div class="card" data-score="{score_str}" data-action="{action_escaped}" data-market="{market}" data-name="{name}" data-code="{code}" data-direction-unchanged="{data_direction}">
+            <div class="card{quality_class}" data-score="{score_str}" data-action="{action_escaped}" data-market="{market}" data-name="{name}" data-code="{code}" data-direction-unchanged="{data_direction}" data-quality="{"issue" if data_quality_issue else "ok"}">
                 <div class="card-header">
                     <div class="card-title">
                         <h3>{name}</h3>
@@ -500,6 +534,7 @@ def build_report_html(
                     </div>
                 </div>
                 {core_block}
+                {quality_badge}
                 <div class="card-info">
                     <div class="info-item">
                         <div class="info-label">交易动作</div>
@@ -538,19 +573,19 @@ def build_report_html(
                         <div class="info-value">{market}</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">加仓价格</div>
+                        <div class="info-label">{add_label}</div>
                         <div class="info-value">{add_price}</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">减仓价格</div>
+                        <div class="info-label">{reduce_label}</div>
                         <div class="info-value">{reduce_price}</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">技术面入场参考</div>
+                        <div class="info-label">{tech_entry_label}</div>
                         <div class="info-value">{tech_entry_note}</div>
                     </div>
                     <div class="info-item">
-                        <div class="info-label">技术面离场参考</div>
+                        <div class="info-label">{tech_exit_label}</div>
                         <div class="info-value">{tech_exit_note}</div>
                     </div>
                     <div class="info-item">
@@ -646,6 +681,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 @media (max-width: 1400px) { .cards-container { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); } }
 @media (max-width: 900px) { .cards-container { grid-template-columns: 1fr; } }
 .card { background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 16px; padding: 25px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: block; border: 1px solid rgba(255, 255, 255, 0.8); position: relative; overflow: hidden; }
+.card.data-quality-issue { border-color: #f59e0b; background: linear-gradient(135deg, #fffaf0 0%, #fff7ed 100%); }
 .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); transform: scaleX(0); transition: transform 0.4s; }
 .card:hover::before { transform: scaleX(1); }
 .card.hidden { display: none; }
@@ -659,6 +695,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .score-interpretation { font-size: 12px; font-weight: 600; color: #667eea; letter-spacing: 0.5px; }
 .score-reason { font-size: 11px; color: #6b7280; max-width: 180px; margin-top: 4px; line-height: 1.35; }
 .card-core-conclusion { margin-bottom: 16px; padding: 12px 14px; background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border-radius: 10px; font-size: 14px; color: #3730a3; line-height: 1.5; border-left: 4px solid #667eea; }
+.quality-badge { margin-bottom: 16px; padding: 10px 12px; background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; border-radius: 10px; font-size: 13px; line-height: 1.5; font-weight: 600; }
 .card-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; }
 .info-item { display: flex; flex-direction: column; padding: 12px; background: #f7fafc; border-radius: 10px; transition: all 0.3s; }
 .info-item:hover { background: #edf2f7; transform: translateY(-2px); }

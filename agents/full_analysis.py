@@ -166,6 +166,11 @@ ATR%: {atr_pct}%（ATR/收盘价×100，用于止损与仓位参考）
             news_text = f"新闻摘要：{news_llm_summary.strip()}\n近期标题：\n{raw_titles}"
         else:
             news_text = raw_titles
+    elif news.get("excluded_news_count"):
+        news_text = (
+            f"无个股直相关新闻；已过滤 {news.get('excluded_news_count')} 条未命中 ticker/公司名的泛新闻，"
+            "不要把泛 AI/行业/大盘新闻当作该股消息面支撑。"
+        )
 
     fund = fundamental
     pe_str = fund.get("pe") or "—"
@@ -214,7 +219,7 @@ ATR%: {atr_pct}%（ATR/收盘价×100，用于止损与仓位参考）
     return f"""
 你是一位{role}。请以{time_scope}，根据下面【技术面】【消息面】【财报/估值/期权】数据，用中文输出以下 10 项，每项单独一行，格式严格如下（不要多写其他内容）：
 
-{quant_prefix}【评分与动作要求】9分应极少给出，每份报告建议不超过3只；10分保留给极罕见的最优标的。9分必须同时满足：① 日线多头排列或趋势明确向上 ② 基本面无重大利空 ③ 消息面无重大利空；任一项不满足则最高给8分。{us_extra}加仓价、减仓价必须与上方【技术面入场/离场参考】中的 entry_note、exit_note 一致或在其基础上略作说明。{strategy_feedback}
+    {quant_prefix}【评分与动作要求】9分应极少给出，每份报告建议不超过3只；10分保留给极罕见的最优标的。9分必须同时满足：① 日线多头排列或趋势明确向上 ② 基本面无重大利空 ③ 消息面无重大利空；任一项不满足则最高给8分。{us_extra}交易动作为「观察」时，加仓价格、减仓价格必须填「—」；买入/离场时才给交易价位，且必须与上方【技术面入场/离场参考】中的 entry_note、exit_note 一致或在其基础上略作说明。{strategy_feedback}
 
 核心结论：<一句话总结该标的当前是否值得关注及主要理由>
 趋势结构：<一句话描述{trend_hint}>
@@ -224,8 +229,8 @@ KDJ状态：<一句话描述超买超卖与钝化>
 评分：<10-1的数字，仅数字，10=最强 1=最弱；9分需基本面+技术面+消息面全方位优秀>
 评分理由：<一句话说明为何给该评分，如 均线多头+PE合理+期权偏多 或 技术承压+估值偏高>
 交易动作：<仅填其一：买入 / 观察 / 离场。偏多或可加仓填「买入」，偏空或减仓填「离场」，不确定填「观察」。>
-加仓价格：<必须与上方【入场参考】entry_note 一致或在其基础上给出具体价位；无参考时填“—”—>
-减仓价格：<必须与上方【离场参考】exit_note 一致或在其基础上给出具体价位；无参考时填“—”—>
+加仓价格：<交易动作为买入时，必须与上方【入场参考】entry_note 一致或在其基础上给出具体价位；交易动作为观察/离场时填“—”>
+减仓价格：<交易动作为离场或买入后风控时，必须与上方【离场参考】exit_note 一致或在其基础上给出具体价位；交易动作为观察时填“—”>
 
 {rag_context + chr(10) + chr(10) if rag_context and rag_context.strip() else ""}【技术面】
 {tech_text}
@@ -329,6 +334,49 @@ def _run_llm_and_parse(system: str, prompt: str) -> Dict[str, Any]:
             pass
     raw = ask_llm(system=system, user=prompt)
     return _parse_llm_output(raw)
+
+
+_REQUIRED_ANALYSIS_FIELDS = ("trend_structure", "macd_status", "kdj_status", "analysis_reason")
+
+
+def _is_blank_text(v: Any) -> bool:
+    s = str(v or "").strip()
+    return not s or s in {"—", "-", "None", "none", "N/A", "n/a", "无"}
+
+
+def _apply_quality_guards(parsed: Dict[str, Any], technical: dict) -> Dict[str, Any]:
+    """
+    防止 LLM 漏字段的卡片按正常候选展示：缺关键字段或技术数据不足时强制观察并降权。
+    """
+    out = dict(parsed or {})
+    missing = [k for k in _REQUIRED_ANALYSIS_FIELDS if _is_blank_text(out.get(k))]
+    technical_ok = bool((technical or {}).get("ok"))
+    issue_parts = []
+    if missing:
+        issue_parts.append("LLM输出不完整")
+    if not technical_ok:
+        issue_parts.append("技术数据不足")
+    if not issue_parts:
+        if out.get("action") == "观察":
+            out["add_price"] = "—"
+            out["reduce_price"] = "—"
+        out["data_quality_issue"] = False
+        out["data_quality_note"] = ""
+        return out
+
+    note = "、".join(issue_parts)
+    out["action"] = "观察"
+    out["score"] = min(float(out.get("score") or 5), 4)
+    out["add_price"] = "—"
+    out["reduce_price"] = "—"
+    out["score_reason"] = f"{note}，已降权为观察。"
+    if _is_blank_text(out.get("core_conclusion")):
+        out["core_conclusion"] = f"{note}，不纳入买入候选，需等待数据补全后再判断。"
+    for field in missing:
+        out[field] = f"{note}，已降权为观察，不纳入买入候选。"
+    out["data_quality_issue"] = True
+    out["data_quality_note"] = f"{note}，不参与推荐候选排序。"
+    return out
 
 
 def _to_json_safe(obj):
@@ -448,6 +496,7 @@ def run_full_analysis(
     except Exception as e:
         print(f"[Report] {ticker} LLM 综合评分异常: {e}", flush=True)
         parsed = _parse_llm_output("")
+    parsed = _apply_quality_guards(parsed, technical)
 
     price = fundamental.get("current_price")
     change_pct = fundamental.get("change_pct")
@@ -482,6 +531,8 @@ def run_full_analysis(
         "macd_status": parsed["macd_status"] or "—",
         "kdj_status": parsed["kdj_status"] or "—",
         "analysis_reason": parsed["analysis_reason"] or "—",
+        "data_quality_issue": parsed.get("data_quality_issue", False),
+        "data_quality_note": parsed.get("data_quality_note") or "",
         "daily_long_align": technical.get("daily_long_align", False),
         "pe": fundamental.get("pe") or "—",
         "put_call": options_summary.get("description") or "—",

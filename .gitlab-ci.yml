@@ -1,0 +1,13 @@
+stages:
+  - review
+
+ai_code_review:
+  stage: review
+  image: python:3.11
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  before_script:
+    - python3 -V
+    - pip install --no-cache-dir openai requests
+  script:
+    - python3 scripts/ai_cr.py

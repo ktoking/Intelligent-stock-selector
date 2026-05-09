@@ -14,6 +14,7 @@ suppress_yf_noise()
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 import yfinance as yf
+from agents.news import filter_relevant_news
 
 
 def _market_type(ticker: str) -> str:
@@ -75,6 +76,8 @@ def _ts_to_unix(published) -> Optional[int]:
         if isinstance(published, (int, float)):
             return int(published)
         s = str(published).strip()
+        if s.isdigit():
+            return int(s)
         for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
             try:
                 dt = datetime.strptime(s[:19], fmt)
@@ -250,37 +253,36 @@ def _build_financial_data(stock) -> dict:
     return out
 
 
-def _build_news_data(news_list: List[dict]) -> dict:
+def _build_news_data(
+    news_list: List[dict],
+    ticker: str = "",
+    company_name: str = "",
+    max_items: int = 10,
+) -> dict:
     """将 yfinance news 转为 news_data 格式。兼容新旧结构：旧版 {title,link,publisher,published}；新版 {content:{title,pubDate,provider,canonicalUrl,summary}}。"""
     articles = []
-    for n in (news_list or [])[:10]:
-        # 新版 yfinance：content 为内层 dict
-        inner = n.get("content")
-        if isinstance(inner, dict):
-            provider = inner.get("provider")
-            if isinstance(provider, dict):
-                provider = provider.get("displayName") or provider.get("name") or ""
-            else:
-                provider = str(provider or "")
-            link = inner.get("canonicalUrl") or inner.get("clickThroughUrl")
-            link = link if isinstance(link, str) else (link.get("url") if isinstance(link, dict) else "")
-            articles.append({
-                "title": str(inner.get("title") or "").strip(),
-                "link": str(link or "").strip(),
-                "publisher": str(provider or "").strip(),
-                "publish_time": _ts_to_unix(inner.get("pubDate")),
-                "summary": str(inner.get("summary") or inner.get("description") or "").strip() or "",
-            })
-        else:
-            # 旧版结构
-            articles.append({
-                "title": (n.get("title") or "").strip(),
-                "link": (n.get("link") or "").strip(),
-                "publisher": (n.get("publisher") or "").strip(),
-                "publish_time": _ts_to_unix(n.get("published")),
-                "summary": (n.get("summary") or "").strip() or "",
-            })
-    return {"total_count": len(articles), "articles": articles}
+    relevant, excluded = filter_relevant_news(ticker, news_list or [], company_name=company_name, max_items=max_items)
+    for n in relevant:
+        articles.append({
+            "title": (n.get("title") or "").strip(),
+            "link": (n.get("link") or "").strip(),
+            "publisher": (n.get("publisher") or "").strip(),
+            "publish_time": _ts_to_unix(n.get("published")),
+            "summary": (n.get("summary") or "").strip() or "",
+            "relevance": n.get("relevance") or "direct",
+            "relevance_reason": n.get("relevance_reason") or "",
+        })
+    return {
+        "total_count": len(articles),
+        "original_count": len(news_list or []),
+        "excluded_count": len(excluded),
+        "filter_note": "仅保留标题或摘要命中 ticker/公司名的个股直相关新闻，避免泛行业新闻污染 LLM 判断。",
+        "excluded_samples": [
+            {"title": (n.get("title") or "").strip(), "publisher": (n.get("publisher") or "").strip()}
+            for n in excluded[:3]
+        ],
+        "articles": articles,
+    }
 
 
 def _build_options_data(stock, current_price: Optional[float]) -> dict:
@@ -392,13 +394,14 @@ def fetch_external_data_json(
         news_list = stock.news or []
     except Exception:
         pass
-    news_list = news_list[:max_news]
+    news_list = news_list[: max(max_news, max_news * 3)]
 
     try:
         stock_data = _build_stock_data(ticker, info, current_price)
         historical_data = _build_historical_data(hist, period)
         financial_data = _build_financial_data(stock)
-        news_data = _build_news_data(news_list)
+        company_name = stock_data.get("company_name") or info.get("shortName") or info.get("longName") or ""
+        news_data = _build_news_data(news_list, ticker=ticker, company_name=company_name, max_items=max_news)
         options_data = _build_options_data(stock, current_price)
     except Exception as e:
         return {"stock_code": ticker, "market_type": _market_type(ticker), "error": f"数据转换失败: {str(e)[:100]}"}

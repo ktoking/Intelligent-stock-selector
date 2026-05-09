@@ -113,6 +113,7 @@ def _compute_entry_exit_levels(
     close: pd.Series,
     high: pd.Series,
     low: pd.Series,
+    ma5: Optional[float],
     ma20: Optional[float],
     ma60: Optional[float],
     price: float,
@@ -160,7 +161,12 @@ def _compute_entry_exit_levels(
 
     entry_parts = []
     if ma20 is not None:
-        entry_parts.append(f"突破/站稳 MA20 约 {ma20:.2f} 可考虑入场")
+        if price > ma20:
+            entry_parts.append(f"已站上 MA20 约 {ma20:.2f}，回踩 MA20 不破可考虑低吸")
+            if ma5 is not None and price < ma5:
+                entry_parts.append(f"重新站回 MA5 约 {ma5:.2f} 后再确认短线转强")
+        else:
+            entry_parts.append(f"突破并站稳 MA20 约 {ma20:.2f} 后再考虑入场")
     if resistance_20d is not None and resistance_20d > price:
         entry_parts.append(f"突破近期高点约 {resistance_20d:.2f} 为强势信号")
     if (
@@ -434,7 +440,7 @@ def get_technical_summary(
 
     tech_levels = _compute_entry_exit_levels(
         close=close, high=high, low=low,
-        ma20=ma20, ma60=ma60, price=price,
+        ma5=ma5, ma20=ma20, ma60=ma60, price=price,
         is_daily=is_daily,
         volume_ratio_tech=volume_ratio_tech,
     )
