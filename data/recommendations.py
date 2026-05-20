@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 
+from utils.yf_retry import fetch_with_retry
+
 # 与 memory_store 同目录，便于统一备份
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 _DEFAULT_DIR = _PROJECT_ROOT / "data" / "memory"
@@ -36,7 +38,11 @@ def _benchmark_return_pct(lookback_days: int = 20, ticker: str = "^GSPC") -> Opt
     try:
         end = datetime.now().date() + timedelta(days=1)
         start = end - timedelta(days=lookback_days + 10)
-        h = yf.Ticker(ticker).history(start=start, end=end)
+        h = fetch_with_retry(
+            lambda: yf.Ticker(ticker).history(start=start, end=end),
+            ticker=ticker,
+            op_name=f"benchmark_history(start={start},end={end})",
+        )
         if h is None or h.empty or "Close" not in h.columns or len(h) < 2:
             return None
         close_first = float(h["Close"].iloc[0])
@@ -243,7 +249,11 @@ def get_past_recommendations_with_returns(
     hist_by_ticker: Dict[str, Any] = {}
     for t in tickers:
         try:
-            h = yf.Ticker(t).history(start=start, end=end)
+            h = fetch_with_retry(
+                lambda: yf.Ticker(t).history(start=start, end=end),
+                ticker=t,
+                op_name=f"recommendation_history(start={start},end={end})",
+            )
             hist_by_ticker[t] = h if h is not None and not h.empty else None
         except Exception:
             hist_by_ticker[t] = None
@@ -253,7 +263,11 @@ def get_past_recommendations_with_returns(
     bench_hist: Dict[str, Any] = {}
     for _m, bt in bench_tickers.items():
         try:
-            h = yf.Ticker(bt).history(start=start, end=end)
+            h = fetch_with_retry(
+                lambda: yf.Ticker(bt).history(start=start, end=end),
+                ticker=bt,
+                op_name=f"benchmark_history(start={start},end={end})",
+            )
             bench_hist[bt] = h if h is not None and not h.empty else None
         except Exception:
             bench_hist[bt] = None

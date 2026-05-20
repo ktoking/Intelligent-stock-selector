@@ -22,10 +22,11 @@ from fastapi.responses import PlainTextResponse, HTMLResponse, FileResponse
 # Report 进度：按 job_id 维护，避免并发请求互相覆盖
 _report_progress: Dict[str, Dict[str, Any]] = {}
 _latest_report_job_id: str = ""
+_latest_report_snapshot: Dict[str, Any] = {}
 _report_progress_lock = threading.Lock()
 
 from agents.fundamental import analyze_fundamental
-from agents.full_analysis import run_full_analysis
+from agents.full_analysis import run_full_analysis, _to_json_safe
 from agents.report_deep import run_one_ticker_deep_report
 from agents.analysis_deep import (
     run_fundamental_deep,
@@ -51,6 +52,196 @@ from config.tickers import (
 )
 from report.build_html import build_report_html
 from llm import ask_llm
+
+
+def _agent_clip(text: str, max_len: int = 1200) -> str:
+    """Return a trimmed agent-friendly summary string."""
+    s = (text or "").strip()
+    if not s:
+        return "—"
+    return s if len(s) <= max_len else s[:max_len] + "…"
+
+
+def _score_text(score: Any) -> str:
+    try:
+        if score is None or score == "":
+            return "—"
+        return f"{float(score):.1f}/10"
+    except Exception:
+        return str(score)
+
+
+def _pick_non_empty(*values: Any, default: str = "—") -> str:
+    for value in values:
+        text = str(value or "").strip()
+        if text and text != "—":
+            return text
+    return default
+
+
+def _dedupe_texts(items: List[str], max_items: int = 3) -> List[str]:
+    seen = set()
+    result: List[str] = []
+    for item in items:
+        text = str(item or "").strip()
+        if not text or text == "—":
+            continue
+        key = text.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(text)
+        if len(result) >= max_items:
+            break
+    return result
+
+
+def _format_numbered_lines(title: str, items: List[str]) -> List[str]:
+    lines = [f"{title}："]
+    for idx, item in enumerate(items, start=1):
+        lines.append(f"{idx}. {item}")
+    return lines
+
+
+def _build_stock_brief(base: Dict[str, Any], deep_sections: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    ticker = base.get("ticker") or ""
+    name = base.get("name") or ticker
+    action = base.get("action") or "观察"
+    score = base.get("score")
+
+    reasons = _dedupe_texts([
+        base.get("core_conclusion"),
+        base.get("analysis_reason"),
+        base.get("trend_structure"),
+        base.get("score_reason"),
+    ])
+    risks = _dedupe_texts([
+        base.get("tech_exit_note"),
+        base.get("data_quality_note"),
+        base.get("macd_status"),
+        base.get("kdj_status"),
+    ])
+    suggestions = _dedupe_texts([
+        base.get("tech_entry_note"),
+        f"加仓参考：{base.get('add_price')}" if base.get("add_price") and base.get("add_price") != "—" else "",
+        f"减仓参考：{base.get('reduce_price')}" if base.get("reduce_price") and base.get("reduce_price") != "—" else "",
+    ])
+
+    lines = [
+        f"{name}（{ticker}）评分：{_score_text(score)}",
+        f"结论：{action}",
+        "",
+    ]
+    lines.extend(_format_numbered_lines("买入/关注理由", reasons or ["当前结论不足，建议先观察。"]))
+    lines.append("")
+    lines.extend(_format_numbered_lines("主要风险", risks or ["暂无明确额外风险提示。"]))
+    lines.append("")
+    lines.extend(_format_numbered_lines("操作建议", suggestions or ["暂时等待更明确的入场信号。"]))
+
+    deep_summary = {}
+    if deep_sections:
+        for key, value in deep_sections.items():
+            deep_summary[key] = _agent_clip(value, 500)
+
+    if deep_summary:
+        lines.append("")
+        lines.append("深度补充：")
+        for key, value in deep_summary.items():
+            lines.append(f"- {key}: {value}")
+
+    return {
+        "ticker": ticker,
+        "name": name,
+        "score": score,
+        "score_text": _score_text(score),
+        "action": action,
+        "reasons": reasons,
+        "risks": risks,
+        "suggestions": suggestions,
+        "summary_text": "\n".join(lines).strip(),
+        "deep_summary": deep_summary,
+    }
+
+
+def _store_latest_report_snapshot(snapshot: Dict[str, Any]) -> None:
+    global _latest_report_snapshot
+    with _report_progress_lock:
+        _latest_report_snapshot = snapshot
+
+
+def _build_report_snapshot(
+    *,
+    title: str,
+    cards: List[Dict[str, Any]],
+    report_path: str = "",
+    job_id: str = "",
+    market: str = "",
+    pool: str = "",
+    deep: int = 0,
+    interval: str = "1d",
+    prepost: int = 0,
+    errors: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    sorted_cards = sorted(cards, key=lambda c: float(c.get("score") or 0), reverse=True)
+    top_picks = []
+    for card in sorted_cards[:3]:
+        top_picks.append({
+            "ticker": card.get("ticker") or "",
+            "name": card.get("name") or card.get("ticker") or "",
+            "score": card.get("score"),
+            "score_text": _score_text(card.get("score")),
+            "action": card.get("action") or "观察",
+            "core_conclusion": _agent_clip(card.get("core_conclusion") or "—", 180),
+        })
+
+    action_counts: Dict[str, int] = {}
+    for card in cards:
+        action = (card.get("action") or "观察").strip() or "观察"
+        action_counts[action] = action_counts.get(action, 0) + 1
+
+    lines = [
+        f"{title} 已生成，共 {len(cards)} 只标的。",
+        f"参数：market={market or 'us'} pool={pool or 'default'} interval={interval} deep={deep} prepost={prepost}",
+    ]
+    if top_picks:
+        lines.append("")
+        lines.append("重点关注：")
+        for idx, pick in enumerate(top_picks, start=1):
+            lines.append(
+                f"{idx}. {pick['name']}（{pick['ticker']}）评分 {pick['score_text']}，{pick['action']}：{pick['core_conclusion']}"
+            )
+    if action_counts:
+        lines.append("")
+        lines.append(
+            "动作分布：" + "，".join(f"{action} {count} 只" for action, count in sorted(action_counts.items()))
+        )
+    if report_path:
+        lines.append("")
+        lines.append(f"本地报告文件：{report_path}")
+    if errors:
+        err_preview = [f"{item.get('ticker')}: {item.get('error')}" for item in errors[:3]]
+        if err_preview:
+            lines.append("")
+            lines.append("异常/跳过：")
+            lines.extend(f"- {item}" for item in err_preview)
+
+    return {
+        "generated_at": generated_at,
+        "title": title,
+        "job_id": job_id,
+        "market": market,
+        "pool": pool,
+        "deep": deep,
+        "interval": interval,
+        "prepost": prepost,
+        "report_path": report_path,
+        "card_count": len(cards),
+        "top_picks": top_picks,
+        "action_counts": action_counts,
+        "errors": errors or [],
+        "summary_text": "\n".join(lines).strip(),
+    }
 
 
 def _normalize_interval(interval: str) -> str:
@@ -450,6 +641,100 @@ def analyze_full_deep(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/agent/analyze")
+def agent_analyze(
+    ticker: str = Query(..., description="股票代码"),
+    deep: int = Query(1, description="1=返回深度分析，0=仅基础综合分析"),
+    narrative: int = Query(1, description="1=深度模式包含叙事分析，0=不包含"),
+    interval: str = Query("1d", description="K线周期，默认日K"),
+    prepost: int = Query(0, description="1=包含盘前盘后，0=不包含"),
+):
+    """
+    给 AI Agent 使用的结构化单股分析接口。
+    - deep=0: 返回 run_full_analysis 的核心结构化结果
+    - deep=1: 在基础结果上追加 ①②③④(+⑤) 深度分析结果与摘要
+    """
+    t = (ticker or "").upper().strip()
+    if not t:
+        raise HTTPException(status_code=400, detail="ticker 不能为空")
+    try:
+        base = run_full_analysis(
+            t,
+            interval=_normalize_interval(interval),
+            include_prepost=(prepost == 1),
+        )
+        if not base:
+            raise HTTPException(status_code=404, detail=f"未获取到 {t} 的分析结果")
+
+        response: Dict[str, Any] = {
+            "ticker": t,
+            "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "mode": "deep" if deep == 1 else "basic",
+            "card": base,
+            "agent_summary": {
+                "name": base.get("name") or t,
+                "action": base.get("action") or "观察",
+                "score": base.get("score"),
+                "score_reason": base.get("score_reason") or "—",
+                "core_conclusion": base.get("core_conclusion") or "—",
+                "analysis_reason": base.get("analysis_reason") or "—",
+                "trend_structure": base.get("trend_structure") or "—",
+                "risk_controls": {
+                    "add_price": base.get("add_price") or "—",
+                    "reduce_price": base.get("reduce_price") or "—",
+                    "tech_entry_note": base.get("tech_entry_note") or "—",
+                    "tech_exit_note": base.get("tech_exit_note") or "—",
+                },
+            },
+        }
+
+        if deep == 1:
+            deep_sections = run_full_deep_combo(t, include_narrative=(narrative == 1))
+            response["deep_sections"] = deep_sections
+            response["deep_section_summaries"] = {
+                key: _agent_clip(value, 900)
+                for key, value in deep_sections.items()
+            }
+
+        return _to_json_safe(response)
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/agent/analyze/brief")
+def agent_analyze_brief(
+    ticker: str = Query(..., description="股票代码"),
+    deep: int = Query(1, description="1=返回深度摘要，0=仅基础综合分析"),
+    narrative: int = Query(1, description="1=深度模式包含叙事分析，0=不包含"),
+    interval: str = Query("1d", description="K线周期，默认日K"),
+    prepost: int = Query(0, description="1=包含盘前盘后，0=不包含"),
+):
+    """给聊天机器人/飞书展示的人类可读单股摘要接口。"""
+    payload = agent_analyze(
+        ticker=ticker,
+        deep=deep,
+        narrative=narrative,
+        interval=interval,
+        prepost=prepost,
+    )
+    base = payload.get("card") or {}
+    deep_sections = payload.get("deep_section_summaries") if deep == 1 else None
+    brief = _build_stock_brief(base, deep_sections=deep_sections)
+    return _to_json_safe({
+        "ticker": payload.get("ticker"),
+        "generated_at": payload.get("generated_at"),
+        "mode": payload.get("mode"),
+        "brief": brief,
+        "agent_summary": payload.get("agent_summary") or {},
+    })
+
+
 # —————— 长期上下文（LangChain memory_store） ——————
 try:
     from chains.memory_store import retrieve, get_context_summary
@@ -565,7 +850,102 @@ def report_page(
             print(f"[Report] 已保存: {out_path}", flush=True)
         except Exception as e:
             print(f"[Report] 保存文件失败: {e}", flush=True)
+    else:
+        out_path = ""
+
+    with _report_progress_lock:
+        progress = dict(_report_progress.get(report_job_id) or {})
+    _store_latest_report_snapshot(_build_report_snapshot(
+        title=title,
+        cards=cards,
+        report_path=out_path,
+        job_id=report_job_id,
+        market=market,
+        pool=pool or "",
+        deep=deep,
+        interval=interval,
+        prepost=prepost,
+        errors=progress.get("errors") or [],
+    ))
     return HTMLResponse(content=html_content)
+
+
+@app.get("/agent/report")
+def agent_report(
+    tickers: str = Query(None, description="逗号分隔股票代码；不传则按 market+pool 取池"),
+    limit: int = Query(5, ge=1, le=200, description="默认 5"),
+    deep: int = Query(0, description="1=每只标的跑深度分析"),
+    interval: str = Query("1d", description="K线周期"),
+    prepost: int = Query(0, description="是否含盘前盘后"),
+    market: str = Query("us", description="市场：us/cn/hk"),
+    pool: str = Query("", description="选股池"),
+    save_output: int = Query(1, description="1=保存 HTML 到 report/output/"),
+    job_id: Optional[str] = Query(None, description="可传固定任务 ID"),
+):
+    """触发报告并返回适合 Agent/飞书消费的结构化摘要。"""
+    if tickers:
+        ticker_list = [normalize_ticker(t) for t in tickers.split(",") if t.strip()][:200]
+    else:
+        ticker_list = get_report_tickers(limit=limit, market=market or MARKET_US, pool=pool or None)
+    ticker_list = [t for t in ticker_list if t not in DELISTED_TICKERS]
+    if not ticker_list:
+        raise HTTPException(status_code=400, detail="请提供 tickers 或使用默认列表（limit>0）")
+
+    report_job_id = ((job_id or "").strip() or uuid.uuid4().hex)
+    global _latest_report_job_id
+    with _report_progress_lock:
+        _latest_report_job_id = report_job_id
+
+    cards, title, html_content = _run_report_impl(
+        ticker_list,
+        interval,
+        deep,
+        market,
+        prepost,
+        job_id=report_job_id,
+        pool=pool or "",
+    )
+
+    out_path = ""
+    if save_output == 1:
+        out_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report", "output")
+        os.makedirs(out_dir, exist_ok=True)
+        ts = datetime.now().strftime("%m%d-%H%M%S")
+        out_path = os.path.join(out_dir, f"report-{ts}-{report_job_id[:8]}.html")
+        try:
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+            print(f"[AgentReport] 已保存: {out_path}", flush=True)
+        except Exception as e:
+            print(f"[AgentReport] 保存文件失败: {e}", flush=True)
+            out_path = ""
+
+    with _report_progress_lock:
+        progress = dict(_report_progress.get(report_job_id) or {})
+    snapshot = _build_report_snapshot(
+        title=title,
+        cards=cards,
+        report_path=out_path,
+        job_id=report_job_id,
+        market=market,
+        pool=pool or "",
+        deep=deep,
+        interval=interval,
+        prepost=prepost,
+        errors=progress.get("errors") or [],
+    )
+    _store_latest_report_snapshot(snapshot)
+    return _to_json_safe(snapshot)
+
+
+@app.get("/agent/report/latest")
+def agent_report_latest():
+    """返回最近一次报告摘要，供聊天机器人直接读取。"""
+    with _report_progress_lock:
+        snapshot = dict(_latest_report_snapshot or {})
+    if not snapshot:
+        raise HTTPException(status_code=404, detail="暂无最近报告摘要")
+    return _to_json_safe(snapshot)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 import yfinance as yf
 from agents.news import filter_relevant_news
+from utils.yf_retry import fetch_with_retry
 
 
 def _market_type(ticker: str) -> str:
@@ -375,7 +376,11 @@ def fetch_external_data_json(
     current_price = _float_or_none(info.get("currentPrice") or info.get("regularMarketPrice"))
     if current_price is None:
         try:
-            hist_5d = stock.history(period="5d", interval=interval)
+            hist_5d = fetch_with_retry(
+                lambda: stock.history(period="5d", interval=interval),
+                ticker=ticker,
+                op_name=f"external_history_5d(interval={interval})",
+            )
             if hist_5d is not None and len(hist_5d) > 0 and "Close" in hist_5d.columns:
                 current_price = float(hist_5d["Close"].iloc[-1])
         except Exception:
@@ -384,7 +389,11 @@ def fetch_external_data_json(
     # 历史 K 线（用于技术分析，至少 60 根）
     hist = None
     try:
-        hist = stock.history(period=period, interval=interval)
+        hist = fetch_with_retry(
+            lambda: stock.history(period=period, interval=interval),
+            ticker=ticker,
+            op_name=f"external_history(period={period},interval={interval})",
+        )
     except Exception:
         pass
 

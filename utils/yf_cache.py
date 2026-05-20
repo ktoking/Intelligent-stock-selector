@@ -19,6 +19,7 @@ from typing import Optional
 
 import pandas as pd
 import yfinance as yf
+from utils.yf_retry import fetch_with_retry
 
 _DB_PATH = Path(__file__).parent.parent / "data" / "cache.db"
 _TTL_DAILY = 300    # 5 min
@@ -93,7 +94,11 @@ def get_history(
 
     # 缓存未命中或已过期，从 yfinance 拉取
     try:
-        hist = yf.Ticker(ticker).history(period=period, interval=interval, prepost=prepost)
+        hist = fetch_with_retry(
+            lambda: yf.Ticker(ticker).history(period=period, interval=interval, prepost=prepost),
+            ticker=ticker,
+            op_name=f"history(period={period},interval={interval},prepost={int(prepost)})",
+        )
     except Exception:
         hist = None
 
