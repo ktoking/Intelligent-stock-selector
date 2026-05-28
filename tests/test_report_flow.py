@@ -5,6 +5,11 @@ import agents.report_deep as report_deep
 import server
 
 
+def _use_temp_analysis_memory(monkeypatch, tmp_path):
+    monkeypatch.setenv("STOCK_AGENT_ANALYSIS_MEMORY_DB", str(tmp_path / "analysis_memory.sqlite"))
+    monkeypatch.setenv("STOCK_AGENT_MEM0_SYNC", "0")
+
+
 def test_run_one_ticker_deep_report_passes_interval_and_prepost(monkeypatch):
     captured = {}
 
@@ -28,7 +33,8 @@ def test_run_one_ticker_deep_report_passes_interval_and_prepost(monkeypatch):
     assert captured == {"ticker": "AAPL", "interval": "15m", "include_prepost": True}
 
 
-def test_report_progress_reads_by_job_id(monkeypatch):
+def test_report_progress_reads_by_job_id(monkeypatch, tmp_path):
+    _use_temp_analysis_memory(monkeypatch, tmp_path)
     client = TestClient(server.app)
 
     def fake_get_report_tickers(limit, market, pool):
@@ -60,7 +66,8 @@ def test_report_progress_reads_by_job_id(monkeypatch):
     assert progress.json()["done_count"] == 1
 
 
-def test_agent_analyze_brief_returns_readable_summary(monkeypatch):
+def test_agent_analyze_brief_returns_readable_summary(monkeypatch, tmp_path):
+    _use_temp_analysis_memory(monkeypatch, tmp_path)
     client = TestClient(server.app)
 
     def fake_run_full_analysis(ticker, interval="1d", include_prepost=False, backtest_summary=None):
@@ -88,9 +95,19 @@ def test_agent_analyze_brief_returns_readable_summary(monkeypatch):
     assert "Monster Beverage" in payload["brief"]["summary_text"]
     assert "买入/关注理由" in payload["brief"]["summary_text"]
     assert "主要风险" in payload["brief"]["summary_text"]
+    assert payload["analysis_memory"]["recorded"] is True
+    assert payload["analysis_memory"]["run_id"]
+
+    history = client.get("/agent/memory/history", params={"ticker": "MNST", "limit": 5})
+    assert history.status_code == 200
+    history_payload = history.json()
+    assert history_payload["count"] == 1
+    assert history_payload["records"][0]["ticker"] == "MNST"
+    assert history_payload["records"][0]["action"] == "买入"
 
 
-def test_agent_report_returns_summary_and_latest_snapshot(monkeypatch):
+def test_agent_report_returns_summary_and_latest_snapshot(monkeypatch, tmp_path):
+    _use_temp_analysis_memory(monkeypatch, tmp_path)
     client = TestClient(server.app)
 
     def fake_get_report_tickers(limit, market, pool):
@@ -122,7 +139,29 @@ def test_agent_report_returns_summary_and_latest_snapshot(monkeypatch):
     assert payload["card_count"] == 2
     assert "重点关注" in payload["summary_text"]
     assert payload["top_picks"][0]["ticker"] == "NVDA"
+    assert payload["analysis_memory"]["recorded_count"] == 2
+    assert len(payload["analysis_memory"]["run_ids"]) == 2
 
     latest = client.get("/agent/report/latest")
     assert latest.status_code == 200
     assert latest.json()["job_id"] == payload["job_id"]
+    assert latest.json()["analysis_memory"]["recorded_count"] == 2
+
+
+def test_agent_memory_update_outcomes_parses_horizons(monkeypatch, tmp_path):
+    _use_temp_analysis_memory(monkeypatch, tmp_path)
+    client = TestClient(server.app)
+
+    captured = {}
+
+    def fake_update_analysis_outcomes(max_runs=200, horizons=(1, 3, 5, 10, 20)):
+        captured["max_runs"] = max_runs
+        captured["horizons"] = tuple(horizons)
+        return {"updated": 3, "skipped": 1, "errors": [], "horizons": list(horizons)}
+
+    monkeypatch.setattr(server, "update_analysis_outcomes", fake_update_analysis_outcomes)
+
+    response = client.get("/agent/memory/update-outcomes", params={"max_runs": 50, "horizons": "1,5,20"})
+    assert response.status_code == 200
+    assert response.json()["updated"] == 3
+    assert captured == {"max_runs": 50, "horizons": (1, 5, 20)}

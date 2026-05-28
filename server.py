@@ -50,6 +50,13 @@ from config.tickers import (
     POOL_CSI300,
     POOL_SMALL_CN,
 )
+from data.analysis_memory import (
+    get_outcome_summary,
+    get_recent_analysis,
+    record_analysis_run,
+    record_report_run,
+    update_analysis_outcomes,
+)
 from report.build_html import build_report_html
 from llm import ask_llm
 
@@ -242,6 +249,52 @@ def _build_report_snapshot(
         "errors": errors or [],
         "summary_text": "\n".join(lines).strip(),
     }
+
+
+def _analysis_memory_meta(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    recorded = [r for r in results if r.get("recorded")]
+    return {
+        "recorded_count": len(recorded),
+        "run_ids": [r.get("run_id") for r in recorded if r.get("run_id")][:20],
+        "db_path": next((r.get("db_path") for r in recorded if r.get("db_path")), ""),
+        "mem0_synced_count": sum(1 for r in recorded if r.get("mem0_status") == "synced"),
+        "mem0_failed_count": sum(1 for r in recorded if r.get("mem0_status") == "failed"),
+        "mem0_skipped_count": sum(1 for r in recorded if r.get("mem0_status") == "skipped"),
+    }
+
+
+def _record_analysis_memory_safely(
+    card: Dict[str, Any],
+    *,
+    brief: Optional[Dict[str, Any]] = None,
+    source: str,
+    mode: str,
+    request: Dict[str, Any],
+) -> Dict[str, Any]:
+    try:
+        return record_analysis_run(
+            card,
+            brief=brief,
+            source=source,
+            mode=mode,
+            request=request,
+        )
+    except Exception as e:
+        print(f"[AnalysisMemory] 单股记录失败: {e}", flush=True)
+        return {"recorded": False, "error": str(e)[:500]}
+
+
+def _record_report_memory_safely(
+    snapshot: Dict[str, Any],
+    cards: List[Dict[str, Any]],
+    *,
+    request: Dict[str, Any],
+) -> Dict[str, Any]:
+    try:
+        return _analysis_memory_meta(record_report_run(snapshot, cards, request=request))
+    except Exception as e:
+        print(f"[AnalysisMemory] 报告记录失败: {e}", flush=True)
+        return {"recorded_count": 0, "error": str(e)[:500]}
 
 
 def _normalize_interval(interval: str) -> str:
@@ -482,6 +535,7 @@ def root():
         "analyze": "/analyze?ticker=AAPL",
         "report": "/report?limit=5&market=us（美股）或 market=cn（A股）或 market=hk（港股）；pool=nasdaq100/csi300/csi2000/russell2000；?tickers=600519.SS,0700.HK 可混用",
         "report_progress": "GET /report/progress 轮询查看报告生成进度（当前第几只、成功数、失败列表）",
+        "agent_memory": "GET /agent/memory/history?ticker=AAPL 查看分析记忆；POST /agent/memory/update-outcomes 补回测收益；GET /agent/memory/outcomes 查看胜率摘要",
         "深度分析（6 类）": {
             "1_基本面深度": "GET /analyze/deep?ticker=AAPL",
             "2_护城河": "GET /analyze/moat?ticker=AAPL",
@@ -696,6 +750,18 @@ def agent_analyze(
                 for key, value in deep_sections.items()
             }
 
+        response["analysis_memory"] = _record_analysis_memory_safely(
+            base,
+            source="agent_analyze",
+            mode=response["mode"],
+            request={
+                "ticker": t,
+                "deep": deep,
+                "narrative": narrative,
+                "interval": interval,
+                "prepost": prepost,
+            },
+        )
         return _to_json_safe(response)
     except HTTPException:
         raise
@@ -732,6 +798,7 @@ def agent_analyze_brief(
         "mode": payload.get("mode"),
         "brief": brief,
         "agent_summary": payload.get("agent_summary") or {},
+        "analysis_memory": payload.get("analysis_memory") or {},
     })
 
 
@@ -855,7 +922,7 @@ def report_page(
 
     with _report_progress_lock:
         progress = dict(_report_progress.get(report_job_id) or {})
-    _store_latest_report_snapshot(_build_report_snapshot(
+    snapshot = _build_report_snapshot(
         title=title,
         cards=cards,
         report_path=out_path,
@@ -866,7 +933,23 @@ def report_page(
         interval=interval,
         prepost=prepost,
         errors=progress.get("errors") or [],
-    ))
+    )
+    snapshot["analysis_memory"] = _record_report_memory_safely(
+        snapshot,
+        cards,
+        request={
+            "tickers": tickers,
+            "limit": limit,
+            "deep": deep,
+            "interval": interval,
+            "prepost": prepost,
+            "market": market,
+            "pool": pool or "",
+            "save_output": save_output,
+            "job_id": report_job_id,
+        },
+    )
+    _store_latest_report_snapshot(snapshot)
     return HTMLResponse(content=html_content)
 
 
@@ -934,6 +1017,21 @@ def agent_report(
         prepost=prepost,
         errors=progress.get("errors") or [],
     )
+    snapshot["analysis_memory"] = _record_report_memory_safely(
+        snapshot,
+        cards,
+        request={
+            "tickers": tickers,
+            "limit": limit,
+            "deep": deep,
+            "interval": interval,
+            "prepost": prepost,
+            "market": market,
+            "pool": pool or "",
+            "save_output": save_output,
+            "job_id": report_job_id,
+        },
+    )
     _store_latest_report_snapshot(snapshot)
     return _to_json_safe(snapshot)
 
@@ -946,6 +1044,65 @@ def agent_report_latest():
     if not snapshot:
         raise HTTPException(status_code=404, detail="暂无最近报告摘要")
     return _to_json_safe(snapshot)
+
+
+@app.get("/agent/memory/history")
+def agent_memory_history(
+    ticker: str = Query("", description="股票代码；不传则返回最近所有标的"),
+    limit: int = Query(20, ge=1, le=200, description="返回条数"),
+    include_payload: int = Query(0, description="1=包含原始 card/request，0=只返回摘要字段"),
+):
+    """查看本地分析记忆，供 Hermes/飞书回看历史判断与 run_id。"""
+    try:
+        records = get_recent_analysis(
+            ticker=ticker,
+            limit=limit,
+            include_payload=(include_payload == 1),
+        )
+        return _to_json_safe({
+            "ticker": (ticker or "").upper().strip(),
+            "count": len(records),
+            "records": records,
+        })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/agent/memory/outcomes")
+def agent_memory_outcomes(
+    ticker: str = Query("", description="股票代码；不传则统计全部"),
+    since_days: int = Query(180, ge=1, le=2000, description="统计最近多少天"),
+):
+    """查看已补齐回测收益后的胜率/平均收益摘要。"""
+    try:
+        return _to_json_safe(get_outcome_summary(ticker=ticker, since_days=since_days))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/agent/memory/update-outcomes")
+@app.get("/agent/memory/update-outcomes")
+def agent_memory_update_outcomes(
+    max_runs: int = Query(200, ge=1, le=2000, description="最多更新最近多少条分析记录"),
+    horizons: str = Query("1,3,5,10,20", description="逗号分隔持有天数，如 1,3,5,10,20"),
+):
+    """按历史价格补齐已记录分析的未来收益，用于每天收盘后复盘。"""
+    try:
+        parsed_horizons = []
+        for item in (horizons or "").split(","):
+            item = item.strip()
+            if not item:
+                continue
+            parsed_horizons.append(int(item))
+        result = update_analysis_outcomes(
+            max_runs=max_runs,
+            horizons=parsed_horizons or (1, 3, 5, 10, 20),
+        )
+        return _to_json_safe(result)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="horizons 需要是逗号分隔整数，例如 1,3,5,10,20")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

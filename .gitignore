@@ -26,6 +26,18 @@ report/output/
 # RAG 向量库（本地 Chroma 持久化）
 data/rag_chroma/
 
+# 本地交易/分析记忆数据库
+data/memory/*.sqlite
+data/memory/*.sqlite-*
+
+# SeaTalk 本地 Hermes adapter（本机回调与机器人接入配置）
+scripts/seatalk_hermes_adapter.py
+scripts/start-seatalk-hermes-adapter.sh
+docs/SeaTalk-Hermes-接入.md
+data/seatalk_events.jsonl
+data/seatalk_action_state.json
+data/seatalk_action_state.json.tmp
+
 # OS
 .DS_Store
 Thumbs.db

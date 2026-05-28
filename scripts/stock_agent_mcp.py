@@ -152,5 +152,65 @@ def stock_agent_latest_report_summary() -> Dict[str, Any]:
     return _http_get_json("/agent/report/latest")
 
 
+@server.tool(
+    description=(
+        "Read local stock-agent analysis memory. Use this when the user asks for "
+        "previous analysis, historical decisions, run ids, or what stock-agent "
+        "remembered about a ticker."
+    )
+)
+def stock_agent_analysis_history(
+    ticker: str = "",
+    limit: int = 10,
+    include_payload: bool = False,
+) -> Dict[str, Any]:
+    return _http_get_json(
+        "/agent/memory/history",
+        {
+            "ticker": (ticker or "").upper().strip() or None,
+            "limit": limit,
+            "include_payload": 1 if include_payload else 0,
+        },
+    )
+
+
+@server.tool(
+    description=(
+        "Update local backtest outcomes for stored stock-agent analysis records. "
+        "Use this after market close or before review to calculate 1/3/5/10/20-day returns."
+    )
+)
+def stock_agent_update_outcomes(
+    max_runs: int = 200,
+    horizons: str = "1,3,5,10,20",
+) -> Dict[str, Any]:
+    return _http_get_json(
+        "/agent/memory/update-outcomes",
+        {
+            "max_runs": max_runs,
+            "horizons": horizons,
+        },
+    )
+
+
+@server.tool(
+    description=(
+        "Summarize local stock-agent backtest outcomes and win rates. "
+        "Use this when the user asks how prior analyses performed."
+    )
+)
+def stock_agent_outcome_summary(
+    ticker: str = "",
+    since_days: int = 180,
+) -> Dict[str, Any]:
+    return _http_get_json(
+        "/agent/memory/outcomes",
+        {
+            "ticker": (ticker or "").upper().strip() or None,
+            "since_days": since_days,
+        },
+    )
+
+
 if __name__ == "__main__":
     server.run("stdio")
