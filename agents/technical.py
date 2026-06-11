@@ -11,6 +11,7 @@ import yfinance as yf
 from typing import Optional, Tuple, List
 from ta.trend import MACD as _TaMacd
 from utils.yf_cache import get_history as _yf_get_history
+from utils.market_data_utils import drop_invalid_ohlc_rows as _drop_invalid_ohlc_rows
 from ta.momentum import RSIIndicator as _TaRsi, StochasticOscillator as _TaStoch
 from ta.volatility import BollingerBands as _TaBb
 from ta.volume import OnBalanceVolumeIndicator as _TaObv
@@ -287,6 +288,26 @@ def get_technical_summary(
         return {
             "ok": False,
             "reason": "行情结构异常或暂无价格数据",
+            "trend_ma": None,
+            "macd_summary": None,
+            "kdj_summary": None,
+            "rsi_summary": None,
+            "bb_summary": None,
+            "obv_summary": None,
+            "divergence_summary": None,
+            "volume_context": None,
+            "tech_levels": {},
+            "tech_status_one_line": None,
+            "interval": interval,
+            "prepost": prepost,
+        }
+
+    # Yahoo 偶发返回“最后一根日线存在、价格字段全为 NaN”的空 K 线，先清掉再算指标。
+    hist = _drop_invalid_ohlc_rows(hist)
+    if len(hist) < min_bars:
+        return {
+            "ok": False,
+            "reason": "有效历史数据不足",
             "trend_ma": None,
             "macd_summary": None,
             "kdj_summary": None,

@@ -26,7 +26,7 @@ _latest_report_snapshot: Dict[str, Any] = {}
 _report_progress_lock = threading.Lock()
 
 from agents.fundamental import analyze_fundamental
-from agents.full_analysis import run_full_analysis, _to_json_safe
+from agents.full_analysis import run_full_analysis, explain_analysis_gap, _to_json_safe
 from agents.report_deep import run_one_ticker_deep_report
 from agents.analysis_deep import (
     run_fundamental_deep,
@@ -718,7 +718,14 @@ def agent_analyze(
             include_prepost=(prepost == 1),
         )
         if not base:
-            raise HTTPException(status_code=404, detail=f"未获取到 {t} 的分析结果")
+            raise HTTPException(
+                status_code=404,
+                detail=explain_analysis_gap(
+                    t,
+                    interval=_normalize_interval(interval),
+                    include_prepost=(prepost == 1),
+                ),
+            )
 
         response: Dict[str, Any] = {
             "ticker": t,

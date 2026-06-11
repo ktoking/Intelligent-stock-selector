@@ -414,6 +414,90 @@ def _build_source_data(ticker: str, interval: str) -> dict:
         return {"stock_code": ticker, "market_type": "us", "error": "源数据拉取失败"}
 
 
+def explain_analysis_gap(
+    ticker: str,
+    interval: str = "1d",
+    include_prepost: bool = False,
+) -> Dict[str, Any]:
+    """构建结构化失败诊断，帮助定位为何综合分析没有产出结果。"""
+    technical = {}
+    news = {}
+    fundamental = {}
+    options_summary = {}
+    reasons = []
+
+    try:
+        technical = get_technical_summary(ticker, interval=interval, prepost=include_prepost) or {}
+    except Exception as exc:
+        technical = {"ok": False, "error": str(exc)}
+        reasons.append("technical_fetch_error")
+
+    try:
+        news = get_news_summary(ticker) or {}
+    except Exception as exc:
+        news = {"ok": False, "error": str(exc), "news": []}
+        reasons.append("news_fetch_error")
+
+    try:
+        fundamental = get_fundamental_data(ticker, use_prepost=(interval == "1d" and include_prepost)) or {}
+    except Exception as exc:
+        fundamental = {"error": str(exc)}
+        reasons.append("fundamental_fetch_error")
+
+    try:
+        options_summary = get_put_call_summary(ticker) or {}
+    except Exception as exc:
+        options_summary = {"ok": False, "error": str(exc)}
+        reasons.append("options_fetch_error")
+
+    if not _is_valid_number(fundamental.get("current_price")):
+        reasons.append("missing_current_price")
+    if not _is_valid_number(fundamental.get("change_pct")):
+        reasons.append("missing_change_pct")
+    if not technical.get("ok"):
+        reasons.append("technical_not_ready")
+    if not news.get("news"):
+        reasons.append("no_direct_news")
+
+    reason_summary = "、".join(reasons) if reasons else "unknown"
+    return _to_json_safe(
+        {
+            "code": "ANALYSIS_DATA_UNAVAILABLE",
+            "ticker": ticker,
+            "message": f"未获取到 {ticker} 的分析结果",
+            "reason_summary": reason_summary,
+            "diagnostics": {
+                "interval": interval,
+                "prepost": include_prepost,
+                "fundamental": {
+                    "short_name": fundamental.get("short_name"),
+                    "current_price": fundamental.get("current_price"),
+                    "change_pct": fundamental.get("change_pct"),
+                    "has_valid_price": _is_valid_number(fundamental.get("current_price")),
+                    "has_valid_change_pct": _is_valid_number(fundamental.get("change_pct")),
+                    "next_earnings": fundamental.get("next_earnings"),
+                },
+                "technical": {
+                    "ok": technical.get("ok", False),
+                    "reason": technical.get("reason") or technical.get("error"),
+                    "last_date": technical.get("last_date"),
+                    "tech_status_one_line": technical.get("tech_status_one_line"),
+                },
+                "news": {
+                    "count": len(news.get("news") or []),
+                    "excluded_count": news.get("excluded_news_count", 0),
+                },
+                "options": {
+                    "ok": options_summary.get("ok", False),
+                    "description": options_summary.get("description"),
+                    "ratio": options_summary.get("ratio"),
+                },
+                "failure_reasons": reasons,
+            },
+        }
+    )
+
+
 def run_full_analysis(
     ticker: str,
     interval: str = "1d",

@@ -1,22 +1,15 @@
 from config.yf_suppress import suppress_yf_noise
 suppress_yf_noise()
-import math
 import yfinance as yf
 from llm import ask_llm
 from typing import Optional, Dict, Any
 from utils.yf_cache import get_history as _yf_get_history
 from utils.av_fallback import get_quote as _av_get_quote
-
-
-def _safe_float(v) -> Optional[float]:
-    """将值转为 float，若结果为 NaN/Inf 则返回 None。"""
-    if v is None:
-        return None
-    try:
-        f = float(v)
-        return None if (math.isnan(f) or math.isinf(f)) else f
-    except (TypeError, ValueError):
-        return None
+from utils.market_data_utils import (
+    safe_float as _safe_float,
+    latest_valid_close_pair as _latest_valid_close_pair,
+    last_close_is_invalid as _last_close_is_invalid,
+)
 
 
 def get_fundamental_data(ticker: str, use_prepost: bool = False) -> Dict[str, Any]:
@@ -67,9 +60,12 @@ def get_fundamental_data(ticker: str, use_prepost: bool = False) -> Dict[str, An
 
         if current is None or (not use_prepost):
             hist = _yf_get_history(ticker, period="5d", interval="1d", prepost=use_prepost)
-            if hist is not None and len(hist) >= 2 and hasattr(hist, "columns") and "Close" in hist.columns:
-                current = _safe_float(hist["Close"].iloc[-1])
-                prev = _safe_float(hist["Close"].iloc[-2])
+            hist_current, prev = _latest_valid_close_pair(hist)
+            if hist_current is not None and not (
+                _last_close_is_invalid(hist)
+                and _safe_float(info.get("currentPrice") or info.get("regularMarketPrice")) is not None
+            ):
+                current = hist_current
                 if current is not None and prev is not None and prev != 0:
                     change_pct = (current - prev) / prev * 100
                 else:
