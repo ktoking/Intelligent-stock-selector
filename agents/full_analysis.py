@@ -503,6 +503,7 @@ def run_full_analysis(
     interval: str = "1d",
     include_prepost: bool = False,
     backtest_summary: Optional[Dict[str, Any]] = None,
+    use_rag_context: bool = True,
 ) -> Optional[Dict[str, Any]]:
     """
     对单只标的做技术+消息+财报+期权综合分析，返回报告卡片所需字段。
@@ -537,7 +538,7 @@ def run_full_analysis(
             flush=True,
         )
 
-    rag_context = _get_rag_context(ticker)
+    rag_context = _get_rag_context(ticker) if use_rag_context else ""
     quant_baseline_100: Optional[int] = None
     quant_baseline_note = ""
     quant_block = ""

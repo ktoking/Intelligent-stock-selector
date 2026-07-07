@@ -6,7 +6,7 @@
     <string>com.stock-agent.server</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/opt/homebrew/bin/python3</string>
+        <string>/Users/kaiyi.wang/PycharmProjects/stock-agent/venv/bin/python</string>
         <string>/Users/kaiyi.wang/PycharmProjects/stock-agent/server.py</string>
     </array>
     <key>WorkingDirectory</key>

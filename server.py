@@ -702,6 +702,7 @@ def agent_analyze(
     narrative: int = Query(1, description="1=深度模式包含叙事分析，0=不包含"),
     interval: str = Query("1d", description="K线周期，默认日K"),
     prepost: int = Query(0, description="1=包含盘前盘后，0=不包含"),
+    use_history: int = Query(1, description="1=允许历史/RAG上下文作为参考，0=仅使用本次实时数据"),
 ):
     """
     给 AI Agent 使用的结构化单股分析接口。
@@ -716,6 +717,7 @@ def agent_analyze(
             t,
             interval=_normalize_interval(interval),
             include_prepost=(prepost == 1),
+            use_rag_context=(use_history == 1),
         )
         if not base:
             raise HTTPException(
@@ -767,6 +769,7 @@ def agent_analyze(
                 "narrative": narrative,
                 "interval": interval,
                 "prepost": prepost,
+                "use_history": use_history,
             },
         )
         return _to_json_safe(response)
@@ -787,6 +790,7 @@ def agent_analyze_brief(
     narrative: int = Query(1, description="1=深度模式包含叙事分析，0=不包含"),
     interval: str = Query("1d", description="K线周期，默认日K"),
     prepost: int = Query(0, description="1=包含盘前盘后，0=不包含"),
+    use_history: int = Query(1, description="1=允许历史/RAG上下文作为参考，0=仅使用本次实时数据"),
 ):
     """给聊天机器人/飞书展示的人类可读单股摘要接口。"""
     payload = agent_analyze(
@@ -795,6 +799,7 @@ def agent_analyze_brief(
         narrative=narrative,
         interval=interval,
         prepost=prepost,
+        use_history=use_history,
     )
     base = payload.get("card") or {}
     deep_sections = payload.get("deep_section_summaries") if deep == 1 else None

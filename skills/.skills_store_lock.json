@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "skills": {
+    "wen-cai": {
+      "name": "all in one skill for wencai 同花顺",
+      "zip_url": "https://api.skillhub.cn/api/v1/download?slug=wen-cai",
+      "source": "community",
+      "version": "1.0.0",
+      "installedAt": "2026-07-06T06:43:18Z"
+    }
+  }
+}
