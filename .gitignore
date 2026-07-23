@@ -30,6 +30,17 @@ data/rag_chroma/
 data/memory/*.sqlite
 data/memory/*.sqlite-*
 
+# Quant / trading runtime artifacts
+data/okx_*.json
+data/okx_*.pkl
+data/okx_*.db
+data/okx_*.db-*
+data/okx_*.joblib
+data/okx_*.joblib.*
+data/okx_backtest_cache/
+data/yfinance_*.json
+data/yfinance_*.pkl
+
 # SeaTalk 本地 Hermes adapter（本机回调与机器人接入配置）
 scripts/seatalk_hermes_adapter.py
 scripts/start-seatalk-hermes-adapter.sh
@@ -37,6 +48,7 @@ docs/SeaTalk-Hermes-接入.md
 data/seatalk_events.jsonl
 data/seatalk_action_state.json
 data/seatalk_action_state.json.tmp
+data/seatalk_turtle_soup_state.json
 
 # OS
 .DS_Store
