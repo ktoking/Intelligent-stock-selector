@@ -14,6 +14,7 @@ import threading
 import time
 import uuid
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 from fastapi import FastAPI, HTTPException, Query, Body, WebSocket
@@ -459,6 +460,37 @@ def _run_report_impl(
 
 
 app = FastAPI(title="Stock Agent", description="美股基本面分析（默认本地 Ollama）")
+
+
+@app.get("/okx/dashboard")
+def okx_dashboard():
+    return FileResponse(Path(__file__).resolve().parent / "static" / "okx-dashboard.html")
+
+
+@app.get("/okx/dashboard/data")
+def okx_dashboard_data():
+    from scripts.okx_intraday_agent import dashboard_snapshot
+    return dashboard_snapshot()
+
+
+@app.post("/okx/dashboard/kill-switch")
+def okx_dashboard_kill_switch(payload: Dict[str, Any] = Body(...)):
+    """Local demo-trading circuit breaker. It never enables live trading."""
+    from scripts.okx_intraday_agent import set_kill_switch
+    if "enabled" not in payload or not isinstance(payload["enabled"], bool):
+        raise HTTPException(status_code=400, detail="enabled must be a boolean")
+    reason = str(payload.get("reason") or "manual dashboard control")[:200]
+    return {"ok": True, "kill_switch": set_kill_switch(payload["enabled"], reason)}
+
+
+@app.post("/okx/dashboard/monitor")
+def okx_dashboard_monitor(payload: Dict[str, Any] = Body(...)):
+    """Pause or resume the launchd-supervised OKX scanner and executor."""
+    from scripts.okx_intraday_agent import set_monitor_control
+    if "enabled" not in payload or not isinstance(payload["enabled"], bool):
+        raise HTTPException(status_code=400, detail="enabled must be a boolean")
+    reason = str(payload.get("reason") or "manual dashboard control")[:200]
+    return {"ok": True, "monitor_control": set_monitor_control(payload["enabled"], reason)}
 
 
 def _seconds_until_8am() -> float:

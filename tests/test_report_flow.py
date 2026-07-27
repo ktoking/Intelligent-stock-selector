@@ -70,7 +70,8 @@ def test_agent_analyze_brief_returns_readable_summary(monkeypatch, tmp_path):
     _use_temp_analysis_memory(monkeypatch, tmp_path)
     client = TestClient(server.app)
 
-    def fake_run_full_analysis(ticker, interval="1d", include_prepost=False, backtest_summary=None):
+    def fake_run_full_analysis(ticker, interval="1d", include_prepost=False, backtest_summary=None,
+                               use_rag_context=True):
         return {
             "ticker": ticker,
             "name": "Monster Beverage",

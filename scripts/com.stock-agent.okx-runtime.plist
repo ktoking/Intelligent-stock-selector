@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>Label</key><string>com.stock-agent.okx-runtime</string>
+<key>ProgramArguments</key><array>
+  <string>/Users/kaiyi.wang/PycharmProjects/stock-agent/.venv/bin/python</string>
+  <string>/Users/kaiyi.wang/PycharmProjects/stock-agent/scripts/okx_runtime.py</string>
+</array>
+<key>WorkingDirectory</key><string>/Users/kaiyi.wang/PycharmProjects/stock-agent</string>
+<key>RunAtLoad</key><true/><key>KeepAlive</key><true/>
+<key>ThrottleInterval</key><integer>10</integer>
+<key>EnvironmentVariables</key><dict>
+  <key>PATH</key><string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  <key>OKX_INTRADAY_EXECUTE_DEMO</key><string>1</string>
+  <key>OKX_INTRADAY_EXPLORATORY_DEMO</key><string>0</string>
+  <key>OKX_GAP_EXPLORATORY_DEMO</key><string>1</string>
+  <key>OKX_MICRO_V13_WARMUP_DEMO</key><string>1</string>
+  <key>OKX_INTRADAY_LEVERAGE</key><string>3</string>
+  <key>OKX_INTRADAY_MAX_DYNAMIC_LEVERAGE</key><string>5</string>
+  <key>OKX_INTRADAY_MAX_OPEN_POSITIONS</key><string>5</string>
+  <key>OKX_INTRADAY_MAX_ENTRIES_PER_DAY</key><string>0</string>
+  <key>OKX_INTRADAY_RISK_USDT</key><string>35</string>
+  <key>OKX_INTRADAY_RISK_FRACTION</key><string>0.0035</string>
+  <key>OKX_INTRADAY_MAX_NOTIONAL_USDT</key><string>1500</string>
+  <key>OKX_INTRADAY_MAX_GROSS_NOTIONAL_USDT</key><string>7500</string>
+  <key>OKX_INTRADAY_DAILY_LOSS_GUARD_BYPASS_DATE</key><string>2026-07-17</string>
+</dict>
+<key>StandardOutPath</key><string>/Users/kaiyi.wang/PycharmProjects/stock-agent/report/output/okx_runtime.log</string>
+<key>StandardErrorPath</key><string>/Users/kaiyi.wang/PycharmProjects/stock-agent/report/output/okx_runtime.err</string>
+</dict></plist>
