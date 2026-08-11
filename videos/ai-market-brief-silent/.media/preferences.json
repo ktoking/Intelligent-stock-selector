@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "preferences": {
+    "destination": {
+      "value": "shorts",
+      "confirmed_in": [
+        "ai-market-brief-silent"
+      ],
+      "updated_at": "2026-08-10T10:05:38.427Z"
+    },
+    "aspect": {
+      "value": "1080x1920",
+      "confirmed_in": [
+        "ai-market-brief-silent"
+      ],
+      "updated_at": "2026-08-10T10:05:38.523Z"
+    },
+    "language": {
+      "value": "zh-CN",
+      "confirmed_in": [
+        "ai-market-brief-silent"
+      ],
+      "updated_at": "2026-08-10T10:05:38.615Z"
+    },
+    "flow": {
+      "value": "automation",
+      "confirmed_in": [
+        "ai-market-brief-silent"
+      ],
+      "updated_at": "2026-08-10T10:05:38.712Z"
+    },
+    "storyboard": {
+      "value": "no",
+      "confirmed_in": [
+        "ai-market-brief-silent"
+      ],
+      "updated_at": "2026-08-10T10:05:38.821Z"
+    },
+    "style_preset.faceless-explainer": {
+      "value": "broadside",
+      "confirmed_in": [
+        "ai-market-brief-silent"
+      ],
+      "updated_at": "2026-08-10T10:05:38.927Z"
+    }
+  },
+  "sightings": {}
+}

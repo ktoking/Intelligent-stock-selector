@@ -12,6 +12,7 @@ import hashlib
 import hmac
 import json
 import logging
+import math
 import os
 import sqlite3
 import subprocess
@@ -254,6 +255,23 @@ class OKX:
             "instId": inst_id, "bar": bar,
             "limit": str(min(max(limit, 40), 300)), "after": str(int(end_ts) + 1),
         })["data"]
+
+    def mark_price_candles_ending_at(self, inst_id: str, end_ts: int, limit: int = 100,
+                                     bar: str = "5m") -> list[list[str]]:
+        """Return historical mark-price candles used by mark-triggered stops."""
+        time.sleep(0.12)
+        return self.request("GET", "/api/v5/market/history-mark-price-candles", {
+            "instId": inst_id, "bar": bar,
+            "limit": str(min(max(limit, 40), 300)), "after": str(int(end_ts) + 1),
+        })["data"]
+
+    def mark_price(self, inst_id: str) -> dict[str, str]:
+        rows = self.request("GET", "/api/v5/public/mark-price", {
+            "instType": "SWAP", "instId": inst_id,
+        })["data"]
+        if not rows:
+            raise RuntimeError(f"mark price not found: {inst_id}")
+        return rows[0]
 
     def ticker(self, inst_id: str) -> dict[str, str]:
         return self.request("GET", "/api/v5/market/ticker", {"instId": inst_id})["data"][0]
@@ -844,6 +862,19 @@ def backtest(cfg: Settings, inst_id: str, limit: int = 300) -> dict[str, Any]:
     }
 
 
+def _json_finite(value: Any) -> Any:
+    """Recursively replace NaN/Infinity from persisted research state."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    if isinstance(value, dict):
+        return {key: _json_finite(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_finite(item) for item in value]
+    if isinstance(value, tuple):
+        return [_json_finite(item) for item in value]
+    return value
+
+
 def dashboard_snapshot() -> dict[str, Any]:
     """Current dashboard data. Credentials stay local; no secret is returned."""
     cfg, client, state = settings(), None, _read_state()
@@ -968,6 +999,11 @@ def dashboard_snapshot() -> dict[str, Any]:
             research["gap_shadow"] = json.loads((ROOT / "data" / "okx_gap_shadow_state.json").read_text())
         except (OSError, json.JSONDecodeError):
             research["gap_shadow"] = {"mode": "not_started", "signals": 0}
+        try:
+            research["bias_audit"] = json.loads((ROOT / "data" / "okx_research_bias_audit.json").read_text())
+        except (OSError, json.JSONDecodeError):
+            research["bias_audit"] = {"selection_adjustment": {"available": False},
+                                      "cscv_pbo": {"available": False}}
         research["deployment_passed"] = bool(
             research["shadow_learning"].get("passed")
             and research["shadow_learning"].get("execution_ready")
@@ -993,7 +1029,7 @@ def dashboard_snapshot() -> dict[str, Any]:
                 })
             except (OSError, json.JSONDecodeError):
                 continue
-        return {
+        return _json_finite({
             "ok": True, "generated_at": datetime.now(UTC).isoformat(), "state": state,
             "funds": {"total_equity": float(balance.get("totalEq") or 0), "usdt_available": float(usdt.get("availBal") or 0), "usdt_frozen": float(usdt.get("frozenBal") or 0), "usdt_balance": float(usdt.get("cashBal") or 0)},
             "positions": positions,
@@ -1005,7 +1041,7 @@ def dashboard_snapshot() -> dict[str, Any]:
             "events": event_data, "research": research,
             "ws": ws, "execution": execution, "kill_switch": kill_switch(), "monitor_control": monitor_control(),
             "charts": {"price": price_chart, "equity": [dict(row) for row in reversed(equity_rows)], "scans": [dict(row) for row in reversed(scan_rows)]},
-        }
+        })
     except Exception as exc:
         return {"ok": False, "error": str(exc), "state": state}
 

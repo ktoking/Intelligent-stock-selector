@@ -1,0 +1,37 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;container-type:size;font-family:"Noto Sans SC",sans-serif;color:#F0ECE5}
+    #root *{box-sizing:border-box}.f05-bg{position:absolute;inset:0;background:#111111}.f05-content{position:absolute;inset:0;padding:108px 72px 326px}.f05-kicker{display:flex;justify-content:space-between;font-size:22px;letter-spacing:.16em;color:#E85D26;font-weight:650}.f05-title{margin-top:74px;font-size:104px;line-height:.98;letter-spacing:-.05em;font-weight:900}.f05-title span{color:#E85D26}
+    .f05-ladder{margin-top:94px;border-top:1px solid #505048}.f05-level{min-height:220px;border-bottom:1px solid #282826;display:grid;grid-template-columns:285px 1fr;align-items:center;gap:36px;position:relative}.f05-level:before{content:attr(data-n);position:absolute;left:0;top:18px;font-size:15px;letter-spacing:.14em;color:#505048}.f05-state{font-size:45px;font-weight:800;line-height:1.05;padding-top:18px}.f05-tickers{display:flex;gap:18px;justify-content:flex-end;flex-wrap:wrap}.f05-ticker{display:inline-flex;align-items:center;justify-content:center;min-width:176px;height:86px;border:1px solid #505048;font-size:34px;font-weight:800;letter-spacing:.04em}.f05-level:last-child .f05-state{color:#E85D26}
+    .f05-action{position:absolute;left:72px;right:72px;bottom:350px;min-height:150px;border-top:1px solid #505048;padding-top:30px;display:flex;justify-content:space-between;align-items:start}.f05-action b{font-size:88px;line-height:1;color:#E85D26;letter-spacing:-.05em}.f05-action span{font-size:24px;letter-spacing:.14em;color:#888880;text-align:right}.f05-note{position:absolute;left:72px;bottom:250px;font-size:21px;letter-spacing:.12em;color:#888880}
+  </style>
+  <div id="root" data-composition-id="05-stocks" data-width="1080" data-height="1920" data-duration="11.6">
+    <div id="f05-background" class="clip f05-bg" data-start="0" data-duration="11.6" data-track-index="0"></div>
+    <div id="f05-content" class="clip f05-content" data-start="0" data-duration="11.6" data-track-index="1">
+      <div class="f05-kicker"><span>STOCK DISPERSION</span><span>05 / 06</span></div><h1 class="f05-title">不是齐涨<br><span>是分化</span></h1>
+      <div class="f05-ladder">
+        <div class="f05-level" data-n="01"><div class="f05-state">震荡消化</div><div class="f05-tickers"><i id="f05-nvda" class="f05-ticker">NVDA</i></div></div>
+        <div class="f05-level" data-n="02"><div class="f05-state">等待确认</div><div class="f05-tickers"><i id="f05-amd" class="f05-ticker">AMD</i></div></div>
+        <div class="f05-level" data-n="03"><div class="f05-state">趋势回踩</div><div class="f05-tickers"><i id="f05-avgo" class="f05-ticker">AVGO</i><i id="f05-net" class="f05-ticker">NET</i></div></div>
+        <div class="f05-level" data-n="04"><div class="f05-state">财报再定价</div><div class="f05-tickers"><i id="f05-smci" class="f05-ticker">SMCI</i><i id="f05-amat" class="f05-ticker">AMAT</i></div></div>
+      </div>
+      <div class="f05-action"><b>不追高</b><span>WAIT FOR<br>CONFIRMATION</span></div><div class="f05-note">示意样片 · 非实时数据</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f05-kicker",{opacity:0,y:-20},{opacity:1,y:0,duration:.5,ease:"power3.out"},0)
+        .fromTo(".f05-title",{opacity:0,y:45},{opacity:1,y:0,duration:.8,ease:"power3.out"},.25)
+        .fromTo(".f05-level",{opacity:0,x:-55},{opacity:1,x:0,duration:.55,stagger:.22,ease:"power3.out"},1.4)
+        .fromTo("#f05-nvda",{opacity:0,x:90},{opacity:1,x:0,duration:.55,ease:"power3.out"},2.25)
+        .fromTo("#f05-amd",{opacity:0,x:90},{opacity:1,x:0,duration:.55,ease:"power3.out"},3.45)
+        .fromTo("#f05-avgo",{opacity:0,x:90},{opacity:1,x:0,duration:.55,ease:"power3.out"},4.7)
+        .fromTo("#f05-net",{opacity:0,x:90},{opacity:1,x:0,duration:.55,ease:"power3.out"},5.35)
+        .fromTo("#f05-smci",{opacity:0,x:90},{opacity:1,x:0,duration:.55,ease:"power3.out"},6.55)
+        .fromTo("#f05-amat",{opacity:0,x:90},{opacity:1,x:0,duration:.55,ease:"power3.out"},7.2)
+        .fromTo(".f05-action",{opacity:0,y:42},{opacity:1,y:0,duration:.75,ease:"power3.out"},8.15)
+        .fromTo(".f05-note",{opacity:0},{opacity:1,duration:.35},8.8);
+      window.__timelines=window.__timelines||{};window.__timelines["05-stocks"]=tl;})();
+  </script>
+</template>

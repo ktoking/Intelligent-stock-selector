@@ -20,7 +20,11 @@ NY=ZoneInfo('America/New_York'); OUTPUT=ROOT/'data'/'okx_gap_research_90d.json'
 TRADE_SYMBOLS=[x for x in DEFAULT_SYMBOLS if not x.startswith(('SPY-','QQQ-'))]
 
 
-def opportunities(raw):
+def opportunities(
+    raw,
+    excluded_symbols: tuple[str, ...] = ("SPY-USDT-SWAP", "QQQ-USDT-SWAP"),
+):
+    """Build opening paths while retaining optional benchmark instruments."""
     records=[]
     for symbol,rows in raw.items():
         bars=aggregate_bars(rows,5)
@@ -50,7 +54,7 @@ def opportunities(raw):
     result=pd.DataFrame(records)
     spy=result[result.symbol=='SPY-USDT-SWAP'][['date','gap_bps','first5_bps','previous_day_bps']].rename(
         columns={'gap_bps':'spy_gap','first5_bps':'spy_first5','previous_day_bps':'spy_previous_day'})
-    return result[~result.symbol.isin(('SPY-USDT-SWAP','QQQ-USDT-SWAP'))].merge(spy,on='date',how='left')
+    return result[~result.symbol.isin(excluded_symbols)].merge(spy,on='date',how='left')
 
 
 def portfolio(rows, score, style, horizon, threshold):

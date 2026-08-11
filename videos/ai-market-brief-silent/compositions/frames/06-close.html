@@ -1,0 +1,37 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;container-type:size;font-family:"Noto Sans SC",sans-serif;color:#F0ECE5}
+    #root *{box-sizing:border-box}.f06-bg{position:absolute;inset:0;background:#111111}.f06-orange{position:absolute;inset:0;background:#E85D26;transform-origin:50% 50%}.f06-content{position:absolute;inset:0;padding:108px 72px 326px}.f06-kicker{display:flex;justify-content:space-between;font-size:22px;letter-spacing:.16em;color:#E85D26;font-weight:650}.f06-conditions{margin-top:150px}.f06-condition{height:190px;border-top:1px solid #505048;display:grid;grid-template-columns:95px 1fr 90px;align-items:center;gap:24px}.f06-condition i{font-style:normal;font-size:17px;letter-spacing:.14em;color:#888880}.f06-condition b{font-size:58px;line-height:1;font-weight:850}.f06-condition em{font-style:normal;font-size:62px;text-align:right;color:#E85D26;font-weight:900}
+    .f06-divider{position:absolute;left:50%;top:910px;width:5px;height:305px;background:#E85D26}.f06-old{position:absolute;left:72px;right:72px;top:905px;text-align:center;font-size:118px;font-weight:900;letter-spacing:-.055em}.f06-old small{display:block;margin-top:28px;font-size:20px;letter-spacing:.18em;color:#888880}
+    .f06-final{position:absolute;inset:0;padding:210px 72px 326px;color:#111}.f06-final h1{margin:0;font-size:218px;line-height:.86;letter-spacing:-.07em;font-weight:900}.f06-final p{margin:110px 0 0;font-size:59px;line-height:1.22;font-weight:750;letter-spacing:-.025em;max-width:900px}.f06-final .f06-meta{position:absolute;left:72px;right:72px;top:110px;display:flex;justify-content:space-between;font-size:21px;letter-spacing:.16em;font-weight:700}.f06-final .f06-disclaimer{position:absolute;left:72px;bottom:250px;font-size:21px;letter-spacing:.12em;color:rgba(17,17,17,.65)}
+  </style>
+  <div id="root" data-composition-id="06-close" data-width="1080" data-height="1920">
+    <div id="f06-background" class="clip f06-bg" data-start="0" data-duration="9" data-track-index="0"></div>
+    <div id="f06-content" class="clip f06-content" data-start="0" data-duration="9" data-track-index="1">
+      <div class="f06-kicker"><span>RISK GATES</span><span>06 / 06</span></div>
+      <div class="f06-conditions"><div id="f06-c1" class="f06-condition"><i>01</i><b>AI 不走弱</b><em>✓</em></div><div id="f06-c2" class="f06-condition"><i>02</i><b>10Y 不破阈值</b><em>✓</em></div><div id="f06-c3" class="f06-condition"><i>03</i><b>原油不过热</b><em>✓</em></div></div>
+      <div id="f06-old" class="f06-old">趋势市<small>TREND MARKET</small></div><div id="f06-divider" class="f06-divider"></div>
+    </div>
+    <div id="f06-orange-panel" class="clip f06-orange" data-start="0" data-duration="9" data-track-index="2"></div>
+    <div id="f06-final-panel" class="clip f06-final" data-start="0" data-duration="9" data-track-index="3">
+      <div class="f06-meta"><span>AI MARKET BRIEF</span><span>SILENT SAMPLE</span></div><h1 id="f06-verification">验证市</h1><p id="f06-line">接下来比的不是谁涨得快<br>而是谁能活下来</p><div class="f06-disclaimer">示意样片 · 非实时数据 · 不构成投资建议</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f06-kicker",{opacity:0,y:-20},{opacity:1,y:0,duration:.45,ease:"power3.out"},0)
+        .fromTo("#f06-c1",{opacity:0,y:45},{opacity:1,y:0,duration:.55,ease:"power3.out"},.45)
+        .fromTo("#f06-c2",{opacity:0,y:45},{opacity:1,y:0,duration:.55,ease:"power3.out"},1.25)
+        .fromTo("#f06-c3",{opacity:0,y:45},{opacity:1,y:0,duration:.55,ease:"power3.out"},2.05)
+        .fromTo("#f06-old",{opacity:0,scale:.82},{opacity:1,scale:1,duration:.65,ease:"power3.out"},2.85)
+        .fromTo("#f06-divider",{scaleY:0},{scaleY:1,duration:.6,ease:"power3.out",transformOrigin:"50% 0%"},3.35)
+        .to("#f06-content",{opacity:0,duration:.24,ease:"power2.in"},4.28)
+        .fromTo(".f06-orange",{scaleY:0},{scaleY:1,duration:.55,ease:"power3.inOut",transformOrigin:"50% 100%"},4.6)
+        .fromTo(".f06-final .f06-meta",{opacity:0,y:-24},{opacity:1,y:0,duration:.45,ease:"power3.out"},5.05)
+        .fromTo("#f06-verification",{opacity:0,y:90},{opacity:1,y:0,duration:.72,ease:"power3.out"},5.15)
+        .fromTo("#f06-line",{opacity:0,y:55},{opacity:1,y:0,duration:.75,ease:"power3.out"},6.05)
+        .fromTo(".f06-disclaimer",{opacity:0},{opacity:1,duration:.35},6.75);
+      window.__timelines=window.__timelines||{};window.__timelines["06-close"]=tl;})();
+  </script>
+</template>

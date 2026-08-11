@@ -1,0 +1,52 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;container-type:size;font-family:"Noto Sans SC",sans-serif;color:#F0ECE5}
+    #root *{box-sizing:border-box}
+    .f01-bg{position:absolute;inset:0;background:#111111}
+    .f01-grid{position:absolute;inset:0 0 17% 0;background-image:linear-gradient(rgba(240,236,229,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(240,236,229,.055) 1px,transparent 1px);background-size:72px 72px;mask-image:linear-gradient(to bottom,#000 70%,transparent)}
+    .f01-content{position:absolute;inset:0;padding:112px 76px 326px;display:flex;flex-direction:column}
+    .f01-top{display:flex;justify-content:space-between;align-items:center;font-size:22px;letter-spacing:.16em;font-weight:600;color:#E85D26}
+    .f01-hero{position:relative;flex:1;margin-top:90px}
+    .f01-word{position:absolute;margin:0;font-weight:900;line-height:.9;letter-spacing:-.055em;font-size:184px;white-space:nowrap}
+    #f01-fast{top:170px;left:0;color:#F0ECE5}
+    #f01-turn{top:520px;right:0;color:#E85D26}
+    .f01-svg{position:absolute;inset:60px 0 90px;width:100%;height:950px;overflow:visible}
+    .f01-path{fill:none;stroke:#E85D26;stroke-width:9;stroke-linecap:square;stroke-linejoin:round}
+    .f01-path-muted{fill:none;stroke:#F0ECE5;stroke-width:4;stroke-opacity:.34;stroke-dasharray:16 18}
+    #f01-question{position:absolute;left:0;right:0;top:900px;text-align:center;font-weight:800;font-size:62px;line-height:1.16}
+    #f01-question strong{display:block;font-size:132px;color:#E85D26;line-height:.86;margin-bottom:28px}
+    .f01-note{position:absolute;left:76px;bottom:250px;font-size:21px;letter-spacing:.12em;color:#888880}
+  </style>
+  <div id="root" data-composition-id="01-hook" data-width="1080" data-height="1920" data-duration="7.6">
+    <div id="f01-background" class="clip f01-bg" data-start="0" data-duration="7.6" data-track-index="0"></div>
+    <div id="f01-grid" class="clip f01-grid" data-start="0" data-duration="7.6" data-track-index="1"></div>
+    <div id="f01-content" class="clip f01-content" data-start="0" data-duration="7.6" data-track-index="2">
+      <div class="f01-top"><span>AI MARKET BRIEF</span><span>01 / 06</span></div>
+      <div class="f01-hero">
+        <svg class="f01-svg" viewBox="0 0 920 1040" aria-hidden="true">
+          <path id="f01-stem" class="f01-path" d="M460 980 L460 690 L390 570 L420 430" pathLength="1"/>
+          <path id="f01-up" class="f01-path-muted" d="M420 430 C480 300 650 210 820 130" pathLength="1"/>
+          <path id="f01-down" class="f01-path" d="M420 430 C390 330 285 270 150 250 C255 365 250 520 190 610" pathLength="1"/>
+        </svg>
+        <h1 id="f01-fast" class="f01-word">加速</h1>
+        <h1 id="f01-turn" class="f01-word">拐点</h1>
+        <div id="f01-question"><strong>?</strong>美股现在在哪一边</div>
+      </div>
+      <div class="f01-note">示意样片 · 非实时数据</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo("#f01-stem",{strokeDasharray:1,strokeDashoffset:1},{strokeDashoffset:0,duration:1.65,ease:"power3.out"},0)
+        .fromTo(".f01-top",{opacity:0,y:-22},{opacity:1,y:0,duration:.55,ease:"power3.out"},.12)
+        .fromTo("#f01-fast",{opacity:0,x:-120},{opacity:1,x:0,duration:.85,ease:"power3.out"},1.65)
+        .fromTo("#f01-up",{strokeDasharray:1,strokeDashoffset:1},{strokeDashoffset:0,duration:1.1,ease:"power3.out"},2.05)
+        .fromTo("#f01-turn",{opacity:0,x:120},{opacity:1,x:0,duration:.85,ease:"power3.out"},3.05)
+        .fromTo("#f01-down",{strokeDasharray:1,strokeDashoffset:1},{strokeDashoffset:0,duration:1.05,ease:"power3.out"},3.35)
+        .fromTo("#f01-question strong",{opacity:0,scale:.5},{opacity:1,scale:1,duration:.65,ease:"power3.out",transformOrigin:"50% 50%"},4.35)
+        .fromTo("#f01-question",{opacity:0,y:36},{opacity:1,y:0,duration:.8,ease:"power3.out"},4.7)
+        .fromTo(".f01-note",{opacity:0},{opacity:1,duration:.4},5.35);
+      window.__timelines=window.__timelines||{};window.__timelines["01-hook"]=tl;})();
+  </script>
+</template>

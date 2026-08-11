@@ -1,0 +1,46 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;container-type:size;font-family:"Noto Sans SC",sans-serif;color:#F0ECE5}
+    #root *{box-sizing:border-box}.f02-bg{position:absolute;inset:0;background:#111111}.f02-content{position:absolute;inset:0;padding:112px 76px 326px}
+    .f02-kicker{font-size:22px;letter-spacing:.16em;font-weight:650;color:#E85D26;display:flex;justify-content:space-between}.f02-title{margin:88px 0 72px;font-size:92px;line-height:1.02;font-weight:900;letter-spacing:-.045em}.f02-title span{color:#E85D26}
+    .f02-counter{position:absolute;right:72px;top:310px;font-size:188px;line-height:1;font-weight:900;color:#E85D26;font-variant-numeric:tabular-nums}.f02-counter small{display:block;text-align:right;font-size:19px;letter-spacing:.18em;color:#888880}
+    .f02-bars{display:flex;flex-direction:column;gap:38px;margin-top:120px}.f02-row{position:relative;height:126px;border-left:2px solid #505048;display:grid;grid-template-columns:205px 1fr;align-items:center;gap:28px}.f02-label{font-size:32px;font-weight:650;letter-spacing:.03em}.f02-track{height:28px;background:#282826;position:relative}.f02-fill{position:absolute;inset:0 auto 0 0;width:100%;background:#F0ECE5;transform-origin:left center}.f02-row:last-child .f02-fill{background:#E85D26}.f02-row:last-child .f02-label{color:#E85D26}
+    .f02-payoff{position:absolute;left:76px;right:76px;bottom:360px;border-top:1px solid #282826;padding-top:34px;display:flex;align-items:end;justify-content:space-between}.f02-payoff b{font-size:116px;line-height:.92;letter-spacing:-.05em}.f02-payoff span{font-size:22px;letter-spacing:.14em;color:#888880;max-width:210px;text-align:right}
+    .f02-note{position:absolute;left:76px;bottom:250px;font-size:21px;letter-spacing:.12em;color:#888880}
+  </style>
+  <div id="root" data-composition-id="02-drivers" data-width="1080" data-height="1920" data-duration="9.5">
+    <div id="f02-background" class="clip f02-bg" data-start="0" data-duration="9.5" data-track-index="0"></div>
+    <div id="f02-content" class="clip f02-content" data-start="0" data-duration="9.5" data-track-index="1">
+      <div class="f02-kicker"><span>MARKET BREADTH</span><span>02 / 06</span></div>
+      <h1 class="f02-title">Risk-On 仍在<br><span>驱动却在变少</span></h1>
+      <div id="f02-count" class="f02-counter">5<small>ACTIVE DRIVERS</small></div>
+      <div class="f02-bars">
+        <div class="f02-row"><div class="f02-label">就业</div><div class="f02-track"><i id="f02-b1" class="f02-fill"></i></div></div>
+        <div class="f02-row"><div class="f02-label">流动性</div><div class="f02-track"><i id="f02-b2" class="f02-fill"></i></div></div>
+        <div class="f02-row"><div class="f02-label">龙头</div><div class="f02-track"><i id="f02-b3" class="f02-fill"></i></div></div>
+        <div class="f02-row"><div class="f02-label">风险偏好</div><div class="f02-track"><i id="f02-b4" class="f02-fill"></i></div></div>
+        <div class="f02-row"><div class="f02-label">CPI</div><div class="f02-track"><i id="f02-b5" class="f02-fill"></i></div></div>
+      </div>
+      <div id="f02-payoff" class="f02-payoff"><b>唯一变量</b><span>CPI<br>THIS WEEK</span></div>
+      <div class="f02-note">示意样片 · 非实时数据</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const count={v:5},el=document.querySelector("#f02-count");const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f02-kicker",{opacity:0,y:-20},{opacity:1,y:0,duration:.5,ease:"power3.out"},0)
+        .fromTo(".f02-title",{opacity:0,y:50},{opacity:1,y:0,duration:.8,ease:"power3.out"},.25)
+        .fromTo(".f02-row",{opacity:0,x:-70},{opacity:1,x:0,duration:.65,stagger:.18,ease:"power3.out"},1.1)
+        .to("#f02-b1",{scaleX:.12,opacity:.18,duration:.6,ease:"power3.inOut"},2.55)
+        .to(count,{v:4,duration:.01,onUpdate:()=>el.childNodes[0].nodeValue=Math.round(count.v)},2.9)
+        .to("#f02-b2",{scaleX:.12,opacity:.18,duration:.6,ease:"power3.inOut"},3.55)
+        .to(count,{v:3,duration:.01,onUpdate:()=>el.childNodes[0].nodeValue=Math.round(count.v)},3.9)
+        .to("#f02-b3",{scaleX:.12,opacity:.18,duration:.6,ease:"power3.inOut"},4.55)
+        .to(count,{v:2,duration:.01,onUpdate:()=>el.childNodes[0].nodeValue=Math.round(count.v)},4.9)
+        .to("#f02-b4",{scaleX:.12,opacity:.18,duration:.6,ease:"power3.inOut"},5.55)
+        .to(count,{v:1,duration:.01,onUpdate:()=>el.childNodes[0].nodeValue=Math.round(count.v)},5.9)
+        .fromTo("#f02-payoff",{opacity:0,y:52},{opacity:1,y:0,duration:.75,ease:"power3.out"},6.45)
+        .fromTo(".f02-note",{opacity:0},{opacity:1,duration:.4},7.15);
+      window.__timelines=window.__timelines||{};window.__timelines["02-drivers"]=tl;})();
+  </script>
+</template>

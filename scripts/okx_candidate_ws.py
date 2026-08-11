@@ -12,6 +12,7 @@ import sys
 import threading
 import time
 import uuid
+from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -53,6 +54,8 @@ TERMINAL = {"EXECUTED", "REJECTED", "EXPIRED", "REMOVED", "CLOSED"}
 SCALE_OUT_FRACTION = 0.40
 SCALE_OUT_R = 1.5
 EXPLORATORY_DEMO_ENV = "OKX_INTRADAY_EXPLORATORY_DEMO"
+SHADOW_SLIPPAGE_REFERENCE_NOTIONAL_USDT = 1_500.0
+BOOK_TCA_MODEL_VERSION = "books5_same_side_impact_v1"
 
 
 def now_iso() -> str:
@@ -138,19 +141,146 @@ def exploratory_demo_enabled(cfg: Any) -> bool:
     return cfg.profile == "demo" and os.getenv(EXPLORATORY_DEMO_ENV) == "1"
 
 
+def _optional_float(value: Any) -> float | None:
+    """Return a finite float without turning missing market data into zero."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def unavailable_book_tca_snapshot(error: str) -> dict[str, Any]:
+    """Make an explicit missing-book record instead of fabricating liquidity."""
+    return {
+        "book_snapshot_status": "snapshot_unavailable",
+        "book_snapshot_error": str(error)[:500],
+        "captured_at": now_iso(),
+        "exchange_ts": None,
+        "bids": [],
+        "asks": [],
+        "bid_px": None,
+        "ask_px": None,
+        "spread_bps": None,
+        "bid_depth_contracts": None,
+        "ask_depth_contracts": None,
+        "bid_depth_notional_usdt": None,
+        "ask_depth_notional_usdt": None,
+        "ct_val": None,
+        "slippage_reference_notional_usdt": None,
+        "slippage_reference_contracts": None,
+        "estimated_slippage_bps": None,
+        "slippage_status": "snapshot_unavailable",
+        "tca_model_version": BOOK_TCA_MODEL_VERSION,
+    }
+
+
+def _normalized_book_levels(rows: Any) -> list[list[float | int | None]]:
+    levels: list[list[float | int | None]] = []
+    for row in list(rows or [])[:5]:
+        if not isinstance(row, (list, tuple)) or len(row) < 2:
+            continue
+        price, size = _optional_float(row[0]), _optional_float(row[1])
+        if price is None or size is None or price <= 0 or size < 0:
+            continue
+        order_count = None
+        if len(row) > 3:
+            try:
+                order_count = int(row[3])
+            except (TypeError, ValueError):
+                order_count = None
+        levels.append([price, size, order_count])
+    return levels
+
+
+def build_book_tca_snapshot(
+    book: dict[str, Any],
+    side: str,
+    ct_val: float,
+    *,
+    reference_notional_usdt: float | None = SHADOW_SLIPPAGE_REFERENCE_NOTIONAL_USDT,
+    reference_contracts: float | None = None,
+) -> dict[str, Any]:
+    """Normalize one observed books5 frame and estimate size-dependent impact.
+
+    ``estimated_slippage_bps`` is impact from the same-side best quote, not the
+    bid/ask spread.  The exact reference size is persisted alongside it so a
+    later TCA never compares estimates made for different order sizes.
+    """
+    bids = _normalized_book_levels(book.get("bids"))
+    asks = _normalized_book_levels(book.get("asks"))
+    if not bids or not asks:
+        return unavailable_book_tca_snapshot("books5 missing a valid bid or ask side")
+    value = _optional_float(ct_val)
+    if value is None or value <= 0:
+        return unavailable_book_tca_snapshot("instrument ctVal unavailable")
+    bid_px, ask_px = float(bids[0][0]), float(asks[0][0])
+    mid = (bid_px + ask_px) / 2
+    if ask_px < bid_px or mid <= 0:
+        return unavailable_book_tca_snapshot("books5 is crossed or has no positive mid")
+    direction = str(side).upper()
+    decision_quote = ask_px if direction in {"LONG", "BUY"} else bid_px
+    contracts = _optional_float(reference_contracts)
+    notional = _optional_float(reference_notional_usdt)
+    if contracts is None:
+        contracts = notional / (decision_quote * value) if notional and notional > 0 else None
+    if notional is None and contracts is not None:
+        notional = contracts * decision_quote * value
+    book_for_estimate = {
+        "bids": [[level[0], level[1]] for level in bids],
+        "asks": [[level[0], level[1]] for level in asks],
+    }
+    estimated = (
+        estimated_slippage_bps(book_for_estimate, direction, contracts, value)
+        if contracts is not None and contracts > 0 else float("inf")
+    )
+    finite_estimated = estimated if math.isfinite(estimated) else None
+    return {
+        "book_snapshot_status": "available",
+        "book_snapshot_error": None,
+        "captured_at": now_iso(),
+        "exchange_ts": int(book.get("ts")) if str(book.get("ts") or "").isdigit() else None,
+        "bids": bids,
+        "asks": asks,
+        "bid_px": bid_px,
+        "ask_px": ask_px,
+        "spread_bps": (ask_px - bid_px) / mid * 10_000,
+        "bid_depth_contracts": sum(float(level[1]) for level in bids),
+        "ask_depth_contracts": sum(float(level[1]) for level in asks),
+        "bid_depth_notional_usdt": sum(float(level[0]) * float(level[1]) * value for level in bids),
+        "ask_depth_notional_usdt": sum(float(level[0]) * float(level[1]) * value for level in asks),
+        "ct_val": value,
+        "slippage_reference_notional_usdt": notional,
+        "slippage_reference_contracts": contracts,
+        "estimated_slippage_bps": finite_estimated,
+        "slippage_status": "estimated" if finite_estimated is not None else "depth_insufficient",
+        "tca_model_version": BOOK_TCA_MODEL_VERSION,
+    }
+
+
 def ensure_shadow_schema() -> None:
     """Create and migrate the forward-label store before any worker uses it."""
-    with sqlite3.connect(DB_PATH) as conn:
+    with closing(sqlite3.connect(DB_PATH)) as conn, conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS okx_signal_shadow (
                 signal_key TEXT PRIMARY KEY, inst_id TEXT NOT NULL, side TEXT NOT NULL,
                 stage TEXT NOT NULL,
                 entry_ts INTEGER NOT NULL, due_ts INTEGER NOT NULL, entry_price REAL NOT NULL,
                 horizon_minutes INTEGER NOT NULL DEFAULT 60,
-                atr14 REAL, score REAL, volume_ratio REAL, spread_bps REAL, slippage_bps REAL,
+                atr14 REAL, stop_bps REAL, score REAL, volume_ratio REAL, spread_bps REAL, slippage_bps REAL,
+                symbol_edge_pct REAL, allocation_multiplier REAL,
                 book_imbalance REAL, aggressive_imbalance REAL, micro_available INTEGER,
+                decision_price REAL, decision_bid_px REAL, decision_ask_px REAL, decision_spread_bps REAL,
+                decision_mark_px REAL, mark_exchange_ts INTEGER,
+                mark_snapshot_status TEXT NOT NULL DEFAULT 'not_captured', mark_snapshot_error TEXT,
+                bid_depth_contracts REAL, ask_depth_contracts REAL,
+                bid_depth_notional_usdt REAL, ask_depth_notional_usdt REAL, book_ct_val REAL,
+                books5_json TEXT, book_exchange_ts INTEGER, book_captured_at TEXT,
+                book_snapshot_status TEXT NOT NULL DEFAULT 'not_captured', book_snapshot_error TEXT,
+                slippage_reference_notional_usdt REAL, slippage_reference_contracts REAL,
+                slippage_status TEXT, tca_model_version TEXT,
                 exit_price REAL, gross_r REAL, net_r REAL, mfe_r REAL, mae_r REAL,
-                labeled_at TEXT, created_at TEXT NOT NULL
+                exit_reason TEXT, labeled_at TEXT, created_at TEXT NOT NULL
             )
         """)
         columns = {item[1] for item in conn.execute("PRAGMA table_info(okx_signal_shadow)")}
@@ -158,30 +288,137 @@ def ensure_shadow_schema() -> None:
             conn.execute("ALTER TABLE okx_signal_shadow ADD COLUMN experiment_id TEXT NOT NULL DEFAULT 'rule_v1'")
         if "horizon_minutes" not in columns:
             conn.execute("ALTER TABLE okx_signal_shadow ADD COLUMN horizon_minutes INTEGER NOT NULL DEFAULT 60")
+        if "stop_bps" not in columns:
+            conn.execute("ALTER TABLE okx_signal_shadow ADD COLUMN stop_bps REAL")
+        if "exit_reason" not in columns:
+            conn.execute("ALTER TABLE okx_signal_shadow ADD COLUMN exit_reason TEXT")
+        if "symbol_edge_pct" not in columns:
+            conn.execute("ALTER TABLE okx_signal_shadow ADD COLUMN symbol_edge_pct REAL")
+        if "allocation_multiplier" not in columns:
+            conn.execute("ALTER TABLE okx_signal_shadow ADD COLUMN allocation_multiplier REAL")
+        for column, declaration in (
+            ("decision_price", "REAL"), ("decision_bid_px", "REAL"),
+            ("decision_ask_px", "REAL"), ("decision_spread_bps", "REAL"),
+            ("decision_mark_px", "REAL"), ("mark_exchange_ts", "INTEGER"),
+            ("mark_snapshot_status", "TEXT NOT NULL DEFAULT 'not_captured'"),
+            ("mark_snapshot_error", "TEXT"),
+            ("bid_depth_contracts", "REAL"), ("ask_depth_contracts", "REAL"),
+            ("bid_depth_notional_usdt", "REAL"), ("ask_depth_notional_usdt", "REAL"),
+            ("book_ct_val", "REAL"), ("books5_json", "TEXT"),
+            ("book_exchange_ts", "INTEGER"), ("book_captured_at", "TEXT"),
+            ("book_snapshot_status", "TEXT NOT NULL DEFAULT 'not_captured'"),
+            ("book_snapshot_error", "TEXT"),
+            ("slippage_reference_notional_usdt", "REAL"),
+            ("slippage_reference_contracts", "REAL"), ("slippage_status", "TEXT"),
+            ("tca_model_version", "TEXT"),
+        ):
+            if column not in columns:
+                conn.execute(f"ALTER TABLE okx_signal_shadow ADD COLUMN {column} {declaration}")
 
 
 def record_shadow_signal(row: dict[str, Any], candle_ts: int, price: float, stage: str) -> None:
     """Persist confirmed signals for delayed, order-independent outcome labels."""
     ensure_shadow_schema()
     micro = row.get("microstructure") or {}
-    with sqlite3.connect(DB_PATH) as conn:
+    book = row.get("decision_book_snapshot") or {}
+    with closing(sqlite3.connect(DB_PATH)) as conn, conn:
         experiment_id = str(row.get("experiment_id") or "rule_v1")
         horizon_minutes = max(5, min(240, int(row.get("horizon_minutes") or 60)))
-        key = f"{row['instId']}:{row['side']}:{candle_ts}:{experiment_id}"
+        if stage.startswith("GAP_"):
+            entry_local = datetime.fromtimestamp(candle_ts / 1000, UTC).astimezone(cfg_ny())
+            trading_day = entry_local.date().isoformat()
+            key = "|".join((trading_day, experiment_id, stage, row["instId"], row["side"]))
+            day_start = datetime(
+                entry_local.year, entry_local.month, entry_local.day, tzinfo=cfg_ny()
+            )
+            day_start_ms = int(day_start.astimezone(UTC).timestamp() * 1000)
+            day_end_ms = int((day_start + timedelta(days=1)).astimezone(UTC).timestamp() * 1000)
+            # Rows written by older versions used the observation timestamp in
+            # the primary key.  Leave those rows untouched and treat a matching
+            # legacy row as the day's gap observation so an in-window upgrade
+            # cannot duplicate the same opening signal.
+            legacy = conn.execute(
+                """
+                SELECT 1 FROM okx_signal_shadow
+                WHERE experiment_id=? AND stage=? AND inst_id=? AND side=?
+                  AND entry_ts>=? AND entry_ts<?
+                LIMIT 1
+                """,
+                (experiment_id, stage, row["instId"], row["side"], day_start_ms, day_end_ms),
+            ).fetchone()
+            if legacy:
+                return
+        else:
+            # Intraday stages can legitimately emit several observations for
+            # one symbol and side on the same day; only an exact candle retry is
+            # idempotent for those experiments.
+            key = f"{row['instId']}:{row['side']}:{candle_ts}:{experiment_id}:{stage}"
+        levels = {"bids": book.get("bids") or [], "asks": book.get("asks") or []}
+        books5_json = (
+            json.dumps(levels, ensure_ascii=False, separators=(",", ":"))
+            if levels["bids"] or levels["asks"] else None
+        )
+        observed_slippage = (
+            book.get("estimated_slippage_bps")
+            if "estimated_slippage_bps" in book else row.get("estimated_slippage_bps")
+        )
+        observed_spread = (
+            book.get("spread_bps") if book.get("spread_bps") is not None else row.get("spread_bps")
+        )
+        payload = {
+            "signal_key": key, "inst_id": row["instId"], "side": row["side"], "stage": stage,
+            "entry_ts": candle_ts, "due_ts": candle_ts + horizon_minutes * 60_000,
+            "entry_price": price, "horizon_minutes": horizon_minutes,
+            "atr14": _optional_float(row.get("atr14")), "stop_bps": _optional_float(row.get("stop_bps")),
+            "score": _optional_float(row.get("score")), "volume_ratio": _optional_float(row.get("volume_ratio")),
+            "spread_bps": _optional_float(observed_spread), "slippage_bps": _optional_float(observed_slippage),
+            "symbol_edge_pct": _optional_float(row.get("symbol_edge_pct")),
+            "allocation_multiplier": _optional_float(row.get("allocation_multiplier")) or 1.0,
+            "book_imbalance": _optional_float(micro.get("book_imbalance")),
+            "aggressive_imbalance": _optional_float(micro.get("aggressive_imbalance")),
+            "micro_available": int(bool(micro.get("available"))),
+            "decision_price": _optional_float(price), "decision_bid_px": _optional_float(book.get("bid_px")),
+            "decision_ask_px": _optional_float(book.get("ask_px")),
+            "decision_spread_bps": _optional_float(book.get("spread_bps")),
+            "decision_mark_px": _optional_float(book.get("decision_mark_px")),
+            "mark_exchange_ts": book.get("mark_exchange_ts"),
+            "mark_snapshot_status": str(book.get("mark_snapshot_status") or "not_captured"),
+            "mark_snapshot_error": book.get("mark_snapshot_error"),
+            "bid_depth_contracts": _optional_float(book.get("bid_depth_contracts")),
+            "ask_depth_contracts": _optional_float(book.get("ask_depth_contracts")),
+            "bid_depth_notional_usdt": _optional_float(book.get("bid_depth_notional_usdt")),
+            "ask_depth_notional_usdt": _optional_float(book.get("ask_depth_notional_usdt")),
+            "book_ct_val": _optional_float(book.get("ct_val")), "books5_json": books5_json,
+            "book_exchange_ts": book.get("exchange_ts"), "book_captured_at": book.get("captured_at"),
+            "book_snapshot_status": str(book.get("book_snapshot_status") or "not_captured"),
+            "book_snapshot_error": book.get("book_snapshot_error"),
+            "slippage_reference_notional_usdt": _optional_float(book.get("slippage_reference_notional_usdt")),
+            "slippage_reference_contracts": _optional_float(book.get("slippage_reference_contracts")),
+            "slippage_status": book.get("slippage_status"),
+            "tca_model_version": book.get("tca_model_version"),
+            "created_at": now_iso(), "experiment_id": experiment_id,
+        }
         conn.execute("""
             INSERT OR IGNORE INTO okx_signal_shadow
-            (signal_key,inst_id,side,stage,entry_ts,due_ts,entry_price,horizon_minutes,atr14,score,volume_ratio,
-             spread_bps,slippage_bps,book_imbalance,aggressive_imbalance,micro_available,created_at,experiment_id)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-        """, (
-            f"{key}:{stage}", row["instId"], row["side"], stage,
-            candle_ts, candle_ts + horizon_minutes * 60_000, price, horizon_minutes,
-            float(row.get("atr14") or 0), float(row.get("score") or 0),
-            float(row.get("volume_ratio") or 0), float(row.get("spread_bps") or 0),
-            float(row.get("estimated_slippage_bps") or 0), float(micro.get("book_imbalance") or 0),
-            float(micro.get("aggressive_imbalance") or 0), int(bool(micro.get("available"))), now_iso(),
-            experiment_id,
-        ))
+            (signal_key,inst_id,side,stage,entry_ts,due_ts,entry_price,horizon_minutes,atr14,stop_bps,score,volume_ratio,
+             spread_bps,slippage_bps,symbol_edge_pct,allocation_multiplier,
+             book_imbalance,aggressive_imbalance,micro_available,
+             decision_price,decision_bid_px,decision_ask_px,decision_spread_bps,
+             decision_mark_px,mark_exchange_ts,mark_snapshot_status,mark_snapshot_error,
+             bid_depth_contracts,ask_depth_contracts,bid_depth_notional_usdt,ask_depth_notional_usdt,book_ct_val,
+             books5_json,book_exchange_ts,book_captured_at,book_snapshot_status,book_snapshot_error,
+             slippage_reference_notional_usdt,slippage_reference_contracts,slippage_status,
+             tca_model_version,created_at,experiment_id)
+            VALUES (:signal_key,:inst_id,:side,:stage,:entry_ts,:due_ts,:entry_price,:horizon_minutes,
+                    :atr14,:stop_bps,:score,:volume_ratio,:spread_bps,:slippage_bps,:symbol_edge_pct,
+                    :allocation_multiplier,:book_imbalance,:aggressive_imbalance,:micro_available,
+                    :decision_price,:decision_bid_px,:decision_ask_px,:decision_spread_bps,
+                    :decision_mark_px,:mark_exchange_ts,:mark_snapshot_status,:mark_snapshot_error,
+                    :bid_depth_contracts,:ask_depth_contracts,:bid_depth_notional_usdt,
+                    :ask_depth_notional_usdt,:book_ct_val,:books5_json,:book_exchange_ts,:book_captured_at,
+                    :book_snapshot_status,:book_snapshot_error,:slippage_reference_notional_usdt,
+                    :slippage_reference_contracts,:slippage_status,:tca_model_version,:created_at,:experiment_id)
+        """, payload)
 
 
 def side_still_valid(side: str, metrics: dict[str, float]) -> tuple[bool, str]:

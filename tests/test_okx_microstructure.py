@@ -1,13 +1,20 @@
 import json
 import sqlite3
 
+import pytest
+
 from scripts import okx_candidate_ws
+from scripts import okx_shadow_labeler as shadow_labeler
 from scripts.okx_microstructure_collector import Collector
-from scripts.okx_shadow_labeler import Labeler
+from scripts.okx_shadow_labeler import (Labeler, _stats, _v5_forward_gate_checks,
+                                        _v5_symbol_edge_sizing_stats)
 from scripts.okx_return_shadow import score_rows
 from scripts import okx_intraday_agent
 from scripts.okx_intraday_agent import OKX
-from scripts.okx_gap_shadow import EXECUTION_EQUIVALENT, EXPERIMENT_ID, gap_bps, gap_context, next_evaluation_at
+from scripts.okx_gap_shadow import (EXECUTION_EQUIVALENT, EXPERIMENT_ID, V5_FROZEN_AT,
+                                    V5_STRICT_CONFIRM_FROZEN_AT, gap_bps, gap_context,
+                                    next_evaluation_at, shadow_market_data_symbols, top_ranked,
+                                    strategy_lanes, v5_ranked_candidates, v5_strict_first5_subset)
 from scripts.okx_barrier_model_research import barrier_targets
 from scripts.okx_microstructure_report import executable_values
 from scripts.okx_microstructure_model import barrier_outcome, try_freeze
@@ -16,6 +23,17 @@ from scripts import okx_microstructure_executor as micro_executor
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import pandas as pd
+
+
+def test_shadow_stats_excludes_non_finite_outcomes():
+    value = _stats([{"net_r": 1.0}, {"net_r": float("-inf")}])
+    assert value["samples"] == 1
+    assert value["expectancy_r"] == 1.0
+    assert value["invalid_samples"] == 1
+
+
+def test_dashboard_json_finite_sanitizes_nested_non_finite_values():
+    assert okx_intraday_agent._json_finite({"x": [float("inf"), 1.0]}) == {"x": [None, 1.0]}
 
 
 def test_micro_executor_risk_size_is_equity_and_portfolio_capped():
@@ -673,6 +691,68 @@ def test_record_shadow_signal_is_idempotent(tmp_path, monkeypatch):
         assert conn.execute("SELECT experiment_id FROM okx_signal_shadow").fetchone()[0] == "rule_v1"
 
 
+def test_shadow_signal_retry_uses_ny_trading_day_and_preserves_first_quote(tmp_path, monkeypatch):
+    database = tmp_path / "shadow.db"
+    monkeypatch.setattr(okx_candidate_ws, "DB_PATH", database)
+    row = {"instId": "NVDA-USDT-SWAP", "side": "LONG", "atr14": 1,
+           "experiment_id": "gap_v5", "microstructure": {}}
+    first = int(datetime(2026, 8, 8, 1, 0, tzinfo=timezone.utc).timestamp() * 1000)
+    retry = first + 90_000
+    next_ny_day = int(datetime(2026, 8, 8, 4, 1, tzinfo=timezone.utc).timestamp() * 1000)
+
+    okx_candidate_ws.record_shadow_signal(row, first, 100, "GAP_FADE_PASS")
+    okx_candidate_ws.record_shadow_signal(row, retry, 101, "GAP_FADE_PASS")
+    okx_candidate_ws.record_shadow_signal(row, next_ny_day, 102, "GAP_FADE_PASS")
+
+    with sqlite3.connect(database) as conn:
+        rows = conn.execute(
+            "SELECT signal_key,entry_ts,entry_price FROM okx_signal_shadow ORDER BY entry_ts"
+        ).fetchall()
+    assert rows[0] == ("2026-08-07|gap_v5|GAP_FADE_PASS|NVDA-USDT-SWAP|LONG", first, 100)
+    assert rows[1] == ("2026-08-08|gap_v5|GAP_FADE_PASS|NVDA-USDT-SWAP|LONG", next_ny_day, 102)
+
+
+@pytest.mark.parametrize("stage", ["ONE_MIN_PASS", "RETURN_MODEL_PASS"])
+def test_intraday_shadow_signal_keeps_distinct_same_day_candles(tmp_path, monkeypatch, stage):
+    database = tmp_path / "shadow.db"
+    monkeypatch.setattr(okx_candidate_ws, "DB_PATH", database)
+    row = {"instId": "NVDA-USDT-SWAP", "side": "LONG", "atr14": 1,
+           "experiment_id": "intraday-v1", "microstructure": {}}
+    first = int(datetime(2026, 8, 7, 14, 0, tzinfo=timezone.utc).timestamp() * 1000)
+
+    okx_candidate_ws.record_shadow_signal(row, first, 100, stage)
+    okx_candidate_ws.record_shadow_signal(row, first + 60_000, 101, stage)
+    okx_candidate_ws.record_shadow_signal(row, first + 60_000, 102, stage)
+
+    with sqlite3.connect(database) as conn:
+        rows = conn.execute(
+            "SELECT entry_ts,entry_price FROM okx_signal_shadow ORDER BY entry_ts"
+        ).fetchall()
+    assert rows == [(first, 100), (first + 60_000, 101)]
+
+
+def test_shadow_signal_recognizes_legacy_same_day_row_without_rewriting_it(tmp_path, monkeypatch):
+    database = tmp_path / "shadow.db"
+    monkeypatch.setattr(okx_candidate_ws, "DB_PATH", database)
+    okx_candidate_ws.ensure_shadow_schema()
+    first = int(datetime(2026, 8, 7, 14, 0, tzinfo=timezone.utc).timestamp() * 1000)
+    with sqlite3.connect(database) as conn:
+        conn.execute("""INSERT INTO okx_signal_shadow
+            (signal_key,inst_id,side,stage,entry_ts,due_ts,entry_price,created_at,experiment_id)
+            VALUES (?,?,?,?,?,?,?,?,?)""",
+            ("NVDA-USDT-SWAP:LONG:legacy", "NVDA-USDT-SWAP", "LONG", "GAP_FADE_PASS",
+             first, first + 60_000, 99, "old", "gap_v5"))
+    row = {"instId": "NVDA-USDT-SWAP", "side": "LONG", "atr14": 1,
+           "experiment_id": "gap_v5", "microstructure": {}}
+    okx_candidate_ws.record_shadow_signal(row, first + 60_000, 101, "GAP_FADE_PASS")
+
+    with sqlite3.connect(database) as conn:
+        stored = conn.execute(
+            "SELECT signal_key,entry_ts,entry_price FROM okx_signal_shadow"
+        ).fetchall()
+    assert stored == [("NVDA-USDT-SWAP:LONG:legacy", first, 99)]
+
+
 def test_shadow_signal_supports_preregistered_150_minute_horizon(tmp_path, monkeypatch):
     database = tmp_path / "shadow.db"
     monkeypatch.setattr(okx_candidate_ws, "DB_PATH", database)
@@ -685,9 +765,134 @@ def test_shadow_signal_supports_preregistered_150_minute_horizon(tmp_path, monke
     assert horizon == 150
 
 
+def test_shadow_signal_persists_symbol_edge_sizing_fields(tmp_path, monkeypatch):
+    database = tmp_path / "shadow.db"
+    monkeypatch.setattr(okx_candidate_ws, "DB_PATH", database)
+    row = {"instId": "NVDA-USDT-SWAP", "side": "LONG", "horizon_minutes": 60,
+           "atr14": 1, "stop_bps": 100, "symbol_edge_pct": .25,
+           "allocation_multiplier": 1.25, "microstructure": {}}
+    okx_candidate_ws.record_shadow_signal(row, 1_000, 100, "GAP_FADE_V5_FORWARD")
+    with sqlite3.connect(database) as conn:
+        edge, multiplier = conn.execute(
+            "SELECT symbol_edge_pct,allocation_multiplier FROM okx_signal_shadow"
+        ).fetchone()
+    assert edge == .25
+    assert multiplier == 1.25
+
+
 def test_gap_experiment_records_executable_quote_version():
     assert "fade_confirm_e0936_quote" in EXPERIMENT_ID
     assert EXECUTION_EQUIVALENT is False
+
+
+def test_gap_demo_ranking_is_not_starved_by_research_only_symbols():
+    rows = [(500, "PUBLIC-A", 0, 0, 0), (400, "PUBLIC-B", 0, 0, 0),
+            (300, "DEMO-A", 0, 0, 0), (200, "DEMO-B", 0, 0, 0)]
+    assert [row[1] for row in top_ranked(rows, {"DEMO-A", "DEMO-B"})] == ["DEMO-A", "DEMO-B"]
+
+
+def test_gap_shadow_fetches_complete_v5_history_plus_forward_and_demo_pools():
+    symbols = shadow_market_data_symbols(
+        ("FORWARD-USDT-SWAP",), ("DEMO-USDT-SWAP",),
+        ("EWJ-USDT-SWAP", "NFLX-USDT-SWAP"),
+    )
+    assert symbols == ("FORWARD-USDT-SWAP", "DEMO-USDT-SWAP",
+                       "EWJ-USDT-SWAP", "NFLX-USDT-SWAP")
+
+
+def test_gap_shadow_state_distinguishes_legacy_demo_from_v5_shadow():
+    lanes = strategy_lanes()
+    assert lanes["legacy_demo"]["v5"] is False
+    assert lanes["v5_shadow"]["mode"] == "shadow_only"
+    assert lanes["v5_shadow"]["execution_enabled"] is False
+    assert lanes["legacy_demo"]["experiment_id"] != lanes["v5_shadow"]["experiment_id"]
+    assert datetime.fromisoformat(V5_STRICT_CONFIRM_FROZEN_AT) > datetime.fromisoformat(V5_FROZEN_AT)
+
+
+def test_gap_shadow_v5_applies_rank_gap_confirmation_and_frozen_horizon():
+    spy = {"gap_bps": 20.0, "first5_bps": 5.0, "previous_day_bps": 10.0}
+    contexts = {
+        "A": {"gap_bps": 320.0, "first5_bps": -20.0, "previous_day_bps": 50.0},
+        "B": {"gap_bps": 220.0, "first5_bps": -10.0, "previous_day_bps": 50.0},
+        "C": {"gap_bps": 120.0, "first5_bps": -5.0, "previous_day_bps": 50.0},
+        "D": {"gap_bps": 70.0, "first5_bps": -5.0, "previous_day_bps": 50.0},
+    }
+    choices = {"SHORT": {"horizon_minutes": 60, "prior_side_samples": 12,
+                           "prior_best_horizon_expectancy_pct": .4}}
+    selected = v5_ranked_candidates(contexts, spy, tuple(contexts), choices)
+    assert [item["inst_id"] for item in selected] == ["A", "B"]
+    assert all(item["horizon_minutes"] == 60 for item in selected)
+
+
+def test_v5_strict_first5_is_post_rank_subset_without_backfill():
+    ranked = [
+        {"inst_id": "A", "relative_gap_bps": 300, "relative_first5_bps": -10},
+        {"inst_id": "B", "relative_gap_bps": 250, "relative_first5_bps": 5},
+        {"inst_id": "C", "relative_gap_bps": -200, "relative_first5_bps": 4},
+    ]
+    assert [row["inst_id"] for row in v5_strict_first5_subset(ranked)] == ["A", "C"]
+
+
+def test_v5_strict_forward_gate_requires_25_fresh_samples_and_five_days():
+    healthy = {"samples": 25, "profit_factor": 1.21, "expectancy_r": .01,
+               "trading_days": 5, "invalid_samples": 0}
+    assert all(_v5_forward_gate_checks(healthy, 0).values())
+    assert not _v5_forward_gate_checks({**healthy, "samples": 24}, 0)["samples_at_least_25"]
+    assert not _v5_forward_gate_checks({**healthy, "trading_days": 4}, 0)["at_least_5_trading_days"]
+
+
+def test_v5_strict_forward_pass_cannot_promote_execution(tmp_path, monkeypatch):
+    database = tmp_path / "shadow.db"
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    output = data_dir / "learning.json"
+    monkeypatch.setattr(okx_candidate_ws, "DB_PATH", database)
+    monkeypatch.setattr(shadow_labeler, "DB_PATH", database)
+    monkeypatch.setattr(shadow_labeler, "ROOT", tmp_path)
+    monkeypatch.setattr(shadow_labeler, "STATE_PATH", output)
+    okx_candidate_ws.ensure_shadow_schema()
+    experiment = "strict-v5"
+    stage = "GAP_FADE_V5_STRICT_CONFIRM_FORWARD"
+    started = datetime(2026, 8, 10, 13, 36, tzinfo=timezone.utc)
+    with sqlite3.connect(database) as conn:
+        for day in range(5):
+            for index in range(5):
+                entry = int((started + timedelta(days=day, seconds=index)).timestamp() * 1000)
+                conn.execute("""INSERT INTO okx_signal_shadow
+                    (signal_key,inst_id,side,stage,entry_ts,due_ts,entry_price,horizon_minutes,
+                     atr14,stop_bps,spread_bps,slippage_bps,net_r,labeled_at,created_at,experiment_id)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (f"strict-{day}-{index}", f"S{index}", "LONG", stage, entry,
+                     entry + 30 * 60_000, 100, 30, 1, 100, 1, 1, .5, "done", "now", experiment))
+    gap_state = {
+        "experiment_id": "legacy-gap", "experiment_started_at": started.isoformat(),
+        "v5_experiment_id": "base-v5", "v5_experiment_started_at": started.isoformat(),
+        "v5_strict_confirm_experiment_id": experiment,
+        "v5_strict_confirm_stage": stage,
+        "v5_strict_confirm_experiment_started_at": started.isoformat(),
+    }
+    (data_dir / "okx_gap_shadow_state.json").write_text(json.dumps(gap_state))
+
+    shadow_labeler.Labeler.__new__(shadow_labeler.Labeler).write_state()
+    state = json.loads(output.read_text())
+
+    assert state["v5_strict_confirm_forward_passed"] is True
+    assert state["v5_strict_confirm_execution_ready"] is False
+    assert state["passed"] is False
+    assert state["qualified_strategy"] is None
+
+
+def test_v5_symbol_edge_sizing_keeps_gross_and_upweights_better_candidate():
+    rows = []
+    for index, multiplier in enumerate((1.5, 1.4, 1.0, .6, .5)):
+        rows.append({
+            "entry_ts": 1_000, "stop_bps": 100.0,
+            "net_r": 2.0 if index == 0 else -1.0,
+            "allocation_multiplier": multiplier,
+        })
+    value = _v5_symbol_edge_sizing_stats(rows)
+    assert value["max_daily_gross_difference_pct_points"] == 0
+    assert value["symbol_edge_weighted"]["return_pct"] > value["baseline"]["return_pct"]
 
 
 def test_gap_next_evaluation_skips_weekend():
@@ -729,6 +934,34 @@ def test_shadow_outcome_includes_observed_costs():
     assert round(result["mfe_r"], 3) == 0.833
 
 
+def test_v5_shadow_outcome_applies_persisted_stop_before_horizon():
+    row = {"entry_ts": 0, "due_ts": 30 * 60_000, "entry_price": 100,
+           "side": "LONG", "stage": "GAP_FADE_V5_FORWARD", "stop_bps": 75,
+           "atr14": 1, "spread_bps": 2, "slippage_bps": 4}
+    candles = [[str(minute * 60_000), "100", "102", "99", "101", "1", "1", "1", "1"]
+               for minute in range(1, 31)]
+    result = Labeler.outcome(row, candles)
+
+    assert result is not None
+    assert result["exit_reason"] == "atr_stop"
+    assert result["exit_price"] == pytest.approx(99.25)
+    assert result["gross_r"] == pytest.approx(-1.0)
+    assert result["net_r"] == pytest.approx(-1 - 14 / 75)
+
+
+def test_v5_strict_shadow_outcome_is_stop_aware():
+    row = {"entry_ts": 0, "due_ts": 30 * 60_000, "entry_price": 100,
+           "side": "SHORT", "stage": "GAP_FADE_V5_STRICT_CONFIRM_FORWARD", "stop_bps": 75,
+           "atr14": 1, "spread_bps": 2, "slippage_bps": 4}
+    candles = [[str(minute * 60_000), "100", "101", "99", "100", "1", "1", "1", "1"]
+               for minute in range(1, 31)]
+    result = Labeler.outcome(row, candles)
+
+    assert result is not None
+    assert result["exit_reason"] == "atr_stop"
+    assert result["exit_price"] == pytest.approx(100.75)
+
+
 def test_return_shadow_scores_only_latest_fixed_opportunity():
     class Model:
         @staticmethod
@@ -757,6 +990,35 @@ def test_historical_label_window_uses_due_timestamp_cursor(monkeypatch):
     assert result == [["1"]]
     assert calls[0][2]["after"] == "3600001"
     assert calls[0][2]["limit"] == "100"
+
+
+def test_historical_mark_price_window_uses_mark_candle_endpoint(monkeypatch):
+    calls = []
+    client = OKX.__new__(OKX)
+    client.request = lambda method, path, params: calls.append((method, path, params)) or {"data": [["1"]]}
+    monkeypatch.setattr(okx_intraday_agent.time, "sleep", lambda _: None)
+
+    result = client.mark_price_candles_ending_at(
+        "NVDA-USDT-SWAP", 3_600_000, limit=100, bar="5m",
+    )
+
+    assert result == [["1"]]
+    assert calls == [("GET", "/api/v5/market/history-mark-price-candles", {
+        "instId": "NVDA-USDT-SWAP", "bar": "5m", "limit": "100", "after": "3600001",
+    })]
+
+
+def test_mark_price_requires_matching_public_row():
+    calls = []
+    client = OKX.__new__(OKX)
+    client.request = lambda method, path, params: calls.append((method, path, params)) or {
+        "data": [{"instId": "NVDA-USDT-SWAP", "markPx": "123.45"}],
+    }
+
+    result = client.mark_price("NVDA-USDT-SWAP")
+
+    assert result["markPx"] == "123.45"
+    assert calls[0][1] == "/api/v5/public/mark-price"
 
 
 def test_deployment_gate_requires_both_forward_pass_and_execution_audit(tmp_path, monkeypatch):

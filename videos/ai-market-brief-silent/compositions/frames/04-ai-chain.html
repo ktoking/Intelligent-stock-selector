@@ -1,0 +1,37 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;container-type:size;font-family:"Noto Sans SC",sans-serif;color:#F0ECE5}
+    #root *{box-sizing:border-box}.f04-bg{position:absolute;inset:0;background:#111111}.f04-grid{position:absolute;inset:0 0 17%;background-image:radial-gradient(circle at center,rgba(232,93,38,.12),transparent 46%),linear-gradient(rgba(240,236,229,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(240,236,229,.045) 1px,transparent 1px);background-size:auto,84px 84px,84px 84px}
+    .f04-content{position:absolute;inset:0;padding:108px 68px 326px}.f04-kicker{display:flex;justify-content:space-between;font-size:22px;letter-spacing:.16em;color:#E85D26;font-weight:650}.f04-watermark{position:absolute;top:185px;left:0;right:0;text-align:center;font-size:410px;line-height:.8;font-weight:900;letter-spacing:-.08em;color:#616160;-webkit-text-fill-color:#616160}
+    .f04-network{position:absolute;top:370px;left:70px;right:70px;height:970px}.f04-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.f04-lines path{fill:none;stroke:#505048;stroke-width:3;stroke-linecap:square;stroke-dasharray:9 13}.f04-core{position:absolute;left:50%;top:315px;width:280px;height:280px;margin-left:-140px;background:#E85D26;color:#111;display:flex;flex-direction:column;align-items:center;justify-content:center}.f04-core b{font-size:100px;line-height:.88;font-weight:900;letter-spacing:-.05em}.f04-core span{font-size:21px;letter-spacing:.18em;font-weight:700;margin-top:18px}
+    .f04-node{position:absolute;width:250px;height:142px;border-top:1px solid #505048;display:flex;align-items:center;justify-content:center;font-size:37px;font-weight:800;text-align:center;background:#1A1A18}.f04-n1{left:0;top:40px}.f04-n2{right:0;top:40px}.f04-n3{left:0;top:650px}.f04-n4{right:0;top:650px}.f04-n5{left:0;top:845px}.f04-n6{right:0;top:845px}.f04-node small{position:absolute;left:12px;top:10px;font-size:14px;letter-spacing:.14em;color:#888880}
+    .f04-thesis{position:absolute;left:70px;right:70px;bottom:345px}.f04-thesis b{display:block;font-size:86px;line-height:1.05;letter-spacing:-.045em}.f04-thesis span{display:block;margin-top:20px;font-size:54px;font-weight:750}.f04-thesis em{font-style:normal;color:#E85D26}.f04-note{position:absolute;left:70px;bottom:250px;font-size:21px;letter-spacing:.12em;color:#888880}
+  </style>
+  <div id="root" data-composition-id="04-ai-chain" data-width="1080" data-height="1920" data-duration="13.5">
+    <div id="f04-background" class="clip f04-bg" data-start="0" data-duration="13.5" data-track-index="0"></div>
+    <div id="f04-grid" class="clip f04-grid" data-start="0" data-duration="13.5" data-track-index="1"></div>
+    <div id="f04-content" class="clip f04-content" data-start="0" data-duration="13.5" data-track-index="2">
+      <div class="f04-kicker"><span>AI VALUE CHAIN</span><span>04 / 06</span></div><div class="f04-watermark">AI</div>
+      <div class="f04-network">
+        <svg class="f04-lines" viewBox="0 0 940 970" aria-hidden="true"><path id="f04-l1" d="M470 455 L125 111" pathLength="1"/><path id="f04-l2" d="M470 455 L815 111" pathLength="1"/><path id="f04-l3" d="M470 455 L125 721" pathLength="1"/><path id="f04-l4" d="M470 455 L815 721" pathLength="1"/><path id="f04-l5" d="M470 455 L125 916" pathLength="1"/><path id="f04-l6" d="M470 455 L815 916" pathLength="1"/></svg>
+        <div id="f04-core" class="f04-core"><b>GPU</b><span>CORE</span></div>
+        <div id="f04-n1" class="f04-node f04-n1"><small>01</small>ASIC</div><div id="f04-n2" class="f04-node f04-n2"><small>02</small>光通信</div>
+        <div id="f04-n3" class="f04-node f04-n3"><small>03</small>服务器</div><div id="f04-n4" class="f04-node f04-n4"><small>04</small>HBM</div>
+        <div id="f04-n5" class="f04-node f04-n5"><small>05</small>电力</div><div id="f04-n6" class="f04-node f04-n6"><small>06</small>液冷</div>
+      </div>
+      <div class="f04-thesis"><b>AI 没结束</b><span><em>单边</em>阶段已过去</span></div><div class="f04-note">示意样片 · 非实时数据</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f04-kicker",{opacity:0,y:-20},{opacity:1,y:0,duration:.5,ease:"power3.out"},0)
+        .fromTo(".f04-watermark",{opacity:0,scale:1.35},{opacity:1,scale:1,duration:1.1,ease:"power3.out"},.15)
+        .fromTo("#f04-core",{opacity:0,scale:.55},{opacity:1,scale:1,duration:.8,ease:"power3.out"},1.65);
+      [["#f04-l1","#f04-n1",2.6],["#f04-l2","#f04-n2",3.4],["#f04-l3","#f04-n3",4.6],["#f04-l4","#f04-n4",5.5],["#f04-l5","#f04-n5",6.7],["#f04-l6","#f04-n6",7.65]].forEach(([p,n,t])=>{tl.fromTo(p,{strokeDasharray:1,strokeDashoffset:1},{strokeDashoffset:0,duration:.55,ease:"power3.out"},t).fromTo(n,{opacity:0,scale:.72},{opacity:1,scale:1,duration:.58,ease:"power3.out"},t+.22)});
+      tl.fromTo(".f04-thesis b",{opacity:0,y:38},{opacity:1,y:0,duration:.7,ease:"power3.out"},9.55)
+        .fromTo(".f04-thesis span",{opacity:0,y:34},{opacity:1,y:0,duration:.7,ease:"power3.out"},10.35)
+        .fromTo(".f04-note",{opacity:0},{opacity:1,duration:.4},11.1);
+      window.__timelines=window.__timelines||{};window.__timelines["04-ai-chain"]=tl;})();
+  </script>
+</template>

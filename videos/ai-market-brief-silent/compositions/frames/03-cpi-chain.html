@@ -1,0 +1,40 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;container-type:size;font-family:"Noto Sans SC",sans-serif;color:#F0ECE5}
+    #root *{box-sizing:border-box}.f03-bg{position:absolute;inset:0;background:#111111}.f03-orange{position:absolute;inset:0;background:#E85D26;transform-origin:center center}.f03-content{position:absolute;inset:0;padding:108px 76px 326px}.f03-kicker{display:flex;justify-content:space-between;font-size:22px;letter-spacing:.16em;color:#E85D26;font-weight:650}
+    .f03-trigger{position:absolute;top:235px;left:76px;right:76px;text-align:center;color:#111111;display:flex;flex-direction:column;align-items:center;gap:44px}.f03-trigger b{display:block;font-size:170px;line-height:1;letter-spacing:-.055em}.f03-trigger span{display:block;margin:0;font-size:24px;line-height:1.2;letter-spacing:.16em;color:rgba(17,17,17,.72)}
+    .f03-chain{position:absolute;top:510px;left:106px;right:106px;height:980px}.f03-node{position:absolute;left:0;right:0;height:180px;border-top:1px solid #505048;display:flex;align-items:center;justify-content:space-between;padding:0 22px}.f03-node b{font-size:74px;line-height:1;font-weight:900;letter-spacing:-.04em}.f03-node em{font-style:normal;font-size:112px;color:#E85D26;font-weight:900}.f03-node small{position:absolute;left:420px;bottom:16px;color:#888880;font-size:18px;letter-spacing:.12em}.f03-n1{top:0}.f03-n2{top:315px}.f03-n3{top:630px}.f03-arrow{position:absolute;left:50%;width:3px;height:135px;background:#E85D26;transform-origin:top center}.f03-a1{top:180px}.f03-a2{top:495px}.f03-arrow:after{content:"";position:absolute;bottom:-1px;left:-10px;border-left:11px solid transparent;border-right:11px solid transparent;border-top:18px solid #E85D26}
+    #f03-reprice{position:absolute;left:76px;right:76px;bottom:350px;text-align:center;font-size:84px;font-weight:900;letter-spacing:-.04em}.f03-accent{color:#E85D26}.f03-note{position:absolute;left:76px;bottom:250px;font-size:21px;letter-spacing:.12em;color:#888880}
+  </style>
+  <div id="root" data-composition-id="03-cpi-chain" data-width="1080" data-height="1920" data-duration="11.4">
+    <div id="f03-background" class="clip f03-bg" data-start="0" data-duration="11.4" data-track-index="0"></div>
+    <div id="f03-orange-panel" class="clip f03-orange" data-start="0" data-duration="11.4" data-track-index="1"></div>
+    <div id="f03-content" class="clip f03-content" data-start="0" data-duration="11.4" data-track-index="2">
+      <div class="f03-kicker"><span>VALUATION CHAIN</span><span>03 / 06</span></div>
+      <div class="f03-trigger"><b>CPI ↑?</b><span>THE REPRICING TRIGGER</span></div>
+      <div class="f03-chain">
+        <div id="f03-n1" class="f03-node f03-n1"><b>降息预期</b><em>↓</em></div><i id="f03-a1" class="f03-arrow f03-a1"></i>
+        <div id="f03-n2" class="f03-node f03-n2"><b>10Y 美债</b><em>↑</em><small>4.7% · 风险阈值示意</small></div><i id="f03-a2" class="f03-arrow f03-a2"></i>
+        <div id="f03-n3" class="f03-node f03-n3"><b>科技估值</b><em>↓</em></div>
+      </div>
+      <div id="f03-reprice">估值锚点 <span class="f03-accent">重新定价</span></div>
+      <div class="f03-note">示意样片 · 非实时数据</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f03-trigger",{opacity:0,scale:.72},{opacity:1,scale:1,duration:.8,ease:"power3.out"},0)
+        .to(".f03-trigger",{opacity:0,y:-35,duration:.4,ease:"power3.in"},1.62)
+        .fromTo(".f03-orange",{scaleY:1},{scaleY:0,duration:.75,ease:"power3.inOut",transformOrigin:"50% 0%"},1.75)
+        .fromTo(".f03-kicker",{opacity:0,y:-22},{opacity:1,y:0,duration:.5,ease:"power3.out"},2.0)
+        .fromTo("#f03-n1",{opacity:0,y:-40},{opacity:1,y:0,duration:.7,ease:"power3.out"},2.35)
+        .fromTo("#f03-a1",{scaleY:0},{scaleY:1,duration:.75,ease:"power3.out"},3.55)
+        .fromTo("#f03-n2",{opacity:0,y:-40},{opacity:1,y:0,duration:.7,ease:"power3.out"},4.45)
+        .fromTo("#f03-a2",{scaleY:0},{scaleY:1,duration:.75,ease:"power3.out"},5.75)
+        .fromTo("#f03-n3",{opacity:0,y:-40},{opacity:1,y:0,duration:.7,ease:"power3.out"},6.7)
+        .fromTo("#f03-reprice",{opacity:0,y:46},{opacity:1,y:0,duration:.8,ease:"power3.out"},8.15)
+        .fromTo(".f03-note",{opacity:0},{opacity:1,duration:.4},8.75);
+      window.__timelines=window.__timelines||{};window.__timelines["03-cpi-chain"]=tl;})();
+  </script>
+</template>

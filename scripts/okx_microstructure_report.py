@@ -7,6 +7,7 @@ import signal
 import sqlite3
 import sys
 import time
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -77,7 +78,7 @@ def is_cash(stamp: int) -> bool:
 
 
 def report() -> dict:
-    with sqlite3.connect(DB_PATH) as conn:
+    with closing(sqlite3.connect(DB_PATH)) as conn:
         conn.row_factory = sqlite3.Row
         try:
             rows = conn.execute("SELECT * FROM okx_microstructure_minute ORDER BY minute_ts").fetchall()

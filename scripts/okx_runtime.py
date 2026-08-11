@@ -9,7 +9,7 @@ import signal
 import subprocess
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, time as clock_time
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -20,6 +20,19 @@ from scripts.okx_intraday_agent import kill_switch, monitor_control
 
 LOG = logging.getLogger("okx-runtime")
 NY = ZoneInfo("America/New_York")
+V5_REPORT_PATH = ROOT / "data" / "okx_gap_strategy_v5_backtest.json"
+
+
+def v5_refresh_due(now: datetime, report_path: Path = V5_REPORT_PATH) -> bool:
+    """Return true once a completed weekday session is absent from the V5 report."""
+    local = now.astimezone(NY)
+    if local.weekday() >= 5 or local.time() < clock_time(16, 15):
+        return False
+    try:
+        end = str(json.loads(report_path.read_text())["effective_sessions"]["end"])
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        end = ""
+    return end != local.date().isoformat()
 
 
 class Runtime:
@@ -32,6 +45,9 @@ class Runtime:
         self.last_recap_check = 0.0
         self.last_health_check = 0.0
         self.last_research_refresh_day: str | None = None
+        self.v5_refresh: subprocess.Popen | None = None
+        self.v5_refresh_started_at: float | None = None
+        self.last_v5_refresh_day: str | None = None
         self.child_started_at: dict[str, float] = {}
 
     def command(self, script: str, *args: str) -> list[str]:
@@ -92,18 +108,18 @@ class Runtime:
             "micro_report": self.command("okx_microstructure_report.py"),
             "gap_shadow": self.command("okx_gap_shadow.py"),
         }
-        if not kill_switch().get("enabled"):
+        kill_switch_enabled = bool(kill_switch().get("enabled"))
+        if not kill_switch_enabled:
             commands.update({
                 "scanner": self.command("okx_intraday_agent.py", "--loop"),
                 "executor": self.command("okx_candidate_ws.py"),
                 "micro_model": self.command("okx_microstructure_model.py"),
                 "micro_executor": self.command("okx_microstructure_executor.py"),
             })
-        # This is a separately opted-in, Demo-only observation experiment. It
-        # never treats a research gate as passed and remains distinct from the
-        # disabled v13 execution path.
-        if os.getenv("OKX_GAP_EXPLORATORY_DEMO") == "1":
-            commands["gap_demo_executor"] = self.command("okx_gap_demo_executor.py")
+            # This is a separately opted-in Demo experiment, but it is still an
+            # order path and must obey the same emergency kill switch.
+            if os.getenv("OKX_GAP_EXPLORATORY_DEMO") == "1":
+                commands["gap_demo_executor"] = self.command("okx_gap_demo_executor.py")
         # A research kill switch must stop the rejected strategy itself, not
         # merely rely on each execution adapter declining orders.  Public data
         # collectors and explicitly shadow-only evaluators remain alive.
@@ -158,6 +174,24 @@ class Runtime:
         self.research_refresh_started_at = time.time()
         self.last_research_refresh_day = today
 
+    def check_v5_refresh(self) -> None:
+        """Refresh the rolling V5 choices after the completed US cash session."""
+        local = datetime.now(NY)
+        today = local.date().isoformat()
+        if self.v5_refresh is not None and self.v5_refresh.poll() is None:
+            if self.v5_refresh_started_at is not None and time.time() - self.v5_refresh_started_at > 300:
+                LOG.warning("V5 post-close refresh exceeded 300s; terminating it")
+                self.v5_refresh.terminate()
+            return
+        if self.last_v5_refresh_day == today or not v5_refresh_due(local):
+            return
+        LOG.info("starting V5 post-close rolling refresh for %s", today)
+        self.v5_refresh = subprocess.Popen(
+            self.command("okx_gap_strategy_v5.py"), cwd=ROOT, env=os.environ.copy()
+        )
+        self.v5_refresh_started_at = time.time()
+        self.last_v5_refresh_day = today
+
     def stop(self) -> None:
         self.running = False
         processes = [child for child in self.children.values() if child.poll() is None]
@@ -165,6 +199,8 @@ class Runtime:
             processes.append(self.recap)
         if self.research_refresh is not None and self.research_refresh.poll() is None:
             processes.append(self.research_refresh)
+        if self.v5_refresh is not None and self.v5_refresh.poll() is None:
+            processes.append(self.v5_refresh)
         for child in processes:
             child.terminate()
         deadline = time.monotonic() + 10
@@ -179,6 +215,7 @@ class Runtime:
             self.ensure_children()
             self.check_heartbeats()
             self.check_research_refresh()
+            self.check_v5_refresh()
             self.check_recap()
             time.sleep(5)
 

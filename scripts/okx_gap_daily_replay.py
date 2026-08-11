@@ -25,9 +25,21 @@ from scripts.okx_trade_replay import candle_window  # noqa: E402
 
 UTC = timezone.utc
 NY = ZoneInfo("America/New_York")
-DEMO_SYMBOLS = ("AAOI-USDT-SWAP", "CRCL-USDT-SWAP", "CRWV-USDT-SWAP", "GOOGL-USDT-SWAP",
-                "HOOD-USDT-SWAP", "MRVL-USDT-SWAP", "NVDA-USDT-SWAP", "ORCL-USDT-SWAP", "TSLA-USDT-SWAP")
+MICROSTRUCTURE_STATE_PATH = ROOT / "data" / "okx_microstructure.json"
+FALLBACK_DEMO_SYMBOLS = ("AAOI-USDT-SWAP", "CRCL-USDT-SWAP", "CRWV-USDT-SWAP", "GOOGL-USDT-SWAP",
+                         "HOOD-USDT-SWAP", "MRVL-USDT-SWAP", "NVDA-USDT-SWAP", "ORCL-USDT-SWAP", "TSLA-USDT-SWAP")
 STOP_BPS, COST_BPS = 75.0, 14.0
+
+
+def demo_symbols() -> tuple[str, ...]:
+    """Replay the same private-Demo-compatible universe observed by the runtime."""
+    try:
+        state = json.loads(MICROSTRUCTURE_STATE_PATH.read_text())
+        symbols = tuple(symbol for symbol in state.get("demo_tradeable_symbols") or ()
+                        if symbol not in {"BTC-USDT-SWAP", "SPY-USDT-SWAP", "QQQ-USDT-SWAP", "SMH-USDT-SWAP"})
+        return symbols or FALLBACK_DEMO_SYMBOLS
+    except (OSError, ValueError, TypeError):
+        return FALLBACK_DEMO_SYMBOLS
 
 
 def stamp(day: date, value: time) -> int:
@@ -85,6 +97,7 @@ def main() -> None:
     parser.add_argument("--date", default=(datetime.now(NY).date() - timedelta(days=1)).isoformat())
     args = parser.parse_args()
     day = date.fromisoformat(args.date)
+    symbols = demo_symbols()
     previous = day - timedelta(days=1)
     while previous.weekday() >= 5:
         previous -= timedelta(days=1)
@@ -93,7 +106,7 @@ def main() -> None:
     start_1m, end_1m = stamp(day, time(9, 36)), stamp(day, time(12, 6))
     contexts: dict[str, dict[str, float]] = {}
     one_minute: dict[str, list[list[str]]] = {}
-    for symbol in ("SPY-USDT-SWAP", *DEMO_SYMBOLS):
+    for symbol in ("SPY-USDT-SWAP", *symbols):
         rows5 = candle_window(client, symbol, "5m", start_5m, end_5m)
         context = gap_context(rows5, rows5, day)
         if context:
@@ -104,7 +117,7 @@ def main() -> None:
     if not spy:
         raise RuntimeError("SPY opening context unavailable")
     candidates = []
-    for symbol in DEMO_SYMBOLS:
+    for symbol in symbols:
         value = contexts.get(symbol)
         if not value:
             continue
@@ -129,7 +142,7 @@ def main() -> None:
     net_r = sum(float(item.get("net_r") or 0) for item in executable)
     report = {"trade_day": day.isoformat(), "generated_at": datetime.now(UTC).isoformat(),
               "method": "public 1m candle replay; 09:36 open entry proxy; 75bp stop takes same-bar precedence; 14bp cost",
-              "demo_universe": list(DEMO_SYMBOLS), "candidates": output,
+              "demo_universe": list(symbols), "candidates": output,
               "summary": {"signal_candidates": len(output), "executable_candidates": len(executable),
                           "net_r": round(net_r, 4), "wins": sum(float(item.get("net_r") or 0) > 0 for item in executable)},
               "warning": "Not a Demo exchange-fill record; historical bid/ask, depth and exact market fill are unavailable."}

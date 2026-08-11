@@ -10,9 +10,10 @@ import sqlite3
 import sys
 import threading
 import time
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 from urllib.parse import urlparse
 
 import websocket
@@ -61,6 +62,28 @@ class Collector:
         self.taker_fee_bps = self._taker_fee_bps()
         self.fee_snapshot_at = time.time()
         self._init_db()
+
+    @staticmethod
+    @contextmanager
+    def _db() -> Iterator[sqlite3.Connection]:
+        """Open a cooperative SQLite writer for the shared runtime database.
+
+        The dashboard, shadow labeler and collector all touch this database.
+        WAL lets readers proceed during the minute flush; the busy timeout turns
+        a short competing write into a wait instead of an incomplete sample.
+        """
+        conn = sqlite3.connect(DB_PATH, timeout=30)
+        conn.execute("PRAGMA busy_timeout=30000")
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        try:
+            yield conn
+            conn.commit()
+        except BaseException:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
     def _contract_values(self) -> dict[str, float]:
         try:
@@ -113,7 +136,7 @@ class Collector:
         return result
 
     def _init_db(self) -> None:
-        with sqlite3.connect(DB_PATH) as conn:
+        with self._db() as conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS okx_microstructure_minute (
                     minute_ts INTEGER NOT NULL,
@@ -315,7 +338,7 @@ class Collector:
             }
             rows.append(row)
             snapshot[inst_id] = row
-        with sqlite3.connect(DB_PATH) as conn:
+        with self._db() as conn:
             conn.executemany("""
                 INSERT INTO okx_microstructure_minute
                 (minute_ts,inst_id,bid_px,ask_px,min_bid_px,max_bid_px,min_ask_px,max_ask_px,spread_bps,bid_depth,ask_depth,
