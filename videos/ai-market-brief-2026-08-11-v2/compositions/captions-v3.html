@@ -1,0 +1,35 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:"Noto Sans SC",sans-serif}.caption-overlay{position:absolute;inset:0}.caption-slot{position:absolute;left:54px;right:54px;bottom:205px;height:190px;display:flex;align-items:center;justify-content:center;z-index:90}.caption-inner{visibility:hidden;opacity:0;width:100%;min-height:126px;padding:24px 34px 27px 42px;background:rgba(17,17,17,.94);border-left:9px solid #E85D26;box-shadow:0 18px 52px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;color:#F0ECE5;font-size:45px;font-weight:760;line-height:1.3;letter-spacing:-.02em;text-align:center;overflow:visible}.caption-text{display:block;width:100%;writing-mode:horizontal-tb;text-orientation:mixed;white-space:normal;word-break:normal;overflow-wrap:normal;line-break:strict;text-wrap:balance}.caption-text em{font-style:normal;color:#FF7440;font-weight:900}
+  </style>
+  <div id="root" data-composition-id="captions-v3" data-start="0" data-width="1080" data-height="1920" data-duration="60">
+    <div id="captions-v3-overlay" class="caption-overlay clip" data-start="0" data-duration="60" data-track-index="0">
+      <div id="cap01" class="caption-slot"><div id="cap01-inner" class="caption-inner"><span class="caption-text"><em>美股每日资讯播报</em>。</span></div></div>
+      <div id="cap02" class="caption-slot"><div id="cap02-inner" class="caption-inner"><span class="caption-text">今天把进攻性<em>再降半档</em>。</span></div></div>
+      <div id="cap03" class="caption-slot"><div id="cap03-inner" class="caption-inner"><span class="caption-text">昨夜标普跌零点零六，纳指跌零点三二，<em>指数平静，内部却不好</em>：</span></div></div>
+      <div id="cap04" class="caption-slot"><div id="cap04-inner" class="caption-inner"><span class="caption-text">英伟达跌近三个点，英特尔因增发跌超四个点，<em>布伦特升到八十八美元</em>。</span></div></div>
+      <div id="cap05" class="caption-slot"><div id="cap05-inner" class="caption-inner"><span class="caption-text">市场正从“弱就业利好科技”，切换到——</span></div></div>
+      <div id="cap06" class="caption-slot"><div id="cap06-inner" class="caption-inner"><span class="caption-text"><em>油价推高通胀、CPI前降风险、AI高位去拥挤</em>。</span></div></div>
+      <div id="cap07" class="caption-slot"><div id="cap07-inner" class="caption-inner"><span class="caption-text">我给市场 <em>Risk-On 六点二分</em>，没到全面 Risk-Off。</span></div></div>
+      <div id="cap08" class="caption-slot"><div id="cap08-inner" class="caption-inner"><span class="caption-text">方向点仍是<em>明晚七月 CPI</em>。</span></div></div>
+      <div id="cap09" class="caption-slot"><div id="cap09-inner" class="caption-inner"><span class="caption-text">等 AMD 和英伟达止跌，<em>不抢第一跌</em>。</span></div></div>
+      <div id="cap10a" class="caption-slot"><div id="cap10a-inner" class="caption-inner"><span class="caption-text">今晚看 <em>CoreWeave 和超微电脑</em>：</span></div></div>
+      <div id="cap10b" class="caption-slot"><div id="cap10b-inner" class="caption-inner"><span class="caption-text">订单、指引都强，股价涨，<em>主线就健康</em>；</span></div></div>
+      <div id="cap10c" class="caption-slot"><div id="cap10c-inner" class="caption-inner"><span class="caption-text">数字好但股票跌，<em>就是警告</em>。</span></div></div>
+      <div id="cap11" class="caption-slot"><div id="cap11-inner" class="caption-inner"><span class="caption-text">不追高，不抢英特尔反弹，<em>也别忽略油价</em>。</span></div></div>
+      <div id="cap12" class="caption-slot"><div id="cap12-inner" class="caption-inner"><span class="caption-text">等 VWAP 和五日线，把仓位留给 <em>CPI 之后</em>。</span></div></div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});const groups=[
+      ["#cap01-inner",.08,2.352],["#cap02-inner",2.372,5.58],
+      ["#cap03-inner",5.6,11.712],["#cap04-inner",11.732,18.204],
+      ["#cap05-inner",18.224,22.32],["#cap06-inner",22.34,27.708],
+      ["#cap07-inner",27.728,32.376],["#cap08-inner",32.396,35.604],
+      ["#cap09-inner",35.624,39.336],["#cap10a-inner",39.356,42.348],
+      ["#cap10b-inner",42.368,46.8],["#cap10c-inner",46.82,50.172],
+      ["#cap11-inner",50.192,54.504],["#cap12-inner",54.524,59.652]
+    ];groups.forEach(([s,a,b])=>{tl.set(s,{visibility:"visible"},a).fromTo(s,{opacity:0,y:34,scale:.98},{opacity:1,y:0,scale:1,duration:.16,ease:"power3.out"},a+.01).to(s,{opacity:0,y:-16,duration:.1,ease:"power2.in"},b-.11).set(s,{opacity:0,visibility:"hidden"},b)});tl.to({},{duration:60},0);window.__timelines=window.__timelines||{};window.__timelines["captions-v3"]=tl;})();
+  </script>
+</template>

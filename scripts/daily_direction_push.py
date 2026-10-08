@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import Any, List, Mapping
 
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
@@ -22,6 +24,35 @@ from daily_direction.seatalk_webhook import post_text
 
 
 DELIVERY_CHOICES = ("webhook", "seatalk-bot")
+DELIVERY_STATE_PATH = Path.home() / ".local" / "state" / "stock-agent" / "daily-direction-delivery.json"
+
+
+def _delivered_today(path: Path, *, delivery: str, group_id: str) -> bool:
+    try:
+        state = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    return (
+        state.get("date") == datetime.now().astimezone().date().isoformat()
+        and state.get("delivery") == delivery
+        and state.get("group_id") == group_id
+    )
+
+
+def _record_delivery(path: Path, *, delivery: str, group_id: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    state = {
+        "date": datetime.now().astimezone().date().isoformat(),
+        "delivery": delivery,
+        "group_id": group_id,
+    }
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(state, ensure_ascii=False) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
+def _missing_market_data(snapshots: Mapping[str, Mapping[str, Any]], jobs: List[MarketJob]) -> List[str]:
+    return [job.label for job in jobs if not (snapshots.get(job.key) or {}).get("top_gainers")]
 
 
 def _selected_jobs(markets: str, *, test: bool) -> List[MarketJob]:
@@ -41,6 +72,7 @@ def main() -> int:
     parser.add_argument("--no-llm", action="store_true", help="不调用 LLM，直接输出规则版")
     parser.add_argument("--prefer-gpt", action=argparse.BooleanOptionalAction, default=True, help="有 OPENAI_API_KEY 时优先用 GPT")
     parser.add_argument("--send", action="store_true", help="实际推送到 SeaTalk；不传则只打印")
+    parser.add_argument("--force-send", action="store_true", help="忽略今天已发送记录，手动补发")
     parser.add_argument(
         "--delivery",
         default=os.environ.get("DAILY_DIRECTION_DELIVERY", "webhook"),
@@ -63,7 +95,16 @@ def main() -> int:
         print("没有可执行市场，请使用 --markets us,cn,hk 中的至少一个", file=sys.stderr)
         return 2
 
+    if args.send and args.delivery == "seatalk-bot" and not args.force_send:
+        if _delivered_today(DELIVERY_STATE_PATH, delivery=args.delivery, group_id=args.group_id.strip()):
+            print("今天已推送到 SeaTalk bot，跳过重复发送", flush=True)
+            return 0
+
     snapshots = scan_markets(jobs, max_items=max(1, args.max_items))
+    missing = _missing_market_data(snapshots, jobs)
+    if missing:
+        print(f"行情扫描无有效数据：{'、'.join(missing)}；本次不生成或推送简报", file=sys.stderr)
+        return 1
     text = generate_direction_report(snapshots, jobs, use_llm=not args.no_llm)
     print(text, flush=True)
 
@@ -72,8 +113,9 @@ def main() -> int:
     if args.delivery == "seatalk-bot":
         from daily_direction.seatalk_bot import send_group_text_via_bot
 
-        send_group_text_via_bot(text, group_id=args.group_id, thread_id=args.thread_id)
-        print("SeaTalk bot 推送已请求发送", flush=True)
+        result = send_group_text_via_bot(text, group_id=args.group_id, thread_id=args.thread_id)
+        _record_delivery(DELIVERY_STATE_PATH, delivery=args.delivery, group_id=result["group_id"])
+        print("SeaTalk bot 推送成功", flush=True)
         return 0
 
     if not args.webhook_url.strip():

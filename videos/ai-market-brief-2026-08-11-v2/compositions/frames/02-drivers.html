@@ -1,0 +1,30 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:"Noto Sans SC",sans-serif;color:#F0ECE5}#root *{box-sizing:border-box}.f2-bg{position:absolute;inset:0;background:#111}.f2-content{position:absolute;inset:0;padding:90px 70px 430px}.f2-top{display:flex;justify-content:space-between;font-size:20px;letter-spacing:.15em;color:#E85D26;font-weight:800}
+    .f2-hero{position:absolute;left:70px;top:210px;width:330px;height:420px}.f2-drop{width:250px;height:330px}.f2-drop path{fill:#E85D26}.f2-price{position:absolute;left:210px;top:180px;font-size:170px;line-height:1;font-weight:900;letter-spacing:-.07em}.f2-price small{display:block;font-size:20px;letter-spacing:.16em;color:#8A857D;margin:18px 0 0 12px}.f2-pipe{position:absolute;left:120px;top:630px;width:820px;height:720px}.f2-pipe path{fill:none;stroke:#E85D26;stroke-width:10;stroke-linecap:square;stroke-linejoin:round}.f2-node{position:absolute;width:630px;height:142px;right:0;background:#1D1D1B;border:1px solid #3D3D39;display:grid;grid-template-columns:110px 1fr 100px;align-items:center;padding:0 26px}.f2-node i{font-style:normal;color:#89847D;font-size:18px;letter-spacing:.13em}.f2-node b{font-size:50px;line-height:1;font-weight:850}.f2-node em{font-style:normal;color:#E85D26;font-size:56px;text-align:right;font-weight:900}.f2-n1{top:0}.f2-n2{top:245px}.f2-n3{top:490px}.f2-end{position:absolute;left:70px;right:70px;top:1370px;border-top:1px solid #55514C;padding-top:24px;font-size:70px;font-weight:900;letter-spacing:-.04em}.f2-end em{font-style:normal;color:#E85D26}.f2-note{position:absolute;left:70px;bottom:80px;font-size:18px;letter-spacing:.1em;color:#77716A}
+  </style>
+  <div id="root" data-composition-id="02-drivers" data-start="0" data-width="1080" data-height="1920" data-duration="18">
+    <div id="f2-background" class="clip f2-bg" data-start="0" data-duration="18" data-track-index="0"></div><div id="f2-content" class="clip f2-content" data-start="0" data-duration="18" data-track-index="1">
+      <div class="f2-top"><span>OIL TRANSMISSION</span><span>03/06</span></div>
+      <div class="f2-hero"><svg id="f2-drop" class="f2-drop" viewBox="0 0 250 330" aria-hidden="true"><path d="M125 10 C90 70 24 145 24 215 C24 278 69 320 125 320 C181 320 226 278 226 215 C226 145 160 70 125 10Z"/></svg><div class="f2-price">88<small>BRENT · USD</small></div></div>
+      <div class="f2-pipe"><svg viewBox="0 0 820 720" aria-hidden="true"><path id="f2-path" d="M70 0 L70 72 L190 72 L190 315 L70 315 L70 560 L190 560" pathLength="1"/></svg>
+        <div id="f2-n1" class="f2-node f2-n1"><i>01</i><b>通胀预期</b><em>↑</em></div><div id="f2-n2" class="f2-node f2-n2"><i>02</i><b>10Y 美债</b><em>↑</em></div><div id="f2-n3" class="f2-node f2-n3"><i>03</i><b>科技估值</b><em>↓</em></div>
+      </div>
+      <div class="f2-end">油价正在<em>重写交易链</em></div><div class="f2-note">简报数据 · 非实时 · 不构成投资建议</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f2-top",{opacity:0,y:-20},{opacity:1,y:0,duration:.45,ease:"power3.out"},0)
+        .fromTo("#f2-drop",{opacity:0,scale:.55},{opacity:1,scale:1,duration:.75,ease:"power3.out",transformOrigin:"50% 50%"},.2)
+        .fromTo(".f2-price",{opacity:0,x:45},{opacity:1,x:0,duration:.7,ease:"power3.out"},.75)
+        .fromTo("#f2-path",{strokeDasharray:1,strokeDashoffset:1},{strokeDashoffset:0,duration:7.2,ease:"power2.inOut"},2.1)
+        .fromTo("#f2-n1",{opacity:0,x:65},{opacity:1,x:0,duration:.6,ease:"power3.out"},4.6)
+        .fromTo("#f2-n2",{opacity:0,x:65},{opacity:1,x:0,duration:.6,ease:"power3.out"},8.05)
+        .fromTo("#f2-n3",{opacity:0,x:65},{opacity:1,x:0,duration:.6,ease:"power3.out"},11.25)
+        .fromTo(".f2-end",{opacity:0,y:35},{opacity:1,y:0,duration:.75,ease:"power3.out"},14.25)
+        .fromTo(".f2-note",{opacity:0},{opacity:1,duration:.3},15.6);
+      window.__timelines=window.__timelines||{};window.__timelines["02-drivers"]=tl;})();
+  </script>
+</template>

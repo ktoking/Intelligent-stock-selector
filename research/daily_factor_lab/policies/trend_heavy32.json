@@ -1,0 +1,14 @@
+{
+  "name": "trend_heavy32",
+  "factor": "momentum_risk",
+  "trend": "slow",
+  "schedule": "twice",
+  "positions": 5,
+  "weight_cap": 0.3,
+  "annual_vol_target": 0.32,
+  "rank_buffer": 5,
+  "regime": "gate",
+  "trail": 0.15,
+  "turnover_band": 0.025,
+  "cooldown": 2
+}

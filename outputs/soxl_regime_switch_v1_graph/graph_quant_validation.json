@@ -1,0 +1,135 @@
+{
+  "warning": "These files preserve the verified V4 graphical strategy. They are not a falsely-labelled implementation of the rejected SOXL_REGIME_SWITCH_V1 research model.",
+  "import_test": {
+    "path": "/Users/kaiyi.wang/PycharmProjects/stock-agent/outputs/soxl_regime_switch_v1_graph/SOXL_GRAPH_IMPORT_TEST.quant",
+    "size": 54781,
+    "sha256": "92c79f10a957b4cd2a813998dc3ec3573f4064694d79aa6a479b59ea14cedb23",
+    "template_path": "/Users/kaiyi.wang/Downloads/超跌反弹SOXL_QQQ_DYNAMIC_REVERSION_V4.quant",
+    "template_sha256": "bea4a4f320f2001a120a71560ec581eb4f2c7d541e7d635197579d2b4b3d2a1a",
+    "strategy_name": "SOXL_GRAPH_IMPORT_TEST",
+    "cards": 92,
+    "lines": 91,
+    "indicators": [
+      "BOLL",
+      "EMA",
+      "MAVOL_SYS",
+      "RSI"
+    ],
+    "graph_fingerprint": "5f52ca6196f25f7ba6d9f0cc739aa6eb6492dafb2c9c9fa40612079896954685",
+    "changed_card_ids": [],
+    "variable_diffs": {},
+    "checks": {
+      "template_roundtrip_byte_identical": true,
+      "output_roundtrip_byte_identical": true,
+      "card_count_92": true,
+      "line_count_91": true,
+      "card_ids_preserved": true,
+      "line_ids_preserved": true,
+      "all_lines_byte_identical": true,
+      "no_dangling_lines": true,
+      "card_ids_unique": true,
+      "line_ids_unique": true,
+      "only_start_card_changed": true,
+      "only_requested_variables_changed": true,
+      "strategy_name_updated": true
+    },
+    "passed": true
+  },
+  "research_baseline": {
+    "path": "/Users/kaiyi.wang/PycharmProjects/stock-agent/outputs/soxl_regime_switch_v1_graph/SOXL_DYNAMIC_REVERSION_V4_RESEARCH_BALANCED.quant",
+    "size": 54806,
+    "sha256": "001ed00bbbd0082bb75561241925047a1893205ebed1c0f401fe874a163013f3",
+    "template_path": "/Users/kaiyi.wang/Downloads/超跌反弹SOXL_QQQ_DYNAMIC_REVERSION_V4.quant",
+    "template_sha256": "bea4a4f320f2001a120a71560ec581eb4f2c7d541e7d635197579d2b4b3d2a1a",
+    "strategy_name": "SOXL_DYNAMIC_REVERSION_V4_RESEARCH_BALANCED",
+    "cards": 92,
+    "lines": 91,
+    "indicators": [
+      "BOLL",
+      "EMA",
+      "MAVOL_SYS",
+      "RSI"
+    ],
+    "graph_fingerprint": "2ed07dc07b682f4f0bb2760ec909e79ebd6aa520818b934789a49080e5a7e690",
+    "changed_card_ids": [
+      1
+    ],
+    "variable_diffs": {
+      "POSITION_L1": {
+        "before": "0.25",
+        "after": "0.20"
+      },
+      "POSITION_L2": {
+        "before": "0.4",
+        "after": "0.25"
+      },
+      "POSITION_L3": {
+        "before": "0.6",
+        "after": "0.25"
+      },
+      "POSITION_L4": {
+        "before": "0.8",
+        "after": "0.25"
+      },
+      "LEVEL4_DAY_DROP": {
+        "before": "0.02",
+        "after": "0.06"
+      },
+      "TAKE_PROFIT": {
+        "before": "0.03",
+        "after": "0.015"
+      }
+    },
+    "checks": {
+      "template_roundtrip_byte_identical": true,
+      "output_roundtrip_byte_identical": true,
+      "card_count_92": true,
+      "line_count_91": true,
+      "card_ids_preserved": true,
+      "line_ids_preserved": true,
+      "all_lines_byte_identical": true,
+      "no_dangling_lines": true,
+      "card_ids_unique": true,
+      "line_ids_unique": true,
+      "only_start_card_changed": true,
+      "only_requested_variables_changed": true,
+      "strategy_name_updated": true
+    },
+    "passed": true
+  },
+  "recent_best": {
+    "path": "/Users/kaiyi.wang/PycharmProjects/stock-agent/outputs/soxl_regime_switch_v1_graph/SOXL_DYNAMIC_REVERSION_V4_RECENT_BEST.quant",
+    "size": 54796,
+    "sha256": "1bc386b035858c792f495f4cff2057e2e3280fd685f5544eb66ea8eb8fdecb13",
+    "template_path": "/Users/kaiyi.wang/Downloads/超跌反弹SOXL_QQQ_DYNAMIC_REVERSION_V4.quant",
+    "template_sha256": "bea4a4f320f2001a120a71560ec581eb4f2c7d541e7d635197579d2b4b3d2a1a",
+    "strategy_name": "SOXL_DYNAMIC_REVERSION_V4_RECENT_BEST",
+    "cards": 92,
+    "lines": 91,
+    "indicators": [
+      "BOLL",
+      "EMA",
+      "MAVOL_SYS",
+      "RSI"
+    ],
+    "graph_fingerprint": "5f52ca6196f25f7ba6d9f0cc739aa6eb6492dafb2c9c9fa40612079896954685",
+    "changed_card_ids": [],
+    "variable_diffs": {},
+    "checks": {
+      "template_roundtrip_byte_identical": true,
+      "output_roundtrip_byte_identical": true,
+      "card_count_92": true,
+      "line_count_91": true,
+      "card_ids_preserved": true,
+      "line_ids_preserved": true,
+      "all_lines_byte_identical": true,
+      "no_dangling_lines": true,
+      "card_ids_unique": true,
+      "line_ids_unique": true,
+      "only_start_card_changed": true,
+      "only_requested_variables_changed": true,
+      "strategy_name_updated": true
+    },
+    "passed": true
+  }
+}

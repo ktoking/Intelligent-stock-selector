@@ -1,0 +1,130 @@
+{
+  "provider": "volcengine-doubao-tts-2.0",
+  "speaker": "zh_female_sajiaoxuemei_uranus_bigtts",
+  "voice_label": "撒娇学妹",
+  "speech_rate": 11,
+  "placement": "continuous",
+  "timeline_duration": 60.0,
+  "last_voice_end": 59.784,
+  "spoken_duration": 58.944,
+  "voiceover": "assets/audio/voiceover.wav",
+  "lines": [
+    {
+      "id": "cap01",
+      "text": "美股每日资讯播报。",
+      "path": "assets/audio/segments/cap01.mp3",
+      "duration": 2.04,
+      "start": 0.12,
+      "end": 2.16,
+      "scene": "s1"
+    },
+    {
+      "id": "cap02",
+      "text": "上周五真正强的，不是AI算力，",
+      "path": "assets/audio/segments/cap02.mp3",
+      "duration": 3.504,
+      "start": 2.22,
+      "end": 5.724,
+      "scene": "s1"
+    },
+    {
+      "id": "cap03",
+      "text": "而是存储和光器件。",
+      "path": "assets/audio/segments/cap03.mp3",
+      "duration": 2.208,
+      "start": 5.784,
+      "end": 7.992,
+      "scene": "s1"
+    },
+    {
+      "id": "cap04",
+      "text": "WDC涨四点六，STX涨五点七，LITE涨五点一；",
+      "path": "assets/audio/segments/cap04.mp3",
+      "duration": 6.408,
+      "start": 8.052,
+      "end": 14.46,
+      "scene": "s2"
+    },
+    {
+      "id": "cap05",
+      "text": "同期CIEN跌三点二，ANET跌二点四，CRDO跌二点三。",
+      "path": "assets/audio/segments/cap05.mp3",
+      "duration": 6.744,
+      "start": 14.52,
+      "end": 21.264,
+      "scene": "s2"
+    },
+    {
+      "id": "cap06",
+      "text": "资金不是撤离AI，而是在重估谁最受益于数据量扩张。",
+      "path": "assets/audio/segments/cap06.mp3",
+      "duration": 4.92,
+      "start": 21.324,
+      "end": 26.244,
+      "scene": "s3"
+    },
+    {
+      "id": "cap07",
+      "text": "数据中心越大，云端存储和高速光互联越先吃到订单。",
+      "path": "assets/audio/segments/cap07.mp3",
+      "duration": 5.28,
+      "start": 26.304,
+      "end": 31.584,
+      "scene": "s3"
+    },
+    {
+      "id": "cap08",
+      "text": "下周优先观察WDC、STX、LITE能否高开后守住开盘价并带动同业；",
+      "path": "assets/audio/segments/cap08.mp3",
+      "duration": 8.328,
+      "start": 31.644,
+      "end": 39.972,
+      "scene": "s4"
+    },
+    {
+      "id": "cap09",
+      "text": "若三只强势股同时冲高回落，网络链继续走弱，",
+      "path": "assets/audio/segments/cap09.mp3",
+      "duration": 4.368,
+      "start": 40.032,
+      "end": 44.4,
+      "scene": "s4"
+    },
+    {
+      "id": "cap10",
+      "text": "这轮轮动就先按失败处理。",
+      "path": "assets/audio/segments/cap10.mp3",
+      "duration": 2.544,
+      "start": 44.46,
+      "end": 47.004,
+      "scene": "s5"
+    },
+    {
+      "id": "cap11",
+      "text": "云服务只做验证：MSFT、GOOGL、ORCL若继续走弱，",
+      "path": "assets/audio/segments/cap11.mp3",
+      "duration": 6.912,
+      "start": 47.064,
+      "end": 53.976,
+      "scene": "s5"
+    },
+    {
+      "id": "cap12",
+      "text": "说明资本开支的收益预期还没修复。",
+      "path": "assets/audio/segments/cap12.mp3",
+      "duration": 3.288,
+      "start": 54.036,
+      "end": 57.324,
+      "scene": "s6"
+    },
+    {
+      "id": "cap13",
+      "text": "这是下周的进攻边界。",
+      "path": "assets/audio/segments/cap13.mp3",
+      "duration": 2.4,
+      "start": 57.384,
+      "end": 59.784,
+      "scene": "s6"
+    }
+  ]
+}

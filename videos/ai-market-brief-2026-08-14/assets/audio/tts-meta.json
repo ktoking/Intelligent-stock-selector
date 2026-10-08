@@ -1,0 +1,139 @@
+{
+  "provider": "volcengine-doubao-tts-2.0",
+  "speaker": "zh_female_sajiaoxuemei_uranus_bigtts",
+  "voice_label": "撒娇学妹",
+  "speech_rate": 11,
+  "placement": "continuous",
+  "timeline_duration": 60.0,
+  "last_voice_end": 59.124,
+  "spoken_duration": 58.224,
+  "voiceover": "assets/audio/voiceover.wav",
+  "lines": [
+    {
+      "id": "cap01",
+      "text": "美股每日资讯播报。",
+      "path": "assets/audio/segments/cap01.mp3",
+      "duration": 2.208,
+      "start": 0.12,
+      "end": 2.328,
+      "scene": "scene-01"
+    },
+    {
+      "id": "cap02",
+      "text": "今天不是全面加仓日，",
+      "path": "assets/audio/segments/cap02.mp3",
+      "duration": 2.376,
+      "start": 2.388,
+      "end": 4.764,
+      "scene": "scene-01"
+    },
+    {
+      "id": "cap03",
+      "text": "AI基建正从财报后的普涨，进入高位分化确认。",
+      "path": "assets/audio/segments/cap03.mp3",
+      "duration": 4.584,
+      "start": 4.824,
+      "end": 9.408,
+      "scene": "scene-01"
+    },
+    {
+      "id": "cap04",
+      "text": "七月PPI环比持平，给风险资产留下空间；",
+      "path": "assets/audio/segments/cap04.mp3",
+      "duration": 4.008,
+      "start": 9.468,
+      "end": 13.476,
+      "scene": "scene-02"
+    },
+    {
+      "id": "cap05",
+      "text": "但剔除食品、能源和贸易服务后的PPI环比仍涨零点四、同比四点七，",
+      "path": "assets/audio/segments/cap05.mp3",
+      "duration": 6.72,
+      "start": 13.536,
+      "end": 20.256,
+      "scene": "scene-02"
+    },
+    {
+      "id": "cap06",
+      "text": "利率风险没有消失。",
+      "path": "assets/audio/segments/cap06.mp3",
+      "duration": 2.568,
+      "start": 20.316,
+      "end": 22.884,
+      "scene": "scene-03"
+    },
+    {
+      "id": "cap07",
+      "text": "昨夜QQQ涨一点一四，SOXX涨零点七二；",
+      "path": "assets/audio/segments/cap07.mp3",
+      "duration": 4.92,
+      "start": 22.944,
+      "end": 27.864,
+      "scene": "scene-03"
+    },
+    {
+      "id": "cap08",
+      "text": "SMCI再涨约四，CRWV回落一点三五，",
+      "path": "assets/audio/segments/cap08.mp3",
+      "duration": 5.28,
+      "start": 27.924,
+      "end": 33.204,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap09",
+      "text": "市场开始区分谁能延续订单和利润。",
+      "path": "assets/audio/segments/cap09.mp3",
+      "duration": 3.288,
+      "start": 33.264,
+      "end": 36.552,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap10",
+      "text": "NVDA小涨，AMD基本持平。",
+      "path": "assets/audio/segments/cap10.mp3",
+      "duration": 3.312,
+      "start": 36.612,
+      "end": 39.924,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap11",
+      "text": "短线不追CRWV大阳线，",
+      "path": "assets/audio/segments/cap11.mp3",
+      "duration": 2.928,
+      "start": 39.984,
+      "end": 42.912,
+      "scene": "scene-05"
+    },
+    {
+      "id": "cap12",
+      "text": "观察它能否守住一百零三点三、重新站回VWAP；",
+      "path": "assets/audio/segments/cap12.mp3",
+      "duration": 5.448,
+      "start": 42.972,
+      "end": 48.42,
+      "scene": "scene-05"
+    },
+    {
+      "id": "cap13",
+      "text": "SMCI看强势能否延续。",
+      "path": "assets/audio/segments/cap13.mp3",
+      "duration": 3.12,
+      "start": 48.48,
+      "end": 51.6,
+      "scene": "scene-05"
+    },
+    {
+      "id": "cap14",
+      "text": "如果十年美债因核心PPI走高，或AI龙头连续两天高开低走，进攻判断降回中性。",
+      "path": "assets/audio/segments/cap14.mp3",
+      "duration": 7.464,
+      "start": 51.66,
+      "end": 59.124,
+      "scene": "scene-06"
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "provider": "volcengine-doubao-tts-2.0",
+  "speaker": "zh_female_sajiaoxuemei_uranus_bigtts",
+  "voice_label": "撒娇学妹",
+  "speech_rate": 10,
+  "placement": "continuous",
+  "timeline_duration": 60.0,
+  "last_voice_end": 58.308,
+  "spoken_duration": 57.408,
+  "voiceover": "assets/audio/voiceover.wav",
+  "lines": [
+    {
+      "id": "cap01",
+      "text": "美股每日资讯播报。",
+      "path": "assets/audio/segments/cap01.mp3",
+      "duration": 2.424,
+      "start": 0.12,
+      "end": 2.544,
+      "scene": "scene-01"
+    },
+    {
+      "id": "cap02",
+      "text": "今天的判断是：CPI落地后，AI基建拿回进攻权，",
+      "path": "assets/audio/segments/cap02.mp3",
+      "duration": 4.608,
+      "start": 2.604,
+      "end": 7.212,
+      "scene": "scene-01"
+    },
+    {
+      "id": "cap03",
+      "text": "但只能做财报验证后的趋势跟踪，不能全面追涨。",
+      "path": "assets/audio/segments/cap03.mp3",
+      "duration": 4.056,
+      "start": 7.272,
+      "end": 11.328,
+      "scene": "scene-01"
+    },
+    {
+      "id": "cap04",
+      "text": "七月美国CPI环比零点一、同比三点四，核心同比二点五；",
+      "path": "assets/audio/segments/cap04.mp3",
+      "duration": 6.048,
+      "start": 11.388,
+      "end": 17.436,
+      "scene": "scene-02"
+    },
+    {
+      "id": "cap05",
+      "text": "标普涨零点三，纳指涨零点五。",
+      "path": "assets/audio/segments/cap05.mp3",
+      "duration": 3.312,
+      "start": 17.496,
+      "end": 20.808,
+      "scene": "scene-02"
+    },
+    {
+      "id": "cap06",
+      "text": "CoreWeave大涨十九点三，Super Micro涨十九，",
+      "path": "assets/audio/segments/cap06.mp3",
+      "duration": 4.392,
+      "start": 20.868,
+      "end": 25.26,
+      "scene": "scene-03"
+    },
+    {
+      "id": "cap07",
+      "text": "英伟达涨约三，",
+      "path": "assets/audio/segments/cap07.mp3",
+      "duration": 2.064,
+      "start": 25.32,
+      "end": 27.384,
+      "scene": "scene-03"
+    },
+    {
+      "id": "cap08",
+      "text": "说明算力租赁、服务器订单和GPU需求同时得到确认。",
+      "path": "assets/audio/segments/cap08.mp3",
+      "duration": 5.496,
+      "start": 27.444,
+      "end": 32.94,
+      "scene": "scene-03"
+    },
+    {
+      "id": "cap09",
+      "text": "不过新高风险没有消失，今晚PPI是第二道宏观验证。",
+      "path": "assets/audio/segments/cap09.mp3",
+      "duration": 5.136,
+      "start": 33.0,
+      "end": 38.136,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap10",
+      "text": "短线看，CRWV和SMCI不追首根长阳，",
+      "path": "assets/audio/segments/cap10.mp3",
+      "duration": 5.136,
+      "start": 38.196,
+      "end": 43.332,
+      "scene": "scene-05"
+    },
+    {
+      "id": "cap11",
+      "text": "等回踩VWAP后能否放量；NVDA观察能否守住强势。",
+      "path": "assets/audio/segments/cap11.mp3",
+      "duration": 5.688,
+      "start": 43.392,
+      "end": 49.08,
+      "scene": "scene-05"
+    },
+    {
+      "id": "cap12",
+      "text": "如果PPI偏热、十年美债上行，",
+      "path": "assets/audio/segments/cap12.mp3",
+      "duration": 3.312,
+      "start": 49.14,
+      "end": 52.452,
+      "scene": "scene-06"
+    },
+    {
+      "id": "cap13",
+      "text": "或者财报利好次日无法延续，",
+      "path": "assets/audio/segments/cap13.mp3",
+      "duration": 3.144,
+      "start": 52.512,
+      "end": 55.656,
+      "scene": "scene-06"
+    },
+    {
+      "id": "cap14",
+      "text": "就把AI优先级降回中性。",
+      "path": "assets/audio/segments/cap14.mp3",
+      "duration": 2.592,
+      "start": 55.716,
+      "end": 58.308,
+      "scene": "scene-06"
+    }
+  ]
+}

@@ -1,0 +1,1892 @@
+{
+  "data_start": "2024-09-25 09:30:00-04:00",
+  "data_end": "2026-09-18 15:30:00-04:00",
+  "selected": {
+    "config": {
+      "regime": "strict",
+      "entry": "trend",
+      "position": 0.8,
+      "trail_pct": 0.12,
+      "stop_pct": 0.08,
+      "qqq_fast": 20,
+      "qqq_slow": 60,
+      "soxl_slope_days": 5,
+      "cooldown_days": 5,
+      "cost_bps": 10.0
+    },
+    "prior_year": {
+      "return_pct": 17.142,
+      "max_drawdown_pct": 15.88,
+      "trades": 4,
+      "win_rate_pct": 75.0,
+      "profit_factor": 3.222,
+      "holding_bars": 297
+    },
+    "recent_year": {
+      "return_pct": 39.999,
+      "max_drawdown_pct": 34.652,
+      "trades": 13,
+      "win_rate_pct": 53.85,
+      "profit_factor": 1.597,
+      "holding_bars": 492
+    },
+    "user_up": {
+      "return_pct": 26.696,
+      "max_drawdown_pct": 28.522,
+      "trades": 9,
+      "win_rate_pct": 44.44,
+      "profit_factor": 1.61,
+      "holding_bars": 227
+    },
+    "user_down": {
+      "return_pct": -21.288,
+      "max_drawdown_pct": 22.057,
+      "trades": 2,
+      "win_rate_pct": 0.0,
+      "profit_factor": 0.0,
+      "holding_bars": 11
+    },
+    "full": {
+      "return_pct": 68.13,
+      "max_drawdown_pct": 34.652,
+      "trades": 16,
+      "win_rate_pct": 56.25,
+      "profit_factor": 1.773,
+      "holding_bars": 790
+    }
+  },
+  "cost_stress": {
+    "10": {
+      "prior_year": {
+        "return_pct": 17.142,
+        "max_drawdown_pct": 15.88,
+        "trades": 4,
+        "win_rate_pct": 75.0,
+        "profit_factor": 3.222,
+        "holding_bars": 297
+      },
+      "recent_year": {
+        "return_pct": 39.999,
+        "max_drawdown_pct": 34.652,
+        "trades": 13,
+        "win_rate_pct": 53.85,
+        "profit_factor": 1.597,
+        "holding_bars": 492
+      },
+      "user_up": {
+        "return_pct": 26.696,
+        "max_drawdown_pct": 28.522,
+        "trades": 9,
+        "win_rate_pct": 44.44,
+        "profit_factor": 1.61,
+        "holding_bars": 227
+      },
+      "full": {
+        "return_pct": 68.13,
+        "max_drawdown_pct": 34.652,
+        "trades": 16,
+        "win_rate_pct": 56.25,
+        "profit_factor": 1.773,
+        "holding_bars": 790
+      }
+    },
+    "20": {
+      "prior_year": {
+        "return_pct": 16.388,
+        "max_drawdown_pct": 16.147,
+        "trades": 4,
+        "win_rate_pct": 75.0,
+        "profit_factor": 3.083,
+        "holding_bars": 297
+      },
+      "recent_year": {
+        "return_pct": 37.104,
+        "max_drawdown_pct": 35.01,
+        "trades": 13,
+        "win_rate_pct": 53.85,
+        "profit_factor": 1.552,
+        "holding_bars": 492
+      },
+      "user_up": {
+        "return_pct": 24.877,
+        "max_drawdown_pct": 28.803,
+        "trades": 9,
+        "win_rate_pct": 44.44,
+        "profit_factor": 1.562,
+        "holding_bars": 227
+      },
+      "full": {
+        "return_pct": 63.855,
+        "max_drawdown_pct": 35.01,
+        "trades": 16,
+        "win_rate_pct": 56.25,
+        "profit_factor": 1.724,
+        "holding_bars": 790
+      }
+    },
+    "40": {
+      "prior_year": {
+        "return_pct": 14.896,
+        "max_drawdown_pct": 16.722,
+        "trades": 4,
+        "win_rate_pct": 50.0,
+        "profit_factor": 2.81,
+        "holding_bars": 297
+      },
+      "recent_year": {
+        "return_pct": 31.496,
+        "max_drawdown_pct": 35.722,
+        "trades": 13,
+        "win_rate_pct": 46.15,
+        "profit_factor": 1.465,
+        "holding_bars": 492
+      },
+      "user_up": {
+        "return_pct": 21.32,
+        "max_drawdown_pct": 29.502,
+        "trades": 9,
+        "win_rate_pct": 33.33,
+        "profit_factor": 1.469,
+        "holding_bars": 227
+      },
+      "full": {
+        "return_pct": 55.634,
+        "max_drawdown_pct": 35.722,
+        "trades": 16,
+        "win_rate_pct": 43.75,
+        "profit_factor": 1.629,
+        "holding_bars": 790
+      }
+    }
+  },
+  "candidate_results": [
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -14.124,
+        "max_drawdown_pct": 35.703,
+        "trades": 17,
+        "win_rate_pct": 29.41,
+        "profit_factor": 0.712,
+        "holding_bars": 603
+      },
+      "recent_year": {
+        "return_pct": 70.321,
+        "max_drawdown_pct": 42.947,
+        "trades": 24,
+        "win_rate_pct": 54.17,
+        "profit_factor": 1.574,
+        "holding_bars": 726
+      },
+      "user_up": {
+        "return_pct": 91.255,
+        "max_drawdown_pct": 15.24,
+        "trades": 13,
+        "win_rate_pct": 69.23,
+        "profit_factor": 6.174,
+        "holding_bars": 342
+      },
+      "user_down": {
+        "return_pct": -39.826,
+        "max_drawdown_pct": 42.614,
+        "trades": 7,
+        "win_rate_pct": 28.57,
+        "profit_factor": 0.1,
+        "holding_bars": 95
+      },
+      "full": {
+        "return_pct": 50.35,
+        "max_drawdown_pct": 42.947,
+        "trades": 40,
+        "win_rate_pct": 42.5,
+        "profit_factor": 1.32,
+        "holding_bars": 1330
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -19.284,
+        "max_drawdown_pct": 39.933,
+        "trades": 16,
+        "win_rate_pct": 31.25,
+        "profit_factor": 0.601,
+        "holding_bars": 537
+      },
+      "recent_year": {
+        "return_pct": 51.688,
+        "max_drawdown_pct": 30.861,
+        "trades": 18,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.789,
+        "holding_bars": 546
+      },
+      "user_up": {
+        "return_pct": 28.229,
+        "max_drawdown_pct": 21.285,
+        "trades": 11,
+        "win_rate_pct": 54.55,
+        "profit_factor": 1.956,
+        "holding_bars": 215
+      },
+      "user_down": {
+        "return_pct": -21.479,
+        "max_drawdown_pct": 25.117,
+        "trades": 5,
+        "win_rate_pct": 40.0,
+        "profit_factor": 0.191,
+        "holding_bars": 81
+      },
+      "full": {
+        "return_pct": 25.856,
+        "max_drawdown_pct": 39.933,
+        "trades": 33,
+        "win_rate_pct": 39.39,
+        "profit_factor": 1.252,
+        "holding_bars": 1084
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -4.096,
+        "max_drawdown_pct": 25.088,
+        "trades": 8,
+        "win_rate_pct": 37.5,
+        "profit_factor": 0.844,
+        "holding_bars": 296
+      },
+      "recent_year": {
+        "return_pct": 85.125,
+        "max_drawdown_pct": 24.507,
+        "trades": 19,
+        "win_rate_pct": 52.63,
+        "profit_factor": 2.28,
+        "holding_bars": 619
+      },
+      "user_up": {
+        "return_pct": 74.868,
+        "max_drawdown_pct": 20.553,
+        "trades": 13,
+        "win_rate_pct": 61.54,
+        "profit_factor": 3.48,
+        "holding_bars": 339
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 82.166,
+        "max_drawdown_pct": 25.088,
+        "trades": 26,
+        "win_rate_pct": 46.15,
+        "profit_factor": 1.896,
+        "holding_bars": 916
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": 4.049,
+        "max_drawdown_pct": 19.532,
+        "trades": 6,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.208,
+        "holding_bars": 231
+      },
+      "recent_year": {
+        "return_pct": 26.349,
+        "max_drawdown_pct": 34.201,
+        "trades": 15,
+        "win_rate_pct": 40.0,
+        "profit_factor": 1.447,
+        "holding_bars": 453
+      },
+      "user_up": {
+        "return_pct": 17.242,
+        "max_drawdown_pct": 28.029,
+        "trades": 11,
+        "win_rate_pct": 45.45,
+        "profit_factor": 1.459,
+        "holding_bars": 212
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 34.889,
+        "max_drawdown_pct": 34.201,
+        "trades": 20,
+        "win_rate_pct": 40.0,
+        "profit_factor": 1.424,
+        "holding_bars": 685
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -42.119,
+        "max_drawdown_pct": 58.238,
+        "trades": 14,
+        "win_rate_pct": 14.29,
+        "profit_factor": 0.344,
+        "holding_bars": 692
+      },
+      "recent_year": {
+        "return_pct": 83.916,
+        "max_drawdown_pct": 38.943,
+        "trades": 19,
+        "win_rate_pct": 47.37,
+        "profit_factor": 1.803,
+        "holding_bars": 780
+      },
+      "user_up": {
+        "return_pct": 111.557,
+        "max_drawdown_pct": 21.289,
+        "trades": 10,
+        "win_rate_pct": 60.0,
+        "profit_factor": 6.656,
+        "holding_bars": 373
+      },
+      "user_down": {
+        "return_pct": -35.603,
+        "max_drawdown_pct": 38.587,
+        "trades": 6,
+        "win_rate_pct": 16.67,
+        "profit_factor": 0.06,
+        "holding_bars": 99
+      },
+      "full": {
+        "return_pct": 9.292,
+        "max_drawdown_pct": 58.238,
+        "trades": 32,
+        "win_rate_pct": 31.25,
+        "profit_factor": 1.074,
+        "holding_bars": 1473
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -47.625,
+        "max_drawdown_pct": 61.18,
+        "trades": 14,
+        "win_rate_pct": 14.29,
+        "profit_factor": 0.268,
+        "holding_bars": 658
+      },
+      "recent_year": {
+        "return_pct": 71.884,
+        "max_drawdown_pct": 36.624,
+        "trades": 15,
+        "win_rate_pct": 53.33,
+        "profit_factor": 1.823,
+        "holding_bars": 643
+      },
+      "user_up": {
+        "return_pct": 82.281,
+        "max_drawdown_pct": 23.259,
+        "trades": 8,
+        "win_rate_pct": 75.0,
+        "profit_factor": 3.267,
+        "holding_bars": 289
+      },
+      "user_down": {
+        "return_pct": -26.172,
+        "max_drawdown_pct": 29.593,
+        "trades": 5,
+        "win_rate_pct": 20.0,
+        "profit_factor": 0.091,
+        "holding_bars": 92
+      },
+      "full": {
+        "return_pct": -7.574,
+        "max_drawdown_pct": 61.18,
+        "trades": 28,
+        "win_rate_pct": 32.14,
+        "profit_factor": 0.932,
+        "holding_bars": 1302
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": 5.99,
+        "max_drawdown_pct": 23.563,
+        "trades": 5,
+        "win_rate_pct": 60.0,
+        "profit_factor": 1.36,
+        "holding_bars": 351
+      },
+      "recent_year": {
+        "return_pct": 90.211,
+        "max_drawdown_pct": 24.818,
+        "trades": 15,
+        "win_rate_pct": 46.67,
+        "profit_factor": 2.352,
+        "holding_bars": 665
+      },
+      "user_up": {
+        "return_pct": 97.049,
+        "max_drawdown_pct": 21.289,
+        "trades": 10,
+        "win_rate_pct": 50.0,
+        "profit_factor": 3.862,
+        "holding_bars": 366
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 106.685,
+        "max_drawdown_pct": 24.818,
+        "trades": 19,
+        "win_rate_pct": 47.37,
+        "profit_factor": 2.197,
+        "holding_bars": 1017
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": 15.934,
+        "max_drawdown_pct": 16.747,
+        "trades": 4,
+        "win_rate_pct": 75.0,
+        "profit_factor": 3.087,
+        "holding_bars": 330
+      },
+      "recent_year": {
+        "return_pct": 55.06,
+        "max_drawdown_pct": 34.652,
+        "trades": 12,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.726,
+        "holding_bars": 535
+      },
+      "user_up": {
+        "return_pct": 69.781,
+        "max_drawdown_pct": 28.522,
+        "trades": 8,
+        "win_rate_pct": 62.5,
+        "profit_factor": 2.439,
+        "holding_bars": 282
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 84.297,
+        "max_drawdown_pct": 34.652,
+        "trades": 15,
+        "win_rate_pct": 53.33,
+        "profit_factor": 1.863,
+        "holding_bars": 866
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -21.127,
+        "max_drawdown_pct": 35.211,
+        "trades": 16,
+        "win_rate_pct": 31.25,
+        "profit_factor": 0.593,
+        "holding_bars": 550
+      },
+      "recent_year": {
+        "return_pct": 18.292,
+        "max_drawdown_pct": 47.633,
+        "trades": 23,
+        "win_rate_pct": 43.48,
+        "profit_factor": 1.152,
+        "holding_bars": 651
+      },
+      "user_up": {
+        "return_pct": 51.302,
+        "max_drawdown_pct": 20.475,
+        "trades": 13,
+        "win_rate_pct": 61.54,
+        "profit_factor": 2.69,
+        "holding_bars": 309
+      },
+      "user_down": {
+        "return_pct": -45.454,
+        "max_drawdown_pct": 45.986,
+        "trades": 6,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 57
+      },
+      "full": {
+        "return_pct": -4.223,
+        "max_drawdown_pct": 47.633,
+        "trades": 38,
+        "win_rate_pct": 36.84,
+        "profit_factor": 0.972,
+        "holding_bars": 1202
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -24.141,
+        "max_drawdown_pct": 38.622,
+        "trades": 15,
+        "win_rate_pct": 33.33,
+        "profit_factor": 0.515,
+        "holding_bars": 486
+      },
+      "recent_year": {
+        "return_pct": 4.167,
+        "max_drawdown_pct": 40.499,
+        "trades": 17,
+        "win_rate_pct": 35.29,
+        "profit_factor": 1.062,
+        "holding_bars": 486
+      },
+      "user_up": {
+        "return_pct": 0.492,
+        "max_drawdown_pct": 28.029,
+        "trades": 11,
+        "win_rate_pct": 45.45,
+        "profit_factor": 1.015,
+        "holding_bars": 198
+      },
+      "user_down": {
+        "return_pct": -28.822,
+        "max_drawdown_pct": 29.517,
+        "trades": 4,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 43
+      },
+      "full": {
+        "return_pct": -18.882,
+        "max_drawdown_pct": 40.499,
+        "trades": 31,
+        "win_rate_pct": 32.26,
+        "profit_factor": 0.815,
+        "holding_bars": 973
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -6.615,
+        "max_drawdown_pct": 27.055,
+        "trades": 7,
+        "win_rate_pct": 28.57,
+        "profit_factor": 0.765,
+        "holding_bars": 286
+      },
+      "recent_year": {
+        "return_pct": 58.78,
+        "max_drawdown_pct": 24.432,
+        "trades": 19,
+        "win_rate_pct": 52.63,
+        "profit_factor": 1.92,
+        "holding_bars": 588
+      },
+      "user_up": {
+        "return_pct": 51.302,
+        "max_drawdown_pct": 20.475,
+        "trades": 13,
+        "win_rate_pct": 61.54,
+        "profit_factor": 2.69,
+        "holding_bars": 309
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 52.138,
+        "max_drawdown_pct": 27.055,
+        "trades": 25,
+        "win_rate_pct": 44.0,
+        "profit_factor": 1.583,
+        "holding_bars": 875
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -1.949,
+        "max_drawdown_pct": 23.847,
+        "trades": 6,
+        "win_rate_pct": 33.33,
+        "profit_factor": 0.921,
+        "holding_bars": 238
+      },
+      "recent_year": {
+        "return_pct": 7.151,
+        "max_drawdown_pct": 34.201,
+        "trades": 15,
+        "win_rate_pct": 40.0,
+        "profit_factor": 1.136,
+        "holding_bars": 437
+      },
+      "user_up": {
+        "return_pct": 0.492,
+        "max_drawdown_pct": 28.029,
+        "trades": 11,
+        "win_rate_pct": 45.45,
+        "profit_factor": 1.015,
+        "holding_bars": 198
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 7.798,
+        "max_drawdown_pct": 34.201,
+        "trades": 20,
+        "win_rate_pct": 35.0,
+        "profit_factor": 1.101,
+        "holding_bars": 676
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -37.655,
+        "max_drawdown_pct": 52.593,
+        "trades": 13,
+        "win_rate_pct": 15.38,
+        "profit_factor": 0.367,
+        "holding_bars": 626
+      },
+      "recent_year": {
+        "return_pct": 35.451,
+        "max_drawdown_pct": 44.096,
+        "trades": 18,
+        "win_rate_pct": 38.89,
+        "profit_factor": 1.306,
+        "holding_bars": 702
+      },
+      "user_up": {
+        "return_pct": 77.348,
+        "max_drawdown_pct": 21.289,
+        "trades": 10,
+        "win_rate_pct": 50.0,
+        "profit_factor": 3.243,
+        "holding_bars": 337
+      },
+      "user_down": {
+        "return_pct": -41.568,
+        "max_drawdown_pct": 42.139,
+        "trades": 5,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 61
+      },
+      "full": {
+        "return_pct": -13.391,
+        "max_drawdown_pct": 52.593,
+        "trades": 30,
+        "win_rate_pct": 26.67,
+        "profit_factor": 0.9,
+        "holding_bars": 1329
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -43.014,
+        "max_drawdown_pct": 55.089,
+        "trades": 13,
+        "win_rate_pct": 15.38,
+        "profit_factor": 0.285,
+        "holding_bars": 610
+      },
+      "recent_year": {
+        "return_pct": 19.953,
+        "max_drawdown_pct": 44.291,
+        "trades": 14,
+        "win_rate_pct": 42.86,
+        "profit_factor": 1.214,
+        "holding_bars": 579
+      },
+      "user_up": {
+        "return_pct": 45.066,
+        "max_drawdown_pct": 28.402,
+        "trades": 8,
+        "win_rate_pct": 62.5,
+        "profit_factor": 2.062,
+        "holding_bars": 268
+      },
+      "user_down": {
+        "return_pct": -33.011,
+        "max_drawdown_pct": 33.665,
+        "trades": 4,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 54
+      },
+      "full": {
+        "return_pct": -29.893,
+        "max_drawdown_pct": 55.089,
+        "trades": 26,
+        "win_rate_pct": 26.92,
+        "profit_factor": 0.739,
+        "holding_bars": 1190
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": 7.428,
+        "max_drawdown_pct": 22.526,
+        "trades": 4,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.499,
+        "holding_bars": 339
+      },
+      "recent_year": {
+        "return_pct": 69.713,
+        "max_drawdown_pct": 24.692,
+        "trades": 15,
+        "win_rate_pct": 46.67,
+        "profit_factor": 2.072,
+        "holding_bars": 635
+      },
+      "user_up": {
+        "return_pct": 77.348,
+        "max_drawdown_pct": 21.289,
+        "trades": 10,
+        "win_rate_pct": 50.0,
+        "profit_factor": 3.243,
+        "holding_bars": 337
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 86.915,
+        "max_drawdown_pct": 24.692,
+        "trades": 18,
+        "win_rate_pct": 44.44,
+        "profit_factor": 2.005,
+        "holding_bars": 975
+      }
+    },
+    {
+      "config": {
+        "regime": "broad",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": 7.428,
+        "max_drawdown_pct": 22.526,
+        "trades": 4,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.499,
+        "holding_bars": 339
+      },
+      "recent_year": {
+        "return_pct": 31.097,
+        "max_drawdown_pct": 34.542,
+        "trades": 12,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.457,
+        "holding_bars": 519
+      },
+      "user_up": {
+        "return_pct": 45.066,
+        "max_drawdown_pct": 28.402,
+        "trades": 8,
+        "win_rate_pct": 62.5,
+        "profit_factor": 2.062,
+        "holding_bars": 268
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 44.384,
+        "max_drawdown_pct": 34.542,
+        "trades": 15,
+        "win_rate_pct": 46.67,
+        "profit_factor": 1.494,
+        "holding_bars": 859
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -10.873,
+        "max_drawdown_pct": 29.51,
+        "trades": 17,
+        "win_rate_pct": 35.29,
+        "profit_factor": 0.776,
+        "holding_bars": 531
+      },
+      "recent_year": {
+        "return_pct": 69.122,
+        "max_drawdown_pct": 39.935,
+        "trades": 23,
+        "win_rate_pct": 56.52,
+        "profit_factor": 1.683,
+        "holding_bars": 606
+      },
+      "user_up": {
+        "return_pct": 86.492,
+        "max_drawdown_pct": 15.24,
+        "trades": 13,
+        "win_rate_pct": 69.23,
+        "profit_factor": 6.62,
+        "holding_bars": 305
+      },
+      "user_down": {
+        "return_pct": -38.988,
+        "max_drawdown_pct": 39.584,
+        "trades": 5,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 35
+      },
+      "full": {
+        "return_pct": 54.936,
+        "max_drawdown_pct": 39.935,
+        "trades": 39,
+        "win_rate_pct": 46.15,
+        "profit_factor": 1.389,
+        "holding_bars": 1138
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -25.758,
+        "max_drawdown_pct": 41.638,
+        "trades": 16,
+        "win_rate_pct": 37.5,
+        "profit_factor": 0.528,
+        "holding_bars": 457
+      },
+      "recent_year": {
+        "return_pct": 34.642,
+        "max_drawdown_pct": 36.509,
+        "trades": 18,
+        "win_rate_pct": 55.56,
+        "profit_factor": 1.441,
+        "holding_bars": 448
+      },
+      "user_up": {
+        "return_pct": 14.568,
+        "max_drawdown_pct": 21.285,
+        "trades": 11,
+        "win_rate_pct": 45.45,
+        "profit_factor": 1.45,
+        "holding_bars": 194
+      },
+      "user_down": {
+        "return_pct": -30.556,
+        "max_drawdown_pct": 31.234,
+        "trades": 4,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 28
+      },
+      "full": {
+        "return_pct": 2.749,
+        "max_drawdown_pct": 41.638,
+        "trades": 33,
+        "win_rate_pct": 45.45,
+        "profit_factor": 1.024,
+        "holding_bars": 906
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -4.096,
+        "max_drawdown_pct": 25.088,
+        "trades": 8,
+        "win_rate_pct": 37.5,
+        "profit_factor": 0.844,
+        "holding_bars": 296
+      },
+      "recent_year": {
+        "return_pct": 81.383,
+        "max_drawdown_pct": 24.507,
+        "trades": 20,
+        "win_rate_pct": 60.0,
+        "profit_factor": 2.329,
+        "holding_bars": 559
+      },
+      "user_up": {
+        "return_pct": 70.514,
+        "max_drawdown_pct": 20.553,
+        "trades": 13,
+        "win_rate_pct": 61.54,
+        "profit_factor": 3.552,
+        "holding_bars": 302
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 78.484,
+        "max_drawdown_pct": 25.088,
+        "trades": 27,
+        "win_rate_pct": 51.85,
+        "profit_factor": 1.907,
+        "holding_bars": 856
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": 4.049,
+        "max_drawdown_pct": 19.532,
+        "trades": 6,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.208,
+        "holding_bars": 231
+      },
+      "recent_year": {
+        "return_pct": 26.868,
+        "max_drawdown_pct": 34.201,
+        "trades": 16,
+        "win_rate_pct": 56.25,
+        "profit_factor": 1.417,
+        "holding_bars": 408
+      },
+      "user_up": {
+        "return_pct": 4.752,
+        "max_drawdown_pct": 28.029,
+        "trades": 11,
+        "win_rate_pct": 36.36,
+        "profit_factor": 1.12,
+        "holding_bars": 191
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 35.443,
+        "max_drawdown_pct": 34.201,
+        "trades": 21,
+        "win_rate_pct": 52.38,
+        "profit_factor": 1.402,
+        "holding_bars": 640
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -29.315,
+        "max_drawdown_pct": 44.521,
+        "trades": 15,
+        "win_rate_pct": 33.33,
+        "profit_factor": 0.548,
+        "holding_bars": 589
+      },
+      "recent_year": {
+        "return_pct": 74.166,
+        "max_drawdown_pct": 35.63,
+        "trades": 19,
+        "win_rate_pct": 52.63,
+        "profit_factor": 1.887,
+        "holding_bars": 651
+      },
+      "user_up": {
+        "return_pct": 90.734,
+        "max_drawdown_pct": 21.289,
+        "trades": 11,
+        "win_rate_pct": 54.55,
+        "profit_factor": 6.323,
+        "holding_bars": 330
+      },
+      "user_down": {
+        "return_pct": -34.616,
+        "max_drawdown_pct": 35.254,
+        "trades": 4,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 39
+      },
+      "full": {
+        "return_pct": 26.39,
+        "max_drawdown_pct": 44.521,
+        "trades": 33,
+        "win_rate_pct": 42.42,
+        "profit_factor": 1.21,
+        "holding_bars": 1241
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -27.866,
+        "max_drawdown_pct": 47.286,
+        "trades": 14,
+        "win_rate_pct": 35.71,
+        "profit_factor": 0.527,
+        "holding_bars": 527
+      },
+      "recent_year": {
+        "return_pct": 37.247,
+        "max_drawdown_pct": 41.72,
+        "trades": 15,
+        "win_rate_pct": 53.33,
+        "profit_factor": 1.417,
+        "holding_bars": 547
+      },
+      "user_up": {
+        "return_pct": 36.024,
+        "max_drawdown_pct": 23.259,
+        "trades": 9,
+        "win_rate_pct": 55.56,
+        "profit_factor": 2.038,
+        "holding_bars": 234
+      },
+      "user_down": {
+        "return_pct": -34.616,
+        "max_drawdown_pct": 35.254,
+        "trades": 4,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 39
+      },
+      "full": {
+        "return_pct": 1.639,
+        "max_drawdown_pct": 47.286,
+        "trades": 28,
+        "win_rate_pct": 42.86,
+        "profit_factor": 1.013,
+        "holding_bars": 1075
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -2.939,
+        "max_drawdown_pct": 30.002,
+        "trades": 6,
+        "win_rate_pct": 50.0,
+        "profit_factor": 0.886,
+        "holding_bars": 334
+      },
+      "recent_year": {
+        "return_pct": 77.658,
+        "max_drawdown_pct": 24.818,
+        "trades": 17,
+        "win_rate_pct": 52.94,
+        "profit_factor": 2.355,
+        "holding_bars": 596
+      },
+      "user_up": {
+        "return_pct": 77.654,
+        "max_drawdown_pct": 21.289,
+        "trades": 11,
+        "win_rate_pct": 45.45,
+        "profit_factor": 3.603,
+        "holding_bars": 323
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 76.782,
+        "max_drawdown_pct": 30.002,
+        "trades": 22,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.926,
+        "holding_bars": 931
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "trend",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": 17.142,
+        "max_drawdown_pct": 15.88,
+        "trades": 4,
+        "win_rate_pct": 75.0,
+        "profit_factor": 3.222,
+        "holding_bars": 297
+      },
+      "recent_year": {
+        "return_pct": 39.999,
+        "max_drawdown_pct": 34.652,
+        "trades": 13,
+        "win_rate_pct": 53.85,
+        "profit_factor": 1.597,
+        "holding_bars": 492
+      },
+      "user_up": {
+        "return_pct": 26.696,
+        "max_drawdown_pct": 28.522,
+        "trades": 9,
+        "win_rate_pct": 44.44,
+        "profit_factor": 1.61,
+        "holding_bars": 227
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 68.13,
+        "max_drawdown_pct": 34.652,
+        "trades": 16,
+        "win_rate_pct": 56.25,
+        "profit_factor": 1.773,
+        "holding_bars": 790
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -16.267,
+        "max_drawdown_pct": 29.282,
+        "trades": 14,
+        "win_rate_pct": 28.57,
+        "profit_factor": 0.641,
+        "holding_bars": 477
+      },
+      "recent_year": {
+        "return_pct": 29.276,
+        "max_drawdown_pct": 41.426,
+        "trades": 22,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.295,
+        "holding_bars": 564
+      },
+      "user_up": {
+        "return_pct": 47.161,
+        "max_drawdown_pct": 20.475,
+        "trades": 12,
+        "win_rate_pct": 58.33,
+        "profit_factor": 2.724,
+        "holding_bars": 267
+      },
+      "user_down": {
+        "return_pct": -38.988,
+        "max_drawdown_pct": 39.584,
+        "trades": 5,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 35
+      },
+      "full": {
+        "return_pct": 11.121,
+        "max_drawdown_pct": 41.426,
+        "trades": 35,
+        "win_rate_pct": 40.0,
+        "profit_factor": 1.085,
+        "holding_bars": 1042
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -16.032,
+        "max_drawdown_pct": 30.148,
+        "trades": 12,
+        "win_rate_pct": 33.33,
+        "profit_factor": 0.607,
+        "holding_bars": 392
+      },
+      "recent_year": {
+        "return_pct": 19.435,
+        "max_drawdown_pct": 41.949,
+        "trades": 17,
+        "win_rate_pct": 52.94,
+        "profit_factor": 1.251,
+        "holding_bars": 424
+      },
+      "user_up": {
+        "return_pct": -10.118,
+        "max_drawdown_pct": 28.029,
+        "trades": 10,
+        "win_rate_pct": 40.0,
+        "profit_factor": 0.714,
+        "holding_bars": 164
+      },
+      "user_down": {
+        "return_pct": -30.556,
+        "max_drawdown_pct": 31.234,
+        "trades": 4,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 28
+      },
+      "full": {
+        "return_pct": 2.949,
+        "max_drawdown_pct": 41.949,
+        "trades": 28,
+        "win_rate_pct": 42.86,
+        "profit_factor": 1.027,
+        "holding_bars": 817
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -6.615,
+        "max_drawdown_pct": 27.055,
+        "trades": 7,
+        "win_rate_pct": 28.57,
+        "profit_factor": 0.765,
+        "holding_bars": 286
+      },
+      "recent_year": {
+        "return_pct": 55.178,
+        "max_drawdown_pct": 24.432,
+        "trades": 19,
+        "win_rate_pct": 57.89,
+        "profit_factor": 1.949,
+        "holding_bars": 523
+      },
+      "user_up": {
+        "return_pct": 47.161,
+        "max_drawdown_pct": 20.475,
+        "trades": 12,
+        "win_rate_pct": 58.33,
+        "profit_factor": 2.724,
+        "holding_bars": 267
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 48.687,
+        "max_drawdown_pct": 27.055,
+        "trades": 25,
+        "win_rate_pct": 48.0,
+        "profit_factor": 1.58,
+        "holding_bars": 810
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.08,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -1.949,
+        "max_drawdown_pct": 23.847,
+        "trades": 6,
+        "win_rate_pct": 33.33,
+        "profit_factor": 0.921,
+        "holding_bars": 238
+      },
+      "recent_year": {
+        "return_pct": 25.955,
+        "max_drawdown_pct": 34.201,
+        "trades": 15,
+        "win_rate_pct": 60.0,
+        "profit_factor": 1.455,
+        "holding_bars": 390
+      },
+      "user_up": {
+        "return_pct": -10.118,
+        "max_drawdown_pct": 28.029,
+        "trades": 10,
+        "win_rate_pct": 40.0,
+        "profit_factor": 0.714,
+        "holding_bars": 164
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 26.716,
+        "max_drawdown_pct": 34.201,
+        "trades": 20,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.326,
+        "holding_bars": 629
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -22.182,
+        "max_drawdown_pct": 38.56,
+        "trades": 12,
+        "win_rate_pct": 25.0,
+        "profit_factor": 0.583,
+        "holding_bars": 524
+      },
+      "recent_year": {
+        "return_pct": 41.107,
+        "max_drawdown_pct": 37.444,
+        "trades": 18,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.466,
+        "holding_bars": 606
+      },
+      "user_up": {
+        "return_pct": 59.501,
+        "max_drawdown_pct": 21.289,
+        "trades": 10,
+        "win_rate_pct": 50.0,
+        "profit_factor": 2.948,
+        "holding_bars": 289
+      },
+      "user_down": {
+        "return_pct": -34.616,
+        "max_drawdown_pct": 35.254,
+        "trades": 4,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 39
+      },
+      "full": {
+        "return_pct": 12.617,
+        "max_drawdown_pct": 38.56,
+        "trades": 29,
+        "win_rate_pct": 37.93,
+        "profit_factor": 1.102,
+        "holding_bars": 1131
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 0,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": -7.454,
+        "max_drawdown_pct": 30.005,
+        "trades": 10,
+        "win_rate_pct": 30.0,
+        "profit_factor": 0.803,
+        "holding_bars": 466
+      },
+      "recent_year": {
+        "return_pct": 3.076,
+        "max_drawdown_pct": 45.626,
+        "trades": 15,
+        "win_rate_pct": 46.67,
+        "profit_factor": 1.036,
+        "holding_bars": 507
+      },
+      "user_up": {
+        "return_pct": 8.369,
+        "max_drawdown_pct": 28.402,
+        "trades": 8,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.213,
+        "holding_bars": 200
+      },
+      "user_down": {
+        "return_pct": -34.616,
+        "max_drawdown_pct": 35.254,
+        "trades": 4,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 39
+      },
+      "full": {
+        "return_pct": -2.166,
+        "max_drawdown_pct": 45.626,
+        "trades": 24,
+        "win_rate_pct": 37.5,
+        "profit_factor": 0.982,
+        "holding_bars": 974
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 0,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": 0.314,
+        "max_drawdown_pct": 27.656,
+        "trades": 5,
+        "win_rate_pct": 40.0,
+        "profit_factor": 1.014,
+        "holding_bars": 323
+      },
+      "recent_year": {
+        "return_pct": 58.124,
+        "max_drawdown_pct": 24.692,
+        "trades": 16,
+        "win_rate_pct": 56.25,
+        "profit_factor": 2.038,
+        "holding_bars": 561
+      },
+      "user_up": {
+        "return_pct": 59.501,
+        "max_drawdown_pct": 21.289,
+        "trades": 10,
+        "win_rate_pct": 50.0,
+        "profit_factor": 2.948,
+        "holding_bars": 289
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 62.619,
+        "max_drawdown_pct": 27.656,
+        "trades": 20,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.782,
+        "holding_bars": 885
+      }
+    },
+    {
+      "config": {
+        "regime": "strict",
+        "entry": "breakout",
+        "position": 0.8,
+        "trail_pct": 0.12,
+        "stop_pct": 0.08,
+        "qqq_fast": 20,
+        "qqq_slow": 60,
+        "soxl_slope_days": 5,
+        "cooldown_days": 5,
+        "cost_bps": 10.0
+      },
+      "prior_year": {
+        "return_pct": 8.547,
+        "max_drawdown_pct": 21.719,
+        "trades": 4,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.568,
+        "holding_bars": 306
+      },
+      "recent_year": {
+        "return_pct": 15.507,
+        "max_drawdown_pct": 34.542,
+        "trades": 13,
+        "win_rate_pct": 53.85,
+        "profit_factor": 1.252,
+        "holding_bars": 462
+      },
+      "user_up": {
+        "return_pct": 8.369,
+        "max_drawdown_pct": 28.402,
+        "trades": 8,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.213,
+        "holding_bars": 200
+      },
+      "user_down": {
+        "return_pct": -21.288,
+        "max_drawdown_pct": 22.057,
+        "trades": 2,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 11
+      },
+      "full": {
+        "return_pct": 28.54,
+        "max_drawdown_pct": 34.542,
+        "trades": 16,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.341,
+        "holding_bars": 769
+      }
+    }
+  ]
+}

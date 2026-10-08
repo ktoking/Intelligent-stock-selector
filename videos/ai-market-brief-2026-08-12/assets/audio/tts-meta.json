@@ -1,0 +1,139 @@
+{
+  "provider": "volcengine-doubao-tts-2.0",
+  "speaker": "zh_female_sajiaoxuemei_uranus_bigtts",
+  "voice_label": "撒娇学妹",
+  "speech_rate": 10,
+  "placement": "continuous",
+  "timeline_duration": 60.0,
+  "last_voice_end": 57.252,
+  "spoken_duration": 56.352,
+  "voiceover": "assets/audio/voiceover.wav",
+  "lines": [
+    {
+      "id": "cap01",
+      "text": "美股每日资讯播报。",
+      "path": "assets/audio/segments/cap01.mp3",
+      "duration": 2.064,
+      "start": 0.12,
+      "end": 2.184,
+      "scene": "scene-01"
+    },
+    {
+      "id": "cap02",
+      "text": "今天的矛盾是：AI基本面变强，宏观却在收紧。",
+      "path": "assets/audio/segments/cap02.mp3",
+      "duration": 4.8,
+      "start": 2.244,
+      "end": 7.044,
+      "scene": "scene-01"
+    },
+    {
+      "id": "cap03",
+      "text": "昨夜标普跌零点三二，纳指跌零点六，",
+      "path": "assets/audio/segments/cap03.mp3",
+      "duration": 4.032,
+      "start": 7.104,
+      "end": 11.136,
+      "scene": "scene-02"
+    },
+    {
+      "id": "cap04",
+      "text": "半导体ETF却涨近一个点；",
+      "path": "assets/audio/segments/cap04.mp3",
+      "duration": 3.144,
+      "start": 11.196,
+      "end": 14.34,
+      "scene": "scene-02"
+    },
+    {
+      "id": "cap05",
+      "text": "布伦特仍在八十八美元上方，",
+      "path": "assets/audio/segments/cap05.mp3",
+      "duration": 2.592,
+      "start": 14.4,
+      "end": 16.992,
+      "scene": "scene-03"
+    },
+    {
+      "id": "cap06",
+      "text": "今晚八点半的七月CPI才是方向开关。",
+      "path": "assets/audio/segments/cap06.mp3",
+      "duration": 3.504,
+      "start": 17.052,
+      "end": 20.556,
+      "scene": "scene-03"
+    },
+    {
+      "id": "cap07",
+      "text": "CoreWeave营收增长一倍，积压订单约一千零四十亿美元；",
+      "path": "assets/audio/segments/cap07.mp3",
+      "duration": 4.992,
+      "start": 20.616,
+      "end": 25.608,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap08",
+      "text": "超微电脑毛利率升到十七点五，年度收入指引最高七百二十亿美元。",
+      "path": "assets/audio/segments/cap08.mp3",
+      "duration": 6.216,
+      "start": 25.668,
+      "end": 31.884,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap09",
+      "text": "两只股票盘后上涨，说明AI基建需求没坏，",
+      "path": "assets/audio/segments/cap09.mp3",
+      "duration": 4.032,
+      "start": 31.944,
+      "end": 35.976,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap10",
+      "text": "但市场开始要求订单、利润和现金流一起兑现。",
+      "path": "assets/audio/segments/cap10.mp3",
+      "duration": 4.416,
+      "start": 36.036,
+      "end": 40.452,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap11",
+      "text": "今天不追高开，也不在CPI前抢方向。",
+      "path": "assets/audio/segments/cap11.mp3",
+      "duration": 3.672,
+      "start": 40.512,
+      "end": 44.184,
+      "scene": "scene-05"
+    },
+    {
+      "id": "cap12",
+      "text": "AMD等收复五日线，盘后强势股看能否守住VWAP；",
+      "path": "assets/audio/segments/cap12.mp3",
+      "duration": 5.52,
+      "start": 44.244,
+      "end": 49.764,
+      "scene": "scene-05"
+    },
+    {
+      "id": "cap13",
+      "text": "如果CPI偏热、美债上行，油价又站稳九十美元，",
+      "path": "assets/audio/segments/cap13.mp3",
+      "duration": 4.776,
+      "start": 49.824,
+      "end": 54.6,
+      "scene": "scene-06"
+    },
+    {
+      "id": "cap14",
+      "text": "就继续降低科技优先级。",
+      "path": "assets/audio/segments/cap14.mp3",
+      "duration": 2.592,
+      "start": 54.66,
+      "end": 57.252,
+      "scene": "scene-06"
+    }
+  ]
+}

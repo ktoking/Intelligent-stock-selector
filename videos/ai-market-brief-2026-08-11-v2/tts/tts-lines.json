@@ -1,0 +1,58 @@
+{
+  "provider": "volcengine-doubao-tts-2.0",
+  "speaker": "zh_female_qingxinnvsheng_uranus_bigtts",
+  "voice_label": "清新女声",
+  "speech_rate": 10,
+  "context": "专业财经女主播，像盘前直播一样自然、连续、有判断。语速紧凑但不抢字，句间只做轻微换气，不要长停顿，不要宣传片和营销腔。英文缩写逐字母清楚读出。",
+  "timeline_duration": 60,
+  "placement": "continuous",
+  "initial_padding": 0.12,
+  "inter_line_gap": 0.06,
+  "tail_padding": 0.2,
+  "scenes": [
+    {
+      "id": "scene-01",
+      "lines": [
+        {"id": "cap01", "text": "美股每日资讯播报。"},
+        {"id": "cap02", "text": "今天把进攻性再降半档。"}
+      ]
+    },
+    {
+      "id": "scene-03",
+      "lines": [
+        {"id": "cap03", "text": "昨夜标普跌零点零六，纳指跌零点三二，指数平静，内部却不好："},
+        {"id": "cap04", "text": "英伟达跌近三个点，英特尔因增发跌超四个点，布伦特升到八十八美元。"}
+      ]
+    },
+    {
+      "id": "scene-02",
+      "lines": [
+        {"id": "cap05", "text": "市场正从弱就业利好科技，切换到"},
+        {"id": "cap06", "text": "油价推高通胀、CPI前降风险、AI高位去拥挤。"},
+        {"id": "cap07", "text": "我给市场Risk-On六点二分，没到全面Risk-Off，"},
+        {"id": "cap08", "text": "方向点仍是明晚七月CPI。"}
+      ]
+    },
+    {
+      "id": "scene-05",
+      "lines": [
+        {"id": "cap09", "text": "等AMD和英伟达止跌，不抢第一跌。"}
+      ]
+    },
+    {
+      "id": "scene-04",
+      "lines": [
+        {"id": "cap10a", "text": "今晚看CoreWeave和超微电脑："},
+        {"id": "cap10b", "text": "订单、指引都强，股价涨，主线就健康；"},
+        {"id": "cap10c", "text": "数字好但股票跌，就是警告。"}
+      ]
+    },
+    {
+      "id": "scene-06",
+      "lines": [
+        {"id": "cap11", "text": "不追高，不抢英特尔反弹，也别忽略油价。"},
+        {"id": "cap12", "text": "等VWAP和五日线，把仓位留给CPI之后。"}
+      ]
+    }
+  ]
+}

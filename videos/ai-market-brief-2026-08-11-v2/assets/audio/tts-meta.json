@@ -1,0 +1,138 @@
+{
+  "provider": "volcengine-doubao-tts-2.0",
+  "speaker": "zh_female_qingxinnvsheng_uranus_bigtts",
+  "voice_label": "清新女声",
+  "speech_rate": 10,
+  "placement": "continuous",
+  "timeline_duration": 60,
+  "last_voice_end": 59.532,
+  "voiceover": "assets/audio/voiceover.wav",
+  "lines": [
+    {
+      "id": "cap01",
+      "text": "美股每日资讯播报。",
+      "path": "assets/audio/segments/cap01.mp3",
+      "duration": 2.232,
+      "start": 0.12,
+      "end": 2.352,
+      "scene": "scene-01"
+    },
+    {
+      "id": "cap02",
+      "text": "今天把进攻性再降半档。",
+      "path": "assets/audio/segments/cap02.mp3",
+      "duration": 3.168,
+      "start": 2.412,
+      "end": 5.58,
+      "scene": "scene-01"
+    },
+    {
+      "id": "cap03",
+      "text": "昨夜标普跌零点零六，纳指跌零点三二，指数平静，内部却不好：",
+      "path": "assets/audio/segments/cap03.mp3",
+      "duration": 6.072,
+      "start": 5.64,
+      "end": 11.712,
+      "scene": "scene-03"
+    },
+    {
+      "id": "cap04",
+      "text": "英伟达跌近三个点，英特尔因增发跌超四个点，布伦特升到八十八美元。",
+      "path": "assets/audio/segments/cap04.mp3",
+      "duration": 6.432,
+      "start": 11.772,
+      "end": 18.204,
+      "scene": "scene-03"
+    },
+    {
+      "id": "cap05",
+      "text": "市场正从弱就业利好科技，切换到",
+      "path": "assets/audio/segments/cap05.mp3",
+      "duration": 4.056,
+      "start": 18.264,
+      "end": 22.32,
+      "scene": "scene-02"
+    },
+    {
+      "id": "cap06",
+      "text": "油价推高通胀、CPI前降风险、AI高位去拥挤。",
+      "path": "assets/audio/segments/cap06.mp3",
+      "duration": 5.328,
+      "start": 22.38,
+      "end": 27.708,
+      "scene": "scene-02"
+    },
+    {
+      "id": "cap07",
+      "text": "我给市场Risk-On六点二分，没到全面Risk-Off，",
+      "path": "assets/audio/segments/cap07.mp3",
+      "duration": 4.608,
+      "start": 27.768,
+      "end": 32.376,
+      "scene": "scene-02"
+    },
+    {
+      "id": "cap08",
+      "text": "方向点仍是明晚七月CPI。",
+      "path": "assets/audio/segments/cap08.mp3",
+      "duration": 3.168,
+      "start": 32.436,
+      "end": 35.604,
+      "scene": "scene-02"
+    },
+    {
+      "id": "cap09",
+      "text": "等AMD和英伟达止跌，不抢第一跌。",
+      "path": "assets/audio/segments/cap09.mp3",
+      "duration": 3.672,
+      "start": 35.664,
+      "end": 39.336,
+      "scene": "scene-05"
+    },
+    {
+      "id": "cap10a",
+      "text": "今晚看CoreWeave和超微电脑：",
+      "path": "assets/audio/segments/cap10a.mp3",
+      "duration": 2.952,
+      "start": 39.396,
+      "end": 42.348,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap10b",
+      "text": "订单、指引都强，股价涨，主线就健康；",
+      "path": "assets/audio/segments/cap10b.mp3",
+      "duration": 4.392,
+      "start": 42.408,
+      "end": 46.8,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap10c",
+      "text": "数字好但股票跌，就是警告。",
+      "path": "assets/audio/segments/cap10c.mp3",
+      "duration": 3.312,
+      "start": 46.86,
+      "end": 50.172,
+      "scene": "scene-04"
+    },
+    {
+      "id": "cap11",
+      "text": "不追高，不抢英特尔反弹，也别忽略油价。",
+      "path": "assets/audio/segments/cap11.mp3",
+      "duration": 4.272,
+      "start": 50.232,
+      "end": 54.504,
+      "scene": "scene-06"
+    },
+    {
+      "id": "cap12",
+      "text": "等VWAP和五日线，把仓位留给CPI之后。",
+      "path": "assets/audio/segments/cap12.mp3",
+      "duration": 4.968,
+      "start": 54.564,
+      "end": 59.532,
+      "scene": "scene-06"
+    }
+  ]
+}

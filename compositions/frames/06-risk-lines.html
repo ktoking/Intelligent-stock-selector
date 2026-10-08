@@ -1,0 +1,233 @@
+<template>
+  <style>
+    @font-face {
+      font-family: NotoSC;
+      src: url("assets/fonts/NotoSansSC-Variable.ttf");
+    }
+    * {
+      box-sizing: border-box;
+    }
+    #risk-root {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: NotoSC, Arial, sans-serif;
+      color: #f4ede0;
+    }
+    .ground {
+      position: absolute;
+      inset: 0;
+      background: #0b0b0b;
+    }
+    .halo {
+      position: absolute;
+      width: 900px;
+      height: 900px;
+      border: 3px solid #ff6a00;
+      border-radius: 50%;
+      left: 90px;
+      top: 330px;
+      opacity: 0.18;
+    }
+    .kicker {
+      position: absolute;
+      left: 64px;
+      top: 70px;
+      font-size: 22px;
+      font-weight: 820;
+      letter-spacing: 0.14em;
+      color: #ff6a00;
+    }
+    .title {
+      position: absolute;
+      left: 60px;
+      top: 170px;
+      font-size: 104px;
+      line-height: 0.94;
+      font-weight: 950;
+      letter-spacing: -0.06em;
+    }
+    .title span,
+    .title em,
+    .small span,
+    .verdict .big span {
+      display: block;
+    }
+    .title em {
+      font-style: normal;
+      color: #ff6a00;
+    }
+    .gates {
+      position: absolute;
+      left: 60px;
+      right: 60px;
+      top: 610px;
+    }
+    .gate {
+      height: 190px;
+      border-top: 3px solid #504b48;
+      display: grid;
+      grid-template-columns: 120px 1fr 190px;
+      align-items: center;
+    }
+    .gate:last-child {
+      border-bottom: 3px solid #504b48;
+    }
+    .idx {
+      font-size: 28px;
+      color: #ff6a00;
+      letter-spacing: 0.1em;
+    }
+    .condition {
+      font-size: 47px;
+      font-weight: 860;
+    }
+    .state {
+      font-size: 31px;
+      font-weight: 920;
+      text-align: right;
+      color: #ff6a00;
+    }
+    .bar {
+      height: 16px;
+      background: #ff6a00;
+      position: absolute;
+      left: 0;
+      right: 100%;
+      margin-top: -16px;
+      transform-origin: left;
+    }
+    .verdict {
+      position: absolute;
+      left: 60px;
+      right: 60px;
+      bottom: 265px;
+      background: #ff6a00;
+      color: #0b0b0b;
+      padding: 32px 42px;
+      height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .verdict .small {
+      font-size: 26px;
+      letter-spacing: 0.1em;
+      font-weight: 850;
+    }
+    .verdict .big {
+      font-size: 62px;
+      line-height: 1.12;
+      font-weight: 950;
+      text-align: right;
+    }
+    .disclaimer {
+      position: absolute;
+      left: 60px;
+      right: 60px;
+      bottom: 82px;
+      border-top: 2px solid #504b48;
+      padding-top: 25px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 20px;
+      letter-spacing: 0.07em;
+      color: #a49c93;
+    }
+  </style>
+  <div
+    id="risk-root"
+    class="root"
+    data-composition-id="risk-lines"
+    data-start="0"
+    data-width="1080"
+    data-height="1920"
+    data-duration="10.86"
+  >
+    <div
+      id="risk-ground"
+      class="ground clip"
+      data-start="0"
+      data-duration="10.86"
+      data-track-index="0"
+    ></div>
+    <div id="risk-halo" class="halo"></div>
+    <div class="kicker">INVALIDATION COMBO / THREE RED LINES</div>
+    <div id="risk-title" class="title" data-layout-allow-overlap>
+      <span>三条同时出现</span><em>科技降级</em>
+    </div>
+    <div class="gates">
+      <div class="gate">
+        <span class="idx">01</span><span class="condition">PPI 偏热</span
+        ><span class="state">HOT</span><span class="bar"></span>
+      </div>
+      <div class="gate">
+        <span class="idx">02</span><span class="condition">10Y 美债上行</span
+        ><span class="state">YIELD ↑</span><span class="bar"></span>
+      </div>
+      <div class="gate">
+        <span class="idx">03</span><span class="condition">利好次日转弱</span
+        ><span class="state">FAIL</span><span class="bar"></span>
+      </div>
+    </div>
+    <div id="risk-verdict" class="verdict">
+      <div class="small">
+        <span>FINAL ACTION</span><span>RISK PRIORITY</span>
+      </div>
+      <div class="big"><span>降低科技</span><span>优先级</span></div>
+    </div>
+    <div class="disclaimer">
+      <span>简报数据 · 非实时</span><span>仅供研究 · 不构成投资建议</span>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(
+        "#risk-title",
+        { x: -120, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.65, ease: "expo.out" },
+        0.14,
+      )
+        .fromTo(
+          ".gate",
+          { x: 120, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.52,
+            stagger: 0.58,
+            ease: "power4.out",
+          },
+          1.22,
+        )
+        .fromTo(
+          ".bar",
+          { scaleX: 0 },
+          { scaleX: 1, duration: 0.75, stagger: 0.72, ease: "circ.inOut" },
+          2.75,
+        )
+        .to(
+          "#risk-halo",
+          { scale: 1.14, opacity: 0.38, duration: 3.1, ease: "sine.inOut" },
+          3.4,
+        )
+        .fromTo(
+          "#risk-verdict",
+          { scaleX: 0, transformOrigin: "left center" },
+          { scaleX: 1, duration: 0.68, ease: "power4.out" },
+          6.55,
+        )
+        .fromTo(
+          "#risk-verdict .big",
+          { x: 80, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.54, ease: "back.out(1.5)" },
+          7.0,
+        )
+        .to({}, { duration: 10.86 }, 0);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["risk-lines"] = tl;
+    })();
+  </script>
+</template>

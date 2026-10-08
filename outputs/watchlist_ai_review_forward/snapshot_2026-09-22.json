@@ -1,0 +1,155 @@
+{
+  "status": "shadow only; no real account/actual trades; AI text is separate from frozen strategy",
+  "generated_at_utc": "2026-09-23T09:35:52.963265+00:00",
+  "signal_date": "2026-09-22",
+  "next_session": "2026-09-23",
+  "source": "cached Futunn REST autype=1 daily K; excludes dividends",
+  "qqq_cache_modified_utc": "2026-09-23T08:35:09.632285+00:00",
+  "universe_count": 220,
+  "ordinary_stock_count": 155,
+  "qqq": {
+    "close": 747.46,
+    "prior_close": 741.47,
+    "ema100": 699.5762073895418,
+    "market_entry_gate": true
+  },
+  "paper_replay_not_actual_account": {
+    "starting_capital": 10000.0,
+    "cost_bps_each_side": 25,
+    "equity_at_close": 13052.11614514861,
+    "cash_at_close": 521.4661451486095,
+    "one_day_return_pct": -0.3712762794841673,
+    "orders_on_signal_date": [],
+    "one_day_attribution_no_orders_only": [
+      {
+        "symbol": "US.MSFT",
+        "pnl_dollars": -18.050000000000068
+      },
+      {
+        "symbol": "US.CVX",
+        "pnl_dollars": -15.11999999999989
+      },
+      {
+        "symbol": "US.ABBV",
+        "pnl_dollars": 7.2999999999996135
+      },
+      {
+        "symbol": "US.JNJ",
+        "pnl_dollars": -2.520000000000266
+      },
+      {
+        "symbol": "US.CVE",
+        "pnl_dollars": -20.25
+      }
+    ],
+    "positions": [
+      {
+        "symbol": "US.MSFT",
+        "qty": 5,
+        "entry_date": "2026-09-14",
+        "entry_price": 498.30264999999997,
+        "peak_close": 505.41,
+        "last_close": 498.0
+      },
+      {
+        "symbol": "US.CVX",
+        "qty": 12,
+        "entry_date": "2026-09-14",
+        "entry_price": 217.5425,
+        "peak_close": 217.77,
+        "last_close": 202.41
+      },
+      {
+        "symbol": "US.ABBV",
+        "qty": 10,
+        "entry_date": "2026-09-21",
+        "entry_price": 263.727675,
+        "peak_close": 265.21,
+        "last_close": 265.21
+      },
+      {
+        "symbol": "US.JNJ",
+        "qty": 9,
+        "entry_date": "2026-09-21",
+        "entry_price": 272.41935,
+        "peak_close": 269.99,
+        "last_close": 269.19
+      },
+      {
+        "symbol": "US.CVE",
+        "qty": 81,
+        "entry_date": "2026-09-21",
+        "entry_price": 32.31057499999999,
+        "peak_close": 32.62,
+        "last_close": 31.32
+      }
+    ],
+    "since_2026_03_23": {
+      "return_pct": 30.52116145148609,
+      "max_drawdown_pct": 14.625087866632558,
+      "completed_trades": 43,
+      "orders": 91,
+      "holding_count_end": 5,
+      "win_rate": 0.4883720930232558,
+      "trading_days": 127
+    }
+  },
+  "candidate_watchlist_not_orders": [
+    {
+      "symbol": "US.MSFT",
+      "close": 498.0,
+      "ema50": 472.9471129151611,
+      "ema150": 444.97085830988044,
+      "momentum_63d": 0.33427149963858493,
+      "volatility_20d": 0.014287852598640648,
+      "baseline_weight_cap": 0.2,
+      "rank_score": 23.395503091233433
+    },
+    {
+      "symbol": "US.QMCO",
+      "close": 25.65,
+      "ema50": 19.912987749199253,
+      "ema150": 14.20632908301189,
+      "momentum_63d": 0.8573497465604634,
+      "volatility_20d": 0.04002432366717835,
+      "baseline_weight_cap": 0.2,
+      "rank_score": 21.42071790368632
+    },
+    {
+      "symbol": "US.PLTR",
+      "close": 184.99,
+      "ema50": 164.15203987331543,
+      "ema150": 152.9544381336628,
+      "momentum_63d": 0.5851756640959727,
+      "volatility_20d": 0.032020870096890794,
+      "baseline_weight_cap": 0.2,
+      "rank_score": 18.27482083795071
+    },
+    {
+      "symbol": "US.NEM",
+      "close": 127.26,
+      "ema50": 117.64439181749283,
+      "ema150": 109.0297479134109,
+      "momentum_63d": 0.3034026252909412,
+      "volatility_20d": 0.022627542368999064,
+      "baseline_weight_cap": 0.2,
+      "rank_score": 13.408554068453272
+    },
+    {
+      "symbol": "US.JNJ",
+      "close": 269.19,
+      "ema50": 262.6668642438454,
+      "ema150": 244.41869874800435,
+      "momentum_63d": 0.1314941482016081,
+      "volatility_20d": 0.010626708671677722,
+      "baseline_weight_cap": 0.2,
+      "rank_score": 12.37392990287444
+    }
+  ],
+  "next_open_frozen_strategy": {
+    "is_monday_rebalance": false,
+    "planned_exits": [],
+    "planned_new_buy_symbols": [],
+    "caveat": "Only signals. Exact shares require next-open price and cash; no orders submitted."
+  }
+}

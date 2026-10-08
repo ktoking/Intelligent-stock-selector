@@ -1,0 +1,255 @@
+<template>
+  <style>
+    @font-face {
+      font-family: NotoSC;
+      src: url("assets/fonts/NotoSansSC-Variable.ttf");
+    }
+    * {
+      box-sizing: border-box;
+    }
+    #cpi-root {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: NotoSC, Arial, sans-serif;
+      color: #0b0b0b;
+    }
+    .ground {
+      position: absolute;
+      inset: 0;
+      background: #ff6a00;
+    }
+    .num {
+      position: absolute;
+      right: 50px;
+      top: 35px;
+      font-size: 250px;
+      font-weight: 950;
+      opacity: 0.12;
+    }
+    .kicker {
+      position: absolute;
+      left: 64px;
+      top: 74px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+    }
+    .title {
+      position: absolute;
+      left: 60px;
+      top: 180px;
+      font-size: 118px;
+      line-height: 0.92;
+      font-weight: 950;
+      letter-spacing: -0.07em;
+    }
+    .title span {
+      display: block;
+    }
+    .switch {
+      position: absolute;
+      right: 78px;
+      top: 455px;
+      width: 270px;
+      height: 110px;
+      border: 5px solid #0b0b0b;
+      border-radius: 80px;
+    }
+    .knob {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      width: 80px;
+      height: 80px;
+      background: #0b0b0b;
+      border-radius: 50%;
+    }
+    .time {
+      position: absolute;
+      left: 64px;
+      top: 590px;
+      font-size: 34px;
+      font-weight: 850;
+    }
+    .time b {
+      font-size: 78px;
+    }
+    .pipe {
+      position: absolute;
+      left: 64px;
+      right: 64px;
+      top: 840px;
+      height: 620px;
+    }
+    .line {
+      position: absolute;
+      left: 80px;
+      right: 80px;
+      top: 270px;
+      height: 14px;
+      background: #0b0b0b;
+      transform-origin: left;
+    }
+    .node {
+      position: absolute;
+      top: 160px;
+      width: 220px;
+      height: 220px;
+      background: #0b0b0b;
+      color: #f4ede0;
+      padding: 26px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .node:nth-of-type(2) {
+      left: 0;
+    }
+    .node:nth-of-type(3) {
+      left: 245px;
+    }
+    .node:nth-of-type(4) {
+      left: 490px;
+    }
+    .node:nth-of-type(5) {
+      left: 735px;
+    }
+    .node .n {
+      font-size: 25px;
+      letter-spacing: 0.08em;
+    }
+    .node .v {
+      font-size: 45px;
+      line-height: 1;
+      font-weight: 920;
+    }
+    .pulse {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #f4ede0;
+      top: 263px;
+      left: 0;
+    }
+    .risk {
+      position: absolute;
+      left: 64px;
+      right: 64px;
+      bottom: 200px;
+      border-top: 4px solid #0b0b0b;
+      padding-top: 28px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 33px;
+      font-weight: 820;
+    }
+    .risk b {
+      font-size: 55px;
+    }
+    .foot {
+      position: absolute;
+      left: 64px;
+      right: 64px;
+      bottom: 56px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 20px;
+      letter-spacing: 0.1em;
+      font-weight: 800;
+    }
+  </style>
+  <div
+    id="cpi-root"
+    class="root"
+    data-composition-id="cpi-pipeline"
+    data-start="0"
+    data-width="1080"
+    data-height="1920"
+    data-duration="6.216"
+  >
+    <div
+      id="cpi-ground"
+      class="ground clip"
+      data-start="0"
+      data-duration="6.216"
+      data-track-index="0"
+    ></div>
+    <div class="num">03</div>
+    <div class="kicker">MACRO TRANSMISSION</div>
+    <div id="cpi-title" class="title" data-layout-allow-overlap>
+      <span>今晚</span><span>CPI 开关</span>
+    </div>
+    <div class="switch"><div id="cpi-knob" class="knob"></div></div>
+    <div class="time">北京时间 <b>20:30</b></div>
+    <div class="pipe">
+      <div id="cpi-line" class="line"></div>
+      <div class="node">
+        <span class="n">BRENT</span><span class="v">$88.91</span>
+      </div>
+      <div class="node">
+        <span class="n">INFLATION</span><span class="v">CPI</span>
+      </div>
+      <div class="node">
+        <span class="n">10Y YIELD</span><span class="v">4.68%</span>
+      </div>
+      <div class="node">
+        <span class="n">AI VALUE</span><span class="v">估值</span>
+      </div>
+      <div id="cpi-pulse" class="pulse"></div>
+    </div>
+    <div id="cpi-risk" class="risk">
+      <span>油价站稳 <b>$90</b></span
+      ><span>科技压力 ↑</span>
+    </div>
+    <div class="foot">
+      <span>方向选择点</span><span>DATA NOT RELEASED YET</span>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(
+        "#cpi-title",
+        { x: -90, opacity: 0 },
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.58,
+          ease: "expo.out",
+        },
+        0.12,
+      )
+        .fromTo(
+          "#cpi-knob",
+          { x: 0 },
+          { x: 160, duration: 0.7, ease: "back.out(1.7)" },
+          0.8,
+        )
+        .fromTo(
+          "#cpi-line",
+          { scaleX: 0 },
+          { scaleX: 1, duration: 1.15, ease: "power3.inOut" },
+          1.42,
+        )
+        .fromTo(
+          ".node",
+          { y: 80, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "circ.out" },
+          2.1,
+        )
+        .to("#cpi-pulse", { x: 900, duration: 2.15, ease: "none" }, 2.65)
+        .fromTo(
+          "#cpi-risk",
+          { y: 60, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.54, ease: "power4.out" },
+          4.95,
+        )
+        .to({}, { duration: 6.216 }, 0);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["cpi-pipeline"] = tl;
+    })();
+  </script>
+</template>

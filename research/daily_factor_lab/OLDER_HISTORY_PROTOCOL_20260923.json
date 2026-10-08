@@ -1,0 +1,77 @@
+{
+  "protocol_date": "2026-09-23",
+  "status": "fixed_before_older_history_collection",
+  "purpose": "Evaluate existing simple candidates on earlier market cycles, without further tuning on the 2024-2026 windows.",
+  "research_stage": "retrospective extension; current-watchlist selection bias remains; not certified untouched out-of-sample",
+  "source_priority": "Futunn REST read-only; no OpenD and no order endpoints",
+  "collection_start": "2019-01-01",
+  "collection_end": "2023-10-31",
+  "overlap_check": "Compare September-October 2023 adjusted OHLCV and turnover with the existing cache before accepting a splice.",
+  "existing_cache": "outputs/watchlist_daily_trend_20260923",
+  "universe": "Freeze the existing 220-symbol watchlist; retain pre-IPO missing history as unavailable, not zero. Only ordinary stocks are buy candidates.",
+  "policies": [
+    {
+      "name": "trend_heavy32",
+      "factor": "momentum_risk",
+      "trend": "slow",
+      "schedule": "twice",
+      "positions": 5,
+      "weight_cap": 0.3,
+      "annual_vol_target": 0.32,
+      "rank_buffer": 5,
+      "regime": "gate",
+      "trail": 0.15,
+      "turnover_band": 0.025,
+      "cooldown": 2
+    },
+    {
+      "name": "trend_heavy36",
+      "factor": "momentum_risk",
+      "trend": "slow",
+      "schedule": "twice",
+      "positions": 5,
+      "weight_cap": 0.3,
+      "annual_vol_target": 0.36,
+      "rank_buffer": 5,
+      "regime": "gate",
+      "trail": 0.15,
+      "turnover_band": 0.025,
+      "cooldown": 2
+    },
+    {
+      "name": "cost_weekly32",
+      "factor": "momentum_risk",
+      "trend": "slow",
+      "schedule": "weekly",
+      "positions": 5,
+      "weight_cap": 0.3,
+      "annual_vol_target": 0.32,
+      "rank_buffer": 5,
+      "regime": "gate",
+      "trail": 0.15,
+      "turnover_band": 0.025,
+      "cooldown": 2
+    }
+  ],
+  "windows": {
+    "older_full": ["2020-01-02", "2023-08-31"],
+    "year_2020": ["2020-01-02", "2020-12-31"],
+    "year_2021": ["2021-01-01", "2021-12-31"],
+    "year_2022": ["2022-01-01", "2022-12-31"],
+    "year_2023_partial": ["2023-01-01", "2023-08-31"]
+  },
+  "capital": 10000,
+  "cost_bps_each_side": [25, 50],
+  "benchmark": "QQQ, identical sessions, price-adjustment basis, initial capital and friction; terminal mark without fictitious liquidation",
+  "readiness_checks": [
+    "Actual API success and historical range coverage",
+    "Adjustment basis and overlap consistency",
+    "No removal of past valid history based on future missing bars",
+    "Fail explicitly on held-asset missing execution or valuation prices",
+    "Independent order/cash/share/NAV reconciliation",
+    "Historical-prefix invariance"
+  ],
+  "evaluation": "Report every predeclared window and cost level, including all failures. Do not select thresholds or a different policy after observing this batch.",
+  "relationship_to_prior_gates": "Earlier-history evidence supplements and does not erase the failed 2024-2026 walk-forward and cost gates.",
+  "execution_authority": "none"
+}

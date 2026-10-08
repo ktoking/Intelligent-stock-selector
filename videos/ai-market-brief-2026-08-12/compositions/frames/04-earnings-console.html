@@ -1,0 +1,347 @@
+<template>
+  <style>
+    @font-face {
+      font-family: NotoSC;
+      src: url("assets/fonts/NotoSansSC-Variable.ttf");
+    }
+    * {
+      box-sizing: border-box;
+    }
+    #earn-root {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: NotoSC, Arial, sans-serif;
+      color: #f4ede0;
+    }
+    .ground {
+      position: absolute;
+      inset: 0;
+      background: #0b0b0b;
+    }
+    .scan {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0 68px,
+        rgba(255, 106, 0, 0.09) 69px 70px
+      );
+    }
+    .head {
+      position: absolute;
+      left: 62px;
+      right: 62px;
+      top: 64px;
+      height: 86px;
+      border-bottom: 2px solid #504b48;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 21px;
+      letter-spacing: 0.13em;
+      color: #ff6a00;
+      font-weight: 820;
+    }
+    .title {
+      position: absolute;
+      left: 60px;
+      top: 190px;
+      font-size: 104px;
+      line-height: 0.94;
+      font-weight: 950;
+      letter-spacing: -0.06em;
+    }
+    .title span,
+    .title em,
+    .copy span {
+      display: block;
+    }
+    .title em {
+      font-style: normal;
+      color: #ff6a00;
+    }
+    .cards {
+      position: absolute;
+      left: 60px;
+      right: 60px;
+      top: 520px;
+      height: 900px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 3px solid #ff6a00;
+      border-bottom: 3px solid #ff6a00;
+    }
+    .card {
+      position: relative;
+      padding: 42px 34px;
+    }
+    .card + .card {
+      border-left: 2px solid #504b48;
+    }
+    .ticker {
+      font-size: 30px;
+      letter-spacing: 0.13em;
+      color: #a49c93;
+    }
+    .name {
+      font-size: 64px;
+      font-weight: 920;
+      margin-top: 18px;
+    }
+    .after {
+      position: absolute;
+      right: 30px;
+      top: 36px;
+      background: #ff6a00;
+      color: #0b0b0b;
+      font-size: 35px;
+      font-weight: 950;
+      padding: 10px 16px;
+    }
+    .metric {
+      margin-top: 78px;
+      border-top: 2px solid #504b48;
+      padding-top: 24px;
+    }
+    .metric .v {
+      font-size: 92px;
+      line-height: 1;
+      font-weight: 950;
+      color: #ff6a00;
+      letter-spacing: -0.06em;
+    }
+    .metric .l {
+      font-size: 28px;
+      margin-top: 12px;
+    }
+    .meter {
+      height: 16px;
+      background: #282726;
+      margin-top: 28px;
+    }
+    .fill {
+      height: 100%;
+      background: #ff6a00;
+      transform-origin: left;
+    }
+    .status {
+      position: absolute;
+      left: 34px;
+      right: 34px;
+      bottom: 38px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 24px;
+      font-weight: 780;
+    }
+    .dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ff6a00;
+    }
+    .verdict {
+      position: absolute;
+      left: 60px;
+      right: 60px;
+      bottom: 205px;
+      height: 230px;
+      border: 4px solid #ff6a00;
+      padding: 34px 38px;
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      align-items: center;
+    }
+    .verdict .mark {
+      font-size: 96px;
+      font-weight: 950;
+      color: #ff6a00;
+    }
+    .verdict .copy {
+      font-size: 42px;
+      line-height: 1.26;
+      font-weight: 790;
+    }
+    .verdict .copy b {
+      color: #ff6a00;
+    }
+    .foot {
+      position: absolute;
+      left: 62px;
+      right: 62px;
+      bottom: 50px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 19px;
+      letter-spacing: 0.1em;
+      color: #a49c93;
+    }
+  </style>
+  <div
+    id="earn-root"
+    class="root"
+    data-composition-id="earnings-console"
+    data-start="0"
+    data-width="1080"
+    data-height="1920"
+    data-duration="19.896"
+  >
+    <div
+      id="earn-ground"
+      class="ground clip"
+      data-start="0"
+      data-duration="19.896"
+      data-track-index="0"
+    ></div>
+    <div class="scan" data-layout-allow-overflow></div>
+    <div class="head">
+      <span>AI INFRA / EARNINGS CONTROL ROOM</span><span>AFTER HOURS</span>
+    </div>
+    <div id="earn-title" class="title" data-layout-allow-overlap>
+      <span>订单很强</span><em>门槛更高</em>
+    </div>
+    <div class="cards">
+      <div id="earn-crwv" class="card">
+        <div class="ticker">NASDAQ · CRWV</div>
+        <div class="name">CoreWeave</div>
+        <div class="after">+15%</div>
+        <div class="metric">
+          <div class="v">+112%</div>
+          <div class="l">收入同比</div>
+          <div class="meter"><div class="fill" style="width: 88%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="v">$104B</div>
+          <div class="l">收入积压</div>
+          <div class="meter"><div class="fill" style="width: 96%"></div></div>
+        </div>
+        <div class="status">
+          <span class="dot"></span><span>需求验证 / 融资成本待考</span>
+        </div>
+      </div>
+      <div id="earn-smci" class="card">
+        <div class="ticker">NASDAQ · SMCI</div>
+        <div class="name">Super Micro</div>
+        <div class="after">+7%</div>
+        <div class="metric">
+          <div class="v">17.5%</div>
+          <div class="l">毛利率</div>
+          <div class="meter"><div class="fill" style="width: 70%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="v">$72B</div>
+          <div class="l">FY27 指引上沿</div>
+          <div class="meter"><div class="fill" style="width: 82%"></div></div>
+        </div>
+        <div class="status">
+          <span class="dot"></span><span>利润改善 / 订单转化待考</span>
+        </div>
+      </div>
+    </div>
+    <div id="earn-verdict" class="verdict">
+      <div class="mark">AI</div>
+      <div class="copy">
+        <span>需求没有坏</span><span>但要看 <b>订单 × 利润 × 现金流</b></span>
+      </div>
+    </div>
+    <div class="foot">
+      <span>SEC 8-K · 11 AUG 2026</span><span>盘后报价流动性较低</span>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(
+        "#earn-title",
+        { x: -120, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.68, ease: "expo.out" },
+        0.15,
+      )
+        .fromTo(
+          "#earn-crwv",
+          { x: -130, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.7, ease: "power4.out" },
+          1.25,
+        )
+        .fromTo(
+          "#earn-smci",
+          { x: 130, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.82, ease: "circ.out" },
+          2.05,
+        )
+        .fromTo(
+          "#earn-crwv .metric",
+          { y: 55, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.52,
+            stagger: 0.18,
+            ease: "back.out(1.3)",
+          },
+          4.0,
+        )
+        .fromTo(
+          "#earn-crwv .fill",
+          { scaleX: 0 },
+          { scaleX: 1, duration: 1.4, stagger: 0.25, ease: "power3.inOut" },
+          5.1,
+        )
+        .fromTo(
+          "#earn-smci .metric",
+          { y: 55, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.55,
+            stagger: 0.2,
+            ease: "power4.out",
+          },
+          7.5,
+        )
+        .fromTo(
+          "#earn-smci .fill",
+          { scaleX: 0 },
+          { scaleX: 1, duration: 1.55, stagger: 0.28, ease: "sine.inOut" },
+          8.65,
+        )
+        .fromTo(
+          ".after",
+          { scale: 0, rotation: -12 },
+          {
+            scale: 1,
+            rotation: 0,
+            duration: 0.55,
+            stagger: 0.18,
+            ease: "back.out(2)",
+          },
+          11.0,
+        )
+        .to(
+          ".dot",
+          {
+            opacity: 0.25,
+            scale: 0.55,
+            duration: 0.55,
+            yoyo: true,
+            repeat: 5,
+            ease: "sine.inOut",
+          },
+          12.0,
+        )
+        .fromTo(
+          "#earn-verdict",
+          { clipPath: "inset(0 100% 0 0)" },
+          { clipPath: "inset(0 0% 0 0)", duration: 1.15, ease: "power3.inOut" },
+          15.3,
+        )
+        .to(".scan", { y: 70, duration: 3.8, ease: "none" }, 16.0)
+        .to({}, { duration: 19.896 }, 0);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["earnings-console"] = tl;
+    })();
+  </script>
+</template>

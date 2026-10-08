@@ -1,0 +1,58 @@
+{
+  "provider": "volcengine-doubao-tts-2.0",
+  "speaker": "zh_female_sajiaoxuemei_uranus_bigtts",
+  "voice_label": "撒娇学妹",
+  "speech_rate": 10,
+  "context": "专业财经女主播，口吻自然、清晰、连续、有判断。语速紧凑但不抢字，句间只做轻微换气，不要长停顿，不要营销腔。英文缩写逐字母清楚读出。",
+  "timeline_duration": 60,
+  "placement": "continuous",
+  "initial_padding": 0.12,
+  "inter_line_gap": 0.06,
+  "tail_padding": 0.2,
+  "scenes": [
+    {
+      "id": "scene-01",
+      "lines": [
+        {"id": "cap01", "text": "美股每日资讯播报。"},
+        {"id": "cap02", "text": "今天的矛盾是：AI基本面变强，宏观却在收紧。"}
+      ]
+    },
+    {
+      "id": "scene-02",
+      "lines": [
+        {"id": "cap03", "text": "昨夜标普跌零点三二，纳指跌零点六，"},
+        {"id": "cap04", "text": "半导体ETF却涨近一个点；"}
+      ]
+    },
+    {
+      "id": "scene-03",
+      "lines": [
+        {"id": "cap05", "text": "布伦特仍在八十八美元上方，"},
+        {"id": "cap06", "text": "今晚八点半的七月CPI才是方向开关。"}
+      ]
+    },
+    {
+      "id": "scene-04",
+      "lines": [
+        {"id": "cap07", "text": "CoreWeave营收增长一倍，积压订单约一千零四十亿美元；"},
+        {"id": "cap08", "text": "超微电脑毛利率升到十七点五，年度收入指引最高七百二十亿美元。"},
+        {"id": "cap09", "text": "两只股票盘后上涨，说明AI基建需求没坏，"},
+        {"id": "cap10", "text": "但市场开始要求订单、利润和现金流一起兑现。"}
+      ]
+    },
+    {
+      "id": "scene-05",
+      "lines": [
+        {"id": "cap11", "text": "今天不追高开，也不在CPI前抢方向。"},
+        {"id": "cap12", "text": "AMD等收复五日线，盘后强势股看能否守住VWAP；"}
+      ]
+    },
+    {
+      "id": "scene-06",
+      "lines": [
+        {"id": "cap13", "text": "如果CPI偏热、美债上行，油价又站稳九十美元，"},
+        {"id": "cap14", "text": "就继续降低科技优先级。"}
+      ]
+    }
+  ]
+}

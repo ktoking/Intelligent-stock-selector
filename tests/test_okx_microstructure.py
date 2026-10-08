@@ -10,7 +10,7 @@ from scripts.okx_shadow_labeler import (Labeler, _stats, _v5_forward_gate_checks
                                         _v5_symbol_edge_sizing_stats)
 from scripts.okx_return_shadow import score_rows
 from scripts import okx_intraday_agent
-from scripts.okx_intraday_agent import OKX
+from scripts.okx_intraday_agent import OKX, _strategy_platform_snapshot
 from scripts.okx_gap_shadow import (EXECUTION_EQUIVALENT, EXPERIMENT_ID, V5_FROZEN_AT,
                                     V5_STRICT_CONFIRM_FROZEN_AT, gap_bps, gap_context,
                                     next_evaluation_at, shadow_market_data_symbols, top_ranked,
@@ -34,6 +34,37 @@ def test_shadow_stats_excludes_non_finite_outcomes():
 
 def test_dashboard_json_finite_sanitizes_nested_non_finite_values():
     assert okx_intraday_agent._json_finite({"x": [float("inf"), 1.0]}) == {"x": [None, 1.0]}
+
+
+def test_strategy_platform_has_five_non_executable_families_when_artifacts_missing(tmp_path):
+    (tmp_path / "data").mkdir()
+
+    value = _strategy_platform_snapshot(tmp_path)
+
+    assert value["summary"]["strategy_families"] == 5
+    assert value["summary"]["registered_gap_lanes"] == 3
+    assert value["summary"]["execution_enabled"] == 0
+    assert value["summary"]["latest_strategy_id"] == "gap_v5_strict"
+
+
+def test_strategy_platform_distinguishes_trade_count_from_active_days(tmp_path):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "okx_gap_confirmation_overlay_research.json").write_text(json.dumps({
+        "effective_sessions": {"count": 99, "start": "2026-03-24", "end": "2026-08-07"},
+        "overlay": {
+            "all": {"trades": 3, "wins": 2, "win_rate_pct": 66.67, "profit_factor": 2},
+            "risk_weighted_portfolio": {"all": {"return_pct": 1.2}},
+            "trades": [{"date": "2026-08-06"}, {"date": "2026-08-06"}, {"date": "2026-08-07"}],
+        },
+    }))
+
+    value = _strategy_platform_snapshot(tmp_path)
+    strict = next(row for row in value["strategies"] if row["id"] == "gap_v5_strict")
+
+    assert value["summary"]["historical_session_count"] == 99
+    assert strict["historical"]["trades"] == 3
+    assert strict["historical"]["active_days"] == 2
 
 
 def test_micro_executor_risk_size_is_equity_and_portfolio_capped():

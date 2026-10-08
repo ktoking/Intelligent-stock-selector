@@ -1,0 +1,213 @@
+<template>
+  <style>
+    @font-face {
+      font-family: NotoSC;
+      src: url("assets/fonts/NotoSansSC-Variable.ttf");
+    }
+    * {
+      box-sizing: border-box;
+    }
+    #captions-root {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: NotoSC, Arial, sans-serif;
+    }
+    .overlay {
+      position: absolute;
+      inset: 0;
+    }
+    .slot {
+      position: absolute;
+      left: 52px;
+      right: 52px;
+      bottom: 175px;
+      min-height: 176px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .caption-inner {
+      visibility: hidden;
+      opacity: 0;
+      width: 100%;
+      min-height: 132px;
+      padding: 25px 32px 28px 42px;
+      background: rgba(11, 11, 11, 0.95);
+      border-left: 10px solid #ff6a00;
+      color: #f4ede0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 43px;
+      font-weight: 780;
+      line-height: 1.32;
+      letter-spacing: -0.022em;
+      text-align: center;
+    }
+    .caption-text {
+      display: block;
+      width: 100%;
+      writing-mode: horizontal-tb;
+      text-orientation: mixed;
+      white-space: normal;
+      word-break: normal;
+      overflow-wrap: normal;
+      line-break: strict;
+      text-wrap: balance;
+    }
+    .caption-text em {
+      font-style: normal;
+      color: #ff7b24;
+      font-weight: 930;
+    }
+  </style>
+  <div
+    id="captions-root"
+    class="root"
+    data-composition-id="daily-captions"
+    data-start="0"
+    data-width="1080"
+    data-height="1920"
+    data-duration="60"
+  >
+    <div
+      id="captions-overlay"
+      class="overlay clip"
+      data-start="0"
+      data-duration="60"
+      data-track-index="0"
+    >
+      <div class="slot">
+        <div id="cap01-inner" class="caption-inner">
+          <span class="caption-text"><em>美股每日资讯播报</em>。</span>
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap02-inner" class="caption-inner">
+          <span class="caption-text"
+            >今天的矛盾是：<em>AI基本面变强，宏观却在收紧</em>。</span
+          >
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap03-inner" class="caption-inner">
+          <span class="caption-text"
+            >昨夜标普跌零点三二，<em>纳指跌零点六</em>，</span
+          >
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap04-inner" class="caption-inner">
+          <span class="caption-text"><em>半导体ETF却涨近一个点</em>；</span>
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap05-inner" class="caption-inner">
+          <span class="caption-text">布伦特仍在<em>八十八美元上方</em>，</span>
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap06-inner" class="caption-inner">
+          <span class="caption-text"
+            >今晚八点半的七月CPI才是<em>方向开关</em>。</span
+          >
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap07-inner" class="caption-inner">
+          <span class="caption-text"
+            >CoreWeave营收增长一倍，积压订单约<em>一千零四十亿美元</em>；</span
+          >
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap08-inner" class="caption-inner">
+          <span class="caption-text"
+            >超微电脑毛利率升到十七点五，年度收入指引最高<em>七百二十亿美元</em>。</span
+          >
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap09-inner" class="caption-inner">
+          <span class="caption-text"
+            >两只股票盘后上涨，说明<em>AI基建需求没坏</em>，</span
+          >
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap10-inner" class="caption-inner">
+          <span class="caption-text"
+            >市场开始要求<em>订单、利润和现金流</em>一起兑现。</span
+          >
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap11-inner" class="caption-inner">
+          <span class="caption-text"
+            >今天不追高开，也不在<em>CPI前抢方向</em>。</span
+          >
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap12-inner" class="caption-inner">
+          <span class="caption-text"
+            >AMD等收复五日线，盘后强势股看能否<em>守住VWAP</em>；</span
+          >
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap13-inner" class="caption-inner">
+          <span class="caption-text"
+            >如果CPI偏热、美债上行，油价又<em>站稳九十美元</em>，</span
+          >
+        </div>
+      </div>
+      <div class="slot">
+        <div id="cap14-inner" class="caption-inner">
+          <span class="caption-text">就继续<em>降低科技优先级</em>。</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused: true }),
+        g = [
+          ["#cap01-inner", 0.12, 2.184],
+          ["#cap02-inner", 2.244, 7.044],
+          ["#cap03-inner", 7.104, 11.136],
+          ["#cap04-inner", 11.196, 14.34],
+          ["#cap05-inner", 14.4, 16.992],
+          ["#cap06-inner", 17.052, 20.556],
+          ["#cap07-inner", 20.616, 25.608],
+          ["#cap08-inner", 25.668, 31.884],
+          ["#cap09-inner", 31.944, 35.976],
+          ["#cap10-inner", 36.036, 40.452],
+          ["#cap11-inner", 40.512, 44.184],
+          ["#cap12-inner", 44.244, 49.764],
+          ["#cap13-inner", 49.824, 54.6],
+          ["#cap14-inner", 54.66, 57.252],
+        ];
+      g.forEach(([s, a, b]) => {
+        tl.set(s, { visibility: "visible" }, a)
+          .fromTo(
+            s,
+            { opacity: 0, y: 28, scale: 0.985 },
+            { opacity: 1, y: 0, scale: 1, duration: 0.15, ease: "power3.out" },
+            a + 0.01,
+          )
+          .to(
+            s,
+            { opacity: 0, y: -12, duration: 0.09, ease: "power2.in" },
+            Math.max(a + 0.18, b - 0.1),
+          )
+          .set(s, { opacity: 0, visibility: "hidden" }, b);
+      });
+      tl.to({}, { duration: 60 }, 0);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["daily-captions"] = tl;
+    })();
+  </script>
+</template>

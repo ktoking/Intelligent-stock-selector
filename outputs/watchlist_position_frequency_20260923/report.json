@@ -1,0 +1,355 @@
+{
+  "status": "retrospective parameter ablation; not AI replay, independent holdout, or live trading",
+  "source": "cached Futunn REST autype=1 adjusted daily OHLCV; no dividends",
+  "universe": "current US watchlist replayed historically; survivorship/selection bias",
+  "data_symbol_count": 220,
+  "ordinary_stock_count": 155,
+  "decision_and_fill": "previous completed daily close -> next adjusted open",
+  "capital": "USD 10000; cash-only, no margin or leverage",
+  "variants": {
+    "base_weekly": {
+      "weight_cap": 0.2,
+      "vol_target": 0.01,
+      "rebalance_weekdays": [
+        0
+      ]
+    },
+    "heavy_weekly": {
+      "weight_cap": 0.3,
+      "vol_target": 0.015,
+      "rebalance_weekdays": [
+        0
+      ]
+    },
+    "base_twice_weekly": {
+      "weight_cap": 0.2,
+      "vol_target": 0.01,
+      "rebalance_weekdays": [
+        0,
+        3
+      ]
+    },
+    "heavy_twice_weekly": {
+      "weight_cap": 0.3,
+      "vol_target": 0.015,
+      "rebalance_weekdays": [
+        0,
+        3
+      ]
+    },
+    "base_daily": {
+      "weight_cap": 0.2,
+      "vol_target": 0.01,
+      "rebalance_weekdays": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "heavy_daily": {
+      "weight_cap": 0.3,
+      "vol_target": 0.015,
+      "rebalance_weekdays": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  },
+  "windows": {
+    "prior_2025": {
+      "dates": [
+        "2025-03-24",
+        "2025-09-23"
+      ],
+      "trading_days": 127,
+      "costs": {
+        "10": {
+          "base_weekly": {
+            "return_pct": 44.66559574586031,
+            "max_drawdown_pct": 7.319053701613065,
+            "completed_trades": 39,
+            "orders": 83,
+            "holding_count_end": 5,
+            "win_rate": 0.5897435897435898,
+            "trading_days": 127,
+            "avg_invested_pct": 71.51510139077672,
+            "order_notional_to_start_capital": 16.997297113693442
+          },
+          "heavy_weekly": {
+            "return_pct": 50.583431573752335,
+            "max_drawdown_pct": 8.203546790123406,
+            "completed_trades": 33,
+            "orders": 71,
+            "holding_count_end": 5,
+            "win_rate": 0.6060606060606061,
+            "trading_days": 127,
+            "avg_invested_pct": 75.13273457204221,
+            "order_notional_to_start_capital": 17.121646473832993
+          },
+          "base_twice_weekly": {
+            "return_pct": 43.67814424338361,
+            "max_drawdown_pct": 9.396640644629628,
+            "completed_trades": 59,
+            "orders": 123,
+            "holding_count_end": 5,
+            "win_rate": 0.576271186440678,
+            "trading_days": 127,
+            "avg_invested_pct": 72.16821603148766,
+            "order_notional_to_start_capital": 24.75483072857368
+          },
+          "heavy_twice_weekly": {
+            "return_pct": 51.21611413233267,
+            "max_drawdown_pct": 12.266722605166258,
+            "completed_trades": 53,
+            "orders": 110,
+            "holding_count_end": 4,
+            "win_rate": 0.5849056603773585,
+            "trading_days": 127,
+            "avg_invested_pct": 74.38871529244975,
+            "order_notional_to_start_capital": 23.456338563866044
+          },
+          "base_daily": {
+            "return_pct": 50.786799604054146,
+            "max_drawdown_pct": 7.607070962466834,
+            "completed_trades": 86,
+            "orders": 177,
+            "holding_count_end": 5,
+            "win_rate": 0.5348837209302325,
+            "trading_days": 127,
+            "avg_invested_pct": 72.83372082478631,
+            "order_notional_to_start_capital": 36.34240594159975
+          },
+          "heavy_daily": {
+            "return_pct": 45.91116001742537,
+            "max_drawdown_pct": 8.516891766204582,
+            "completed_trades": 75,
+            "orders": 155,
+            "holding_count_end": 5,
+            "win_rate": 0.5466666666666666,
+            "trading_days": 127,
+            "avg_invested_pct": 74.60154456151137,
+            "order_notional_to_start_capital": 34.399738075001885
+          }
+        },
+        "25": {
+          "base_weekly": {
+            "return_pct": 41.49900016431734,
+            "max_drawdown_pct": 7.494017165563149,
+            "completed_trades": 39,
+            "orders": 83,
+            "holding_count_end": 5,
+            "win_rate": 0.5897435897435898,
+            "trading_days": 127,
+            "avg_invested_pct": 71.67118322721383,
+            "order_notional_to_start_capital": 16.824572349323045
+          },
+          "heavy_weekly": {
+            "return_pct": 48.3537965156756,
+            "max_drawdown_pct": 8.756846859470935,
+            "completed_trades": 34,
+            "orders": 73,
+            "holding_count_end": 5,
+            "win_rate": 0.6176470588235294,
+            "trading_days": 127,
+            "avg_invested_pct": 74.91378956217704,
+            "order_notional_to_start_capital": 16.851604182285133
+          },
+          "base_twice_weekly": {
+            "return_pct": 39.093904433344726,
+            "max_drawdown_pct": 9.430885676083578,
+            "completed_trades": 59,
+            "orders": 123,
+            "holding_count_end": 5,
+            "win_rate": 0.5254237288135594,
+            "trading_days": 127,
+            "avg_invested_pct": 72.16944665209287,
+            "order_notional_to_start_capital": 24.333098157313543
+          },
+          "heavy_twice_weekly": {
+            "return_pct": 46.32752639348192,
+            "max_drawdown_pct": 12.307694045499918,
+            "completed_trades": 54,
+            "orders": 112,
+            "holding_count_end": 4,
+            "win_rate": 0.5370370370370371,
+            "trading_days": 127,
+            "avg_invested_pct": 74.2987885183094,
+            "order_notional_to_start_capital": 22.83036566629508
+          },
+          "base_daily": {
+            "return_pct": 43.13573926949048,
+            "max_drawdown_pct": 7.808011309686725,
+            "completed_trades": 86,
+            "orders": 177,
+            "holding_count_end": 5,
+            "win_rate": 0.5116279069767442,
+            "trading_days": 127,
+            "avg_invested_pct": 73.38549758176086,
+            "order_notional_to_start_capital": 35.62793872815696
+          },
+          "heavy_daily": {
+            "return_pct": 35.345792874805085,
+            "max_drawdown_pct": 10.060248997030541,
+            "completed_trades": 73,
+            "orders": 151,
+            "holding_count_end": 5,
+            "win_rate": 0.5616438356164384,
+            "trading_days": 127,
+            "avg_invested_pct": 75.08560572625507,
+            "order_notional_to_start_capital": 30.45750505117322
+          }
+        }
+      }
+    },
+    "recent_2026": {
+      "dates": [
+        "2026-03-23",
+        "2026-09-22"
+      ],
+      "trading_days": 127,
+      "costs": {
+        "10": {
+          "base_weekly": {
+            "return_pct": 33.43763525887597,
+            "max_drawdown_pct": 14.13033942055193,
+            "completed_trades": 43,
+            "orders": 91,
+            "holding_count_end": 5,
+            "win_rate": 0.4883720930232558,
+            "trading_days": 127,
+            "avg_invested_pct": 72.24973740321438,
+            "order_notional_to_start_capital": 18.598801036294027
+          },
+          "heavy_weekly": {
+            "return_pct": 37.26949561795991,
+            "max_drawdown_pct": 14.445955329936256,
+            "completed_trades": 41,
+            "orders": 87,
+            "holding_count_end": 5,
+            "win_rate": 0.4878048780487805,
+            "trading_days": 127,
+            "avg_invested_pct": 82.3734632239662,
+            "order_notional_to_start_capital": 21.828358096064925
+          },
+          "base_twice_weekly": {
+            "return_pct": 46.24900299746475,
+            "max_drawdown_pct": 14.660389640744087,
+            "completed_trades": 63,
+            "orders": 131,
+            "holding_count_end": 5,
+            "win_rate": 0.5396825396825397,
+            "trading_days": 127,
+            "avg_invested_pct": 76.65064099947811,
+            "order_notional_to_start_capital": 29.233284420252115
+          },
+          "heavy_twice_weekly": {
+            "return_pct": 61.85374744128864,
+            "max_drawdown_pct": 13.975113226999614,
+            "completed_trades": 56,
+            "orders": 117,
+            "holding_count_end": 5,
+            "win_rate": 0.5535714285714286,
+            "trading_days": 127,
+            "avg_invested_pct": 85.85131478752625,
+            "order_notional_to_start_capital": 33.37729955158422
+          },
+          "base_daily": {
+            "return_pct": 24.677170560525873,
+            "max_drawdown_pct": 17.787843230303956,
+            "completed_trades": 92,
+            "orders": 189,
+            "holding_count_end": 5,
+            "win_rate": 0.44565217391304346,
+            "trading_days": 127,
+            "avg_invested_pct": 76.95519365462263,
+            "order_notional_to_start_capital": 39.489738485429534
+          },
+          "heavy_daily": {
+            "return_pct": 29.751358293204987,
+            "max_drawdown_pct": 20.931252657333044,
+            "completed_trades": 88,
+            "orders": 180,
+            "holding_count_end": 4,
+            "win_rate": 0.45454545454545453,
+            "trading_days": 127,
+            "avg_invested_pct": 86.12703518332884,
+            "order_notional_to_start_capital": 46.20439499072557
+          }
+        },
+        "25": {
+          "base_weekly": {
+            "return_pct": 30.52116145148609,
+            "max_drawdown_pct": 14.625087866632558,
+            "completed_trades": 43,
+            "orders": 91,
+            "holding_count_end": 5,
+            "win_rate": 0.4883720930232558,
+            "trading_days": 127,
+            "avg_invested_pct": 72.35891043750566,
+            "order_notional_to_start_capital": 18.462059396577708
+          },
+          "heavy_weekly": {
+            "return_pct": 32.82452279007937,
+            "max_drawdown_pct": 14.882786877074594,
+            "completed_trades": 41,
+            "orders": 86,
+            "holding_count_end": 4,
+            "win_rate": 0.4878048780487805,
+            "trading_days": 127,
+            "avg_invested_pct": 82.32172205601519,
+            "order_notional_to_start_capital": 21.45087699627938
+          },
+          "base_twice_weekly": {
+            "return_pct": 39.46172170482498,
+            "max_drawdown_pct": 14.591622140509408,
+            "completed_trades": 63,
+            "orders": 131,
+            "holding_count_end": 5,
+            "win_rate": 0.5238095238095238,
+            "trading_days": 127,
+            "avg_invested_pct": 75.6880967051773,
+            "order_notional_to_start_capital": 27.842055148724445
+          },
+          "heavy_twice_weekly": {
+            "return_pct": 55.914008192113165,
+            "max_drawdown_pct": 15.330246166017481,
+            "completed_trades": 57,
+            "orders": 119,
+            "holding_count_end": 5,
+            "win_rate": 0.5263157894736842,
+            "trading_days": 127,
+            "avg_invested_pct": 85.93725891244104,
+            "order_notional_to_start_capital": 32.72872349959125
+          },
+          "base_daily": {
+            "return_pct": 18.797513538420763,
+            "max_drawdown_pct": 19.761330036934808,
+            "completed_trades": 92,
+            "orders": 189,
+            "holding_count_end": 5,
+            "win_rate": 0.40217391304347827,
+            "trading_days": 127,
+            "avg_invested_pct": 77.63530758464219,
+            "order_notional_to_start_capital": 38.794718359097736
+          },
+          "heavy_daily": {
+            "return_pct": 19.4074271102763,
+            "max_drawdown_pct": 23.546031172678028,
+            "completed_trades": 90,
+            "orders": 185,
+            "holding_count_end": 5,
+            "win_rate": 0.4111111111111111,
+            "trading_days": 127,
+            "avg_invested_pct": 85.71847990702372,
+            "order_notional_to_start_capital": 42.85572945612068
+          }
+        }
+      }
+    }
+  }
+}

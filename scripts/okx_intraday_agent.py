@@ -875,6 +875,171 @@ def _json_finite(value: Any) -> Any:
     return value
 
 
+def _strategy_platform_snapshot(root: Path = ROOT) -> dict[str, Any]:
+    """Return compact strategy analytics without exposing bulky research artifacts."""
+    data_dir = root / "data"
+
+    def load(name: str) -> dict[str, Any]:
+        try:
+            value = json.loads((data_dir / name).read_text())
+            return value if isinstance(value, dict) else {}
+        except (OSError, json.JSONDecodeError):
+            return {}
+
+    def metric(value: dict[str, Any] | None, risk: dict[str, Any] | None = None) -> dict[str, Any]:
+        value, risk = value or {}, risk or {}
+        return {
+            "trades": int(value.get("trades") or value.get("samples") or 0),
+            "wins": int(value.get("wins") or 0),
+            "win_rate_pct": float(value.get("win_rate_pct", value.get("win_rate", 0)) or 0),
+            "profit_factor": value.get("profit_factor"),
+            "expectancy": float(value.get("expectancy_pct_per_trade", value.get("expectancy_r", 0)) or 0),
+            "return_pct": risk.get("return_pct"),
+            "net_pnl": risk.get("net_pnl"),
+            "max_drawdown_pct": risk.get("max_drawdown_pct", value.get("max_drawdown_pct_points")),
+            "trading_days": int(value.get("trading_days") or 0),
+        }
+
+    v5 = load("okx_gap_strategy_v5_backtest.json")
+    strict = load("okx_gap_confirmation_overlay_research.json")
+    weekly = load("okx_strategy_weekly_latest.json")
+    shadow = load("okx_shadow_learning.json")
+    gap = load("okx_gap_shadow_state.json")
+    micro = load("okx_microstructure_model_state.json")
+    bias = load("okx_research_bias_audit.json")
+    stop_trigger = load("okx_gap_stop_trigger_research.json")
+    mark_parity = load("okx_gap_mark_stop_parity.json")
+
+    v5_metrics = (v5.get("metrics") or {}).get("all") or {}
+    v5_risk = (v5.get("metrics") or {}).get("risk_weighted_portfolio") or {}
+    strict_overlay = strict.get("overlay") or {}
+    strict_history = strict_overlay.get("all") or {}
+    strict_risk = (strict_overlay.get("risk_weighted_portfolio") or {}).get("all") or {}
+    shadow_gap = shadow.get("gap_shadow_diagnostics") or {}
+    legacy_forward = next(
+        (value for key, value in shadow_gap.items() if key.startswith("GAP_FADE_DIAGNOSTIC_PASS:")), {}
+    )
+    weekly_v5 = weekly.get("v5") or {}
+    weekly_strict = weekly.get("strict_mark_price") or {}
+    v5_historical = metric(v5_metrics, v5_risk)
+    v5_historical["active_days"] = len({
+        str(trade.get("date")) for trade in v5.get("trades") or [] if trade.get("date")
+    })
+    strict_historical = metric(strict_history, strict_risk)
+    strict_historical["active_days"] = len({
+        str(trade.get("date")) for trade in strict_overlay.get("trades") or [] if trade.get("date")
+    })
+    strategies = [
+        {
+            "id": "legacy_gap_150", "name": "Relative Gap 150", "version": "Legacy V3",
+            "description": "相对开盘跳空回补，固定持有 150 分钟。",
+            "mode": "optional_demo", "status": "legacy", "execution_enabled": False,
+            "historical": metric(None), "forward": metric(legacy_forward), "weekly": metric(None),
+        },
+        {
+            "id": "gap_v5", "name": "Adaptive Gap Fade", "version": "V5",
+            "description": "按过去 20 个交易日分方向选择 30/60/90 分钟持有期。",
+            "mode": "shadow_only", "status": "shadow", "execution_enabled": False,
+            "historical": v5_historical,
+            "forward": metric(shadow.get("v5_forward") or {}),
+            "weekly": metric(weekly_v5.get("metrics") or {}, weekly_v5.get("risk_weighted") or {}),
+        },
+        {
+            "id": "gap_v5_strict", "name": "Strict First-5", "version": "V5.1",
+            "description": "在 V5 Top 候选上要求首个 5 分钟反转，不补位。",
+            "mode": "shadow_only", "status": "latest", "execution_enabled": False,
+            "historical": strict_historical,
+            "forward": metric(shadow.get("v5_strict_confirm_forward") or {}),
+            "weekly": metric(
+                weekly_strict.get("metrics") or {}, weekly_strict.get("risk_weighted") or {}
+            ),
+        },
+        {
+            "id": "return_model", "name": "Rolling Return", "version": "R1",
+            "description": "滚动收益预测与盘口过滤的独立影子模型。",
+            "mode": "shadow_only", "status": "research", "execution_enabled": False,
+            "historical": metric(None), "forward": metric(shadow.get("return_model") or {}),
+            "weekly": metric(None),
+        },
+        {
+            "id": "micro_barrier", "name": "Micro Barrier", "version": "M13",
+            "description": "基于一分钟盘口与障碍标签的执行等价模型。",
+            "mode": "research", "status": "rejected", "execution_enabled": False,
+            "historical": metric(None), "forward": metric(micro.get("forward") or {}),
+            "weekly": metric(None),
+        },
+    ]
+
+    selection = bias.get("selection_adjustment") or {}
+    dsr = selection.get("deflated_sharpe") or {}
+    pbo = bias.get("cscv_pbo") or {}
+    stop_diagnostics = stop_trigger.get("diagnostics") or {}
+    mark_metrics = (mark_parity.get("mark_price_stop_diagnostic") or {}).get("all") or {}
+    experiments = [
+        {
+            "name": "Mark-price 止损对齐", "decision": "保留为研究基线",
+            "result": f"PF {mark_metrics.get('profit_factor', '—')} · 仅执行口径修正",
+            "passed": False,
+        },
+        {
+            "name": "5 分钟收盘确认止损", "decision": "不晋级",
+            "result": f"PF {((stop_diagnostics.get('five_minute_close_confirmed') or {}).get('all') or {}).get('profit_factor', '—')}",
+            "passed": False,
+        },
+        {
+            "name": "Strict First-5 Overlay", "decision": "继续前瞻观察",
+            "result": f"历史 PF {strict_history.get('profit_factor', '—')} · 本周 PF {(weekly_strict.get('metrics') or {}).get('profit_factor', '—')}",
+            "passed": False,
+        },
+        {
+            "name": "Live-flow / No-backfill", "decision": "下一候选",
+            "result": "等待完整 books5、主动成交方向与 $1,500 冲击样本",
+            "passed": False,
+        },
+    ]
+    curve = ((strict_overlay.get("risk_weighted_portfolio") or {}).get("all") or {}).get("daily") or []
+    return {
+        "generated_at": datetime.now(UTC).isoformat(),
+        "summary": {
+            "strategy_families": len(strategies), "registered_gap_lanes": 3,
+            "execution_enabled": sum(bool(item["execution_enabled"]) for item in strategies),
+            "latest_strategy_id": "gap_v5_strict",
+            "historical_session_count": int(
+                (strict.get("effective_sessions") or v5.get("effective_sessions") or {}).get("count") or 0
+            ),
+        },
+        "historical_period": strict.get("effective_sessions") or v5.get("effective_sessions") or {},
+        "weekly": weekly,
+        "strategies": strategies,
+        "equity_curve": curve,
+        "optimization": {
+            "historical_trial_lower_bound": int(
+                (bias.get("historical_trial_governance") or {}).get("declared_historical_trial_lower_bound") or 0
+            ),
+            "dsr_probability": dsr.get("deflated_sharpe_probability"),
+            "pbo_probability": pbo.get("pbo_probability"),
+            "candidate_count": pbo.get("candidate_count"),
+            "experiments": experiments,
+            "next_candidate": {
+                "name": "V5 strict-first5 + live-flow/no-backfill",
+                "requirements": [
+                    "完整且新鲜的 WebSocket 盘口与主动成交方向",
+                    "点差 ≤ 5bp，固定 $1,500 五档冲击 ≤ 5bp",
+                    "至少 30 笔候选、20 个独立交易日，多空各至少 10 笔",
+                    "25bp 成本下 PF ≥ 1.2，收益为正且回撤不高于配对基线",
+                ],
+                "execution_ready": False,
+            },
+            "promotion_blockers": list(strict.get("promotion_blockers") or []),
+        },
+        "runtime": {
+            "gap_lanes": gap.get("strategy_lanes") or {},
+            "next_evaluation_at": gap.get("next_evaluation_at"),
+            "promotion_passed": False,
+        },
+    }
+
+
 def dashboard_snapshot() -> dict[str, Any]:
     """Current dashboard data. Credentials stay local; no secret is returned."""
     cfg, client, state = settings(), None, _read_state()
@@ -1008,6 +1173,7 @@ def dashboard_snapshot() -> dict[str, Any]:
             research["shadow_learning"].get("passed")
             and research["shadow_learning"].get("execution_ready")
         )
+        research["strategy_platform"] = _strategy_platform_snapshot()
         for name, path in (
             ("90日 ML/横截面", ROOT / "data" / "okx_walkforward_90d.json"),
             ("90日 ORB", ROOT / "data" / "okx_orb_walkforward.json"),

@@ -1,0 +1,74 @@
+{
+  "status": "retrospective ablation; not a historical AI replay or independent holdout",
+  "period": [
+    "2026-03-23",
+    "2026-09-22"
+  ],
+  "source": "cached Futunn REST autype=1 daily OHLCV; dividends excluded",
+  "universe_source": "current US watchlist viewed retrospectively; survivorship bias",
+  "ordinary_stock_count": 155,
+  "decision_timing": "prior completed daily close; next adjusted open fill",
+  "review_rule": "QQQ prior close below EMA100: flatten existing stocks at next open; keep baseline Monday re-entry",
+  "benchmark": {
+    "US.QQQ": {
+      "return_pct": 25.218199832631715,
+      "max_drawdown_pct": 10.71199518712983,
+      "shares": 16
+    },
+    "US.SPY": {
+      "return_pct": 17.695734564066456,
+      "max_drawdown_pct": 4.428674677330591,
+      "shares": 15
+    }
+  },
+  "costs": {
+    "10": {
+      "baseline": {
+        "return_pct": 33.43763525887597,
+        "max_drawdown_pct": 14.13033942055193,
+        "completed_trades": 43,
+        "orders": 91,
+        "holding_count_end": 5,
+        "win_rate": 0.4883720930232558,
+        "trading_days": 127,
+        "market_off_days": 0
+      },
+      "daily_review_proxy": {
+        "return_pct": 26.71862891086405,
+        "max_drawdown_pct": 14.39796865187829,
+        "completed_trades": 47,
+        "orders": 99,
+        "holding_count_end": 5,
+        "win_rate": 0.46808510638297873,
+        "trading_days": 127,
+        "market_off_days": 15
+      },
+      "return_delta_points": -6.71900634801192,
+      "drawdown_delta_points": 0.2676292313263602
+    },
+    "25": {
+      "baseline": {
+        "return_pct": 30.52116145148609,
+        "max_drawdown_pct": 14.625087866632558,
+        "completed_trades": 43,
+        "orders": 91,
+        "holding_count_end": 5,
+        "win_rate": 0.4883720930232558,
+        "trading_days": 127,
+        "market_off_days": 0
+      },
+      "daily_review_proxy": {
+        "return_pct": 23.390749469336303,
+        "max_drawdown_pct": 15.727708351606328,
+        "completed_trades": 47,
+        "orders": 99,
+        "holding_count_end": 5,
+        "win_rate": 0.46808510638297873,
+        "trading_days": 127,
+        "market_off_days": 15
+      },
+      "return_delta_points": -7.130411982149788,
+      "drawdown_delta_points": 1.1026204849737695
+    }
+  }
+}

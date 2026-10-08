@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous"></script>
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box}
+      html,body{width:1080px;height:1920px;overflow:hidden;background:#111}
+      #root{position:relative;width:1080px;height:1920px;overflow:hidden;background:#111}
+      .scene{position:absolute;inset:0;width:100%;height:100%}
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="60" data-width="1080" data-height="1920">
+      <div id="el-01-hook" class="scene" data-layout-allow-overlap data-composition-id="01-hook" data-composition-src="compositions/frames/01-hook.html" data-start="0" data-duration="6.24" data-track-index="0"></div>
+      <div id="el-03-cpi-chain" class="scene" data-layout-allow-overlap data-composition-id="03-cpi-chain" data-composition-src="compositions/frames/03-cpi-chain.html" data-start="5.64" data-duration="13.224" data-track-index="1"></div>
+      <div id="el-02-drivers" class="scene" data-layout-allow-overlap data-composition-id="02-drivers" data-composition-src="compositions/frames/02-drivers.html" data-start="18.264" data-duration="18" data-track-index="0"></div>
+      <div id="el-05-stocks" class="scene" data-layout-allow-overlap data-composition-id="05-stocks" data-composition-src="compositions/frames/05-stocks.html" data-start="35.664" data-duration="4.332" data-track-index="1"></div>
+      <div id="el-04-ai-chain" class="scene" data-layout-allow-overlap data-composition-id="04-ai-chain" data-composition-src="compositions/frames/04-ai-chain.html" data-start="39.396" data-duration="11.436" data-track-index="0"></div>
+      <div id="el-06-close" class="scene" data-layout-allow-overlap data-composition-id="06-close" data-composition-src="compositions/frames/06-close.html" data-start="50.232" data-duration="9.768" data-track-index="1"></div>
+      <audio id="voiceover" class="clip" src="assets/audio/voiceover.wav" data-start="0" data-duration="60" data-track-index="8" data-volume="1" preload="auto"></audio>
+      <div id="el-captions-v3" class="scene" data-composition-id="captions-v3" data-composition-src="compositions/captions-v3.html" data-start="0" data-duration="60" data-track-index="9"></div>
+    </div>
+
+    <script>
+      window.__timelines=window.__timelines||{};
+      const tl=gsap.timeline({paused:true});
+      tl.to("#el-01-hook",{filter:"blur(10px)",scale:1.03,opacity:0,duration:.6,ease:"power2.inOut"},5.64)
+        .fromTo("#el-03-cpi-chain",{filter:"blur(10px)",scale:.97,opacity:0},{filter:"blur(0px)",scale:1,opacity:1,duration:.6,ease:"power2.inOut"},5.64)
+        .to("#el-03-cpi-chain",{opacity:0,duration:.6,ease:"power2.inOut"},18.264)
+        .fromTo("#el-02-drivers",{opacity:0},{opacity:1,duration:.6,ease:"power2.inOut"},18.264)
+        .to("#el-02-drivers",{scale:1.18,opacity:0,filter:"blur(8px)",duration:.6,ease:"power3.in"},35.664)
+        .fromTo("#el-05-stocks",{scale:.82,opacity:0,filter:"blur(8px)"},{scale:1,opacity:1,filter:"blur(0px)",duration:.6,ease:"power3.out"},35.664)
+        .to("#el-05-stocks",{opacity:0,duration:.6,ease:"power2.inOut"},39.396)
+        .fromTo("#el-04-ai-chain",{opacity:0},{opacity:1,duration:.6,ease:"power2.inOut"},39.396)
+        .to("#el-04-ai-chain",{filter:"blur(10px)",scale:1.03,opacity:0,duration:.6,ease:"power2.inOut"},50.232)
+        .fromTo("#el-06-close",{filter:"blur(10px)",scale:.97,opacity:0},{filter:"blur(0px)",scale:1,opacity:1,duration:.6,ease:"power2.inOut"},50.232);
+
+      tl.to({},{duration:60},0);
+      window.__timelines["main"]=tl;
+    </script>
+  </body>
+</html>

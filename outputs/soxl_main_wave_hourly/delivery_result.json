@@ -1,0 +1,166 @@
+{
+  "status": "exploratory_offline_proxy_only",
+  "config": {
+    "regime": "strict",
+    "entry": "trend",
+    "position": 0.8,
+    "trail_pct": 0.12,
+    "stop_pct": 0.08,
+    "qqq_fast": 20,
+    "qqq_slow": 60,
+    "soxl_slope_days": 5,
+    "cooldown_sessions": 7,
+    "max_extension": 0.25,
+    "cost_bps": 10.0
+  },
+  "data": {
+    "source": "Yahoo cached adjusted bars",
+    "hourly_start": "2024-09-25 09:30:00-04:00",
+    "hourly_end": "2026-09-18 15:30:00-04:00",
+    "daily_end": "2026-09-18 00:00:00",
+    "recent_5m_start": "2026-07-27 09:30:00-04:00",
+    "recent_5m_end": "2026-09-18 15:55:00-04:00"
+  },
+  "windows": {
+    "prior_year": {
+      "return_pct": 8.079,
+      "max_drawdown_pct": 22.056,
+      "trades": 4,
+      "win_rate_pct": 50.0,
+      "profit_factor": 1.522,
+      "holding_bars": 302
+    },
+    "recent_year": {
+      "return_pct": 42.742,
+      "max_drawdown_pct": 25.676,
+      "trades": 11,
+      "win_rate_pct": 54.55,
+      "profit_factor": 1.946,
+      "holding_bars": 383
+    },
+    "user_up": {
+      "return_pct": 49.73,
+      "max_drawdown_pct": 16.978,
+      "trades": 6,
+      "win_rate_pct": 66.67,
+      "profit_factor": 3.719,
+      "holding_bars": 159
+    },
+    "user_down": {
+      "return_pct": -8.575,
+      "max_drawdown_pct": 9.573,
+      "trades": 1,
+      "win_rate_pct": 0.0,
+      "profit_factor": 0.0,
+      "holding_bars": 4
+    },
+    "full": {
+      "return_pct": 58.162,
+      "max_drawdown_pct": 25.877,
+      "trades": 14,
+      "win_rate_pct": 50.0,
+      "profit_factor": 1.887,
+      "holding_bars": 686
+    }
+  },
+  "cost_stress_bps_per_side": {
+    "20.0": {
+      "prior_year": {
+        "return_pct": 7.387,
+        "max_drawdown_pct": 22.425,
+        "trades": 4,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.469,
+        "holding_bars": 302
+      },
+      "recent_year": {
+        "return_pct": 40.237,
+        "max_drawdown_pct": 26.145,
+        "trades": 11,
+        "win_rate_pct": 54.55,
+        "profit_factor": 1.882,
+        "holding_bars": 383
+      },
+      "user_up": {
+        "return_pct": 48.28,
+        "max_drawdown_pct": 17.178,
+        "trades": 6,
+        "win_rate_pct": 50.0,
+        "profit_factor": 3.591,
+        "holding_bars": 159
+      },
+      "user_down": {
+        "return_pct": -8.718,
+        "max_drawdown_pct": 9.642,
+        "trades": 1,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 4
+      },
+      "full": {
+        "return_pct": 54.639,
+        "max_drawdown_pct": 26.346,
+        "trades": 14,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.827,
+        "holding_bars": 686
+      }
+    },
+    "40.0": {
+      "prior_year": {
+        "return_pct": 6.018,
+        "max_drawdown_pct": 23.157,
+        "trades": 4,
+        "win_rate_pct": 50.0,
+        "profit_factor": 1.369,
+        "holding_bars": 302
+      },
+      "recent_year": {
+        "return_pct": 35.361,
+        "max_drawdown_pct": 27.074,
+        "trades": 11,
+        "win_rate_pct": 45.45,
+        "profit_factor": 1.759,
+        "holding_bars": 383
+      },
+      "user_up": {
+        "return_pct": 45.424,
+        "max_drawdown_pct": 17.739,
+        "trades": 6,
+        "win_rate_pct": 33.33,
+        "profit_factor": 3.292,
+        "holding_bars": 159
+      },
+      "user_down": {
+        "return_pct": -9.003,
+        "max_drawdown_pct": 9.779,
+        "trades": 1,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "holding_bars": 4
+      },
+      "full": {
+        "return_pct": 47.829,
+        "max_drawdown_pct": 27.275,
+        "trades": 14,
+        "win_rate_pct": 42.86,
+        "profit_factor": 1.711,
+        "holding_bars": 686
+      }
+    }
+  },
+  "recent_5m": {
+    "return_pct": 0.0,
+    "max_drawdown_pct": 0.0,
+    "trades": 0,
+    "win_rate_pct": null,
+    "profit_factor": null,
+    "holding_bars": 0
+  },
+  "limitations": [
+    "Parameters were inspected across all reported windows; none is a clean untouched out-of-sample result.",
+    "Hourly fills are a proxy for the 5-minute Futu trigger and 60-minute signal.",
+    "The down-window result is negative and the 5-minute check has no trades.",
+    "Native Futu import and Futu backtest were not run; user requested no desktop operation or OpenD."
+  ]
+}

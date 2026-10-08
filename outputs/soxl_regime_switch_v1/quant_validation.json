@@ -1,0 +1,29 @@
+{
+  "path": "outputs/soxl_regime_switch_v1/SOXL_REGIME_SWITCH_V1_RESEARCH_CANDIDATE.quant",
+  "sha256": "123be10fd24f7b2393651542db7be581960655f62f1aa2280989d0f7a822a6a7",
+  "size": 12839,
+  "nodes": 2,
+  "edges": 1,
+  "template_sha256": "2aae69ace1104b774c9cbf4de16d72714783e9b785e13bf0bde2157856fc8229",
+  "checks": {
+    "wire_parse_to_eof": true,
+    "strategy_name": "SOXL_REGIME_SWITCH_V1_RESEARCH_CANDIDATE",
+    "strategy_type_canvas": true,
+    "start_node_exists": true,
+    "node_ids_unique": true,
+    "edge_ids_unique": true,
+    "dangling_edges": [],
+    "has_buy": true,
+    "has_sell": true,
+    "completed_5m_select_2": true,
+    "rsi14_implemented": true,
+    "reset_includes_0930": true,
+    "entry_includes_0945": true,
+    "entry_includes_1530": true,
+    "force_flat_includes_1545": true,
+    "exit_before_entry": true,
+    "execution_disabled_default": true,
+    "local_futu_api_symbols": true
+  },
+  "passed": true
+}

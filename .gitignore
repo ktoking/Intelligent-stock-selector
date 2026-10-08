@@ -40,6 +40,15 @@ data/okx_*.joblib.*
 data/okx_backtest_cache/
 data/yfinance_*.json
 data/yfinance_*.pkl
+data/factor_lab/
+
+# Regenerable SOXL/SOXS parameter-search rankings (too large for code diffs)
+data/soxl_soxs_trend_lab_*/leaderboard.json
+outputs/tqqq_intraday_20260923/
+outputs/watchlist_breakout_20260923/
+outputs/watchlist_daily_trend_20260923/
+outputs/watchlist_short_swing_20260923/
+outputs/daily_factor_lab/
 
 # SeaTalk 本地 Hermes adapter（本机回调与机器人接入配置）
 scripts/seatalk_hermes_adapter.py

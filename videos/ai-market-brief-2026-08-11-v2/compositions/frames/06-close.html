@@ -1,0 +1,26 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:"Noto Sans SC",sans-serif;color:#F0ECE5}#root *{box-sizing:border-box}.f6-bg{position:absolute;inset:0;background:#111}.f6-map{position:absolute;inset:0;padding:90px 70px 430px}.f6-top{display:flex;justify-content:space-between;font-size:20px;letter-spacing:.15em;color:#E85D26;font-weight:850}.f6-title{margin-top:68px;font-size:82px;line-height:1.03;font-weight:950;letter-spacing:-.05em}.f6-zones{position:absolute;left:70px;right:70px;top:390px;height:910px}.f6-zone{height:260px;border-top:2px solid #55514C;display:grid;grid-template-columns:230px 1fr 150px;align-items:center;gap:30px}.f6-zone b{font-size:64px;line-height:1;font-weight:950}.f6-zone span{font-size:34px;font-weight:800}.f6-zone em{font-style:normal;font-size:62px;text-align:right;font-weight:950;color:#E85D26}.f6-zone:nth-child(2){background:#201A17;padding:0 24px;margin:0 -24px}.f6-pointer{position:absolute;right:80px;top:330px;width:180px;height:72px;background:#E85D26;color:#111;display:flex;align-items:center;justify-content:center;font-size:31px;font-weight:950}.f6-pointer:after{content:"";position:absolute;right:-30px;border-top:36px solid transparent;border-bottom:36px solid transparent;border-left:30px solid #E85D26}.f6-current{position:absolute;left:70px;right:70px;top:1370px;border-top:2px solid #E85D26;padding-top:25px;font-size:68px;font-weight:900}.f6-current em{font-style:normal;color:#E85D26}.f6-note{position:absolute;left:70px;bottom:80px;font-size:18px;letter-spacing:.1em;color:#77716A}
+    .f6-orange{position:absolute;inset:0;background:#E85D26}.f6-final{position:absolute;inset:0;padding:120px 70px 430px;color:#111}.f6-meta{display:flex;justify-content:space-between;font-size:20px;letter-spacing:.15em;font-weight:850}.f6-final h1{margin-top:150px;font-size:205px;line-height:.86;letter-spacing:-.075em;font-weight:950}.f6-final p{margin-top:95px;font-size:58px;line-height:1.25;font-weight:800}.f6-final small{position:absolute;left:70px;bottom:80px;font-size:18px;letter-spacing:.1em;color:#3C190B}
+  </style>
+  <div id="root" data-composition-id="06-close" data-start="0" data-width="1080" data-height="1920" data-duration="9.768">
+    <div id="f6-background" class="clip f6-bg" data-start="0" data-duration="9.768" data-track-index="0"></div><div id="f6-map" class="clip f6-map" data-start="0" data-duration="9.768" data-track-index="1"><div class="f6-top"><span>BRENT DECISION MAP</span><span>06/06</span></div><h1 class="f6-title">不用猜方向<br>直接看三档</h1><div class="f6-zones"><div class="f6-zone"><b>&lt; 85</b><span>压力缓和</span><em>攻</em></div><div class="f6-zone"><b>85—90</b><span>当前区域</span><em>等</em></div><div class="f6-zone"><b>&gt; 90</b><span>叠加热CPI</span><em>防</em></div><div id="f6-pointer" class="f6-pointer">BRENT 88</div></div><div class="f6-current">当前动作：<em>降低追涨</em></div><div class="f6-note">简报数据 · 非实时 · 不构成投资建议</div></div>
+    <div id="f6-orange" class="clip f6-orange" data-start="0" data-duration="9.768" data-track-index="2"></div><div id="f6-final" class="clip f6-final" data-start="0" data-duration="9.768" data-track-index="3"><div class="f6-meta"><span>DAILY MARKET BRIEF</span><span>2026.08.11</span></div><h1>降半档</h1><p>今晚等财报<br>明晚等 CPI</p><small>简报数据 · 非实时 · 不构成投资建议</small></div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f6-top",{opacity:0,y:-18},{opacity:1,y:0,duration:.4,ease:"power3.out"},0)
+        .fromTo(".f6-title",{opacity:0,y:42},{opacity:1,y:0,duration:.65,ease:"power3.out"},.2)
+        .fromTo(".f6-zone",{opacity:0,x:-50},{opacity:1,x:0,duration:.48,stagger:.48,ease:"power3.out"},.9)
+        .fromTo("#f6-pointer",{opacity:0,x:80},{opacity:1,x:0,duration:.65,ease:"power3.out"},2.25)
+        .fromTo(".f6-current",{opacity:0,y:32},{opacity:1,y:0,duration:.6,ease:"power3.out"},3.05)
+        .to("#f6-map",{opacity:0,duration:.25,ease:"power2.in"},4.45)
+        .fromTo("#f6-orange",{scaleY:0},{scaleY:1,duration:.52,ease:"power3.inOut",transformOrigin:"50% 100%"},4.55)
+        .fromTo("#f6-final .f6-meta",{opacity:0,y:-20},{opacity:1,y:0,duration:.4,ease:"power3.out"},4.95)
+        .fromTo("#f6-final h1",{opacity:0,y:80},{opacity:1,y:0,duration:.65,ease:"power3.out"},5.05)
+        .fromTo("#f6-final p",{opacity:0,y:40},{opacity:1,y:0,duration:.65,ease:"power3.out"},5.8)
+        .fromTo("#f6-final small",{opacity:0},{opacity:1,duration:.3},6.45);
+      window.__timelines=window.__timelines||{};window.__timelines["06-close"]=tl;})();
+  </script>
+</template>

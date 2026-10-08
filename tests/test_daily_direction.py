@@ -19,6 +19,7 @@ from daily_direction.seatalk_webhook import (
 )
 from daily_direction.seatalk_bot import send_group_text_via_bot
 from daily_direction.hithink_market import fetch_hithink_cn_quotes
+from scripts.daily_direction_push import _delivered_today, _missing_market_data, _record_delivery
 
 
 def _signal_frame(last_close: float = 108.0, last_volume: float = 3_000_000.0) -> pd.DataFrame:
@@ -50,6 +51,23 @@ def test_eval_daily_signal_returns_rankable_market_signal():
     assert signal["breakout_20d"] is True
     assert signal["above_sma50"] is True
     assert signal["signal_score"] > signal["daily_pct"]
+
+
+def test_delivery_retry_skips_only_the_group_already_sent_today(tmp_path):
+    state_path = tmp_path / "delivery.json"
+    assert not _delivered_today(state_path, delivery="seatalk-bot", group_id="G1")
+
+    _record_delivery(state_path, delivery="seatalk-bot", group_id="G1")
+
+    assert _delivered_today(state_path, delivery="seatalk-bot", group_id="G1")
+    assert not _delivered_today(state_path, delivery="seatalk-bot", group_id="G2")
+
+
+def test_missing_market_data_rejects_empty_scan():
+    jobs = [MarketJob("us", "美股", "us", "nasdaq100"), MarketJob("cn", "A股", "cn", "csi300")]
+    snapshots = {"us": {"top_gainers": [{"ticker": "NVDA"}]}, "cn": {"top_gainers": []}}
+
+    assert _missing_market_data(snapshots, jobs) == ["A股"]
 
 
 def test_eval_daily_signal_detects_ma5_breakout_and_quant_baseline():

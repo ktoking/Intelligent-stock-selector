@@ -1,0 +1,29 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:"Noto Sans SC",sans-serif;color:#F0ECE5}#root *{box-sizing:border-box}.f4-bg{position:absolute;inset:0;background:#111}.f4-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(232,93,38,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(232,93,38,.07) 1px,transparent 1px);background-size:54px 54px}.f4-content{position:absolute;inset:0;padding:90px 58px 430px}.f4-top{display:flex;justify-content:space-between;font-size:20px;letter-spacing:.15em;color:#E85D26;font-weight:850}.f4-title{margin:50px 12px 0;font-size:78px;line-height:1.05;letter-spacing:-.045em;font-weight:900}.f4-title em{font-style:normal;color:#E85D26}
+    .f4-console{position:absolute;left:58px;right:58px;top:350px;height:1000px;display:grid;grid-template-columns:1fr 1fr;gap:24px}.f4-company{position:relative;background:#191917;border:1px solid #3D3D38;padding:34px 26px}.f4-company-head{height:165px;border-bottom:2px solid #E85D26;display:flex;align-items:center;justify-content:space-between}.f4-company-head b{font-size:70px;line-height:1;font-weight:950;letter-spacing:-.04em}.f4-company-head span{font-size:17px;letter-spacing:.13em;color:#8E8980;text-align:right}.f4-metric{height:175px;border-bottom:1px solid #353532;padding-top:25px}.f4-metric-head{display:flex;justify-content:space-between;align-items:center}.f4-metric-head b{font-size:35px}.f4-metric-head em{font-style:normal;color:#E85D26;font-size:19px;letter-spacing:.1em}.f4-track{height:18px;margin-top:30px;background:#333330;position:relative}.f4-fill{position:absolute;inset:0 auto 0 0;background:#E85D26;transform-origin:left}.f4-p1{width:88%}.f4-p2{width:64%}.f4-p3{width:82%}.f4-p4{width:51%}.f4-p5{width:78%}.f4-p6{width:48%}.f4-p7{width:90%}.f4-p8{width:44%}.f4-status{position:absolute;left:26px;right:26px;bottom:30px;height:80px;background:#E85D26;color:#111;display:flex;align-items:center;justify-content:center;font-size:31px;font-weight:950;letter-spacing:.05em}.f4-verdict{position:absolute;left:58px;right:58px;top:1390px;font-size:68px;line-height:1.1;font-weight:900}.f4-verdict em{font-style:normal;color:#E85D26}.f4-note{position:absolute;left:58px;bottom:80px;font-size:18px;letter-spacing:.1em;color:#77716A}
+  </style>
+  <div id="root" data-composition-id="04-ai-chain" data-start="0" data-width="1080" data-height="1920" data-duration="11.436">
+    <div id="f4-background" class="clip f4-bg" data-start="0" data-duration="11.436" data-track-index="0"></div><div id="f4-grid" class="clip f4-grid" data-start="0" data-duration="11.436" data-track-index="1"></div><div id="f4-content" class="clip f4-content" data-start="0" data-duration="11.436" data-track-index="2">
+      <div class="f4-top"><span>EARNINGS CONTROL ROOM</span><span>05/06</span></div><h1 class="f4-title">今晚不是看热闹<br>是过<em>四道关</em></h1>
+      <div class="f4-console">
+        <section id="f4-left" class="f4-company"><div class="f4-company-head"><b>CRWV</b><span>AI CLOUD<br>CHECK</span></div><div class="f4-metric"><div class="f4-metric-head"><b>订单</b><em>ORDER</em></div><div class="f4-track"><i class="f4-fill f4-p1"></i></div></div><div class="f4-metric"><div class="f4-metric-head"><b>利润</b><em>MARGIN</em></div><div class="f4-track"><i class="f4-fill f4-p2"></i></div></div><div class="f4-metric"><div class="f4-metric-head"><b>Capex</b><em>SPEND</em></div><div class="f4-track"><i class="f4-fill f4-p3"></i></div></div><div class="f4-metric"><div class="f4-metric-head"><b>现金流</b><em>FCF</em></div><div class="f4-track"><i class="f4-fill f4-p4"></i></div></div><div class="f4-status">高增长 ≠ 高质量</div></section>
+        <section id="f4-right" class="f4-company"><div class="f4-company-head"><b>SMCI</b><span>SERVER<br>CHECK</span></div><div class="f4-metric"><div class="f4-metric-head"><b>订单</b><em>ORDER</em></div><div class="f4-track"><i class="f4-fill f4-p5"></i></div></div><div class="f4-metric"><div class="f4-metric-head"><b>利润</b><em>MARGIN</em></div><div class="f4-track"><i class="f4-fill f4-p6"></i></div></div><div class="f4-metric"><div class="f4-metric-head"><b>Capex</b><em>SPEND</em></div><div class="f4-track"><i class="f4-fill f4-p7"></i></div></div><div class="f4-metric"><div class="f4-metric-head"><b>现金流</b><em>FCF</em></div><div class="f4-track"><i class="f4-fill f4-p8"></i></div></div><div class="f4-status">营收强 ≠ 股价涨</div></section>
+      </div>
+      <div class="f4-verdict">数字很好但股票跌，就是<em>ROI 警告</em></div><div class="f4-note">简报数据 · 非实时 · 不构成投资建议</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f4-top",{opacity:0,y:-18},{opacity:1,y:0,duration:.42,ease:"power3.out"},0)
+        .fromTo(".f4-title",{opacity:0,y:42},{opacity:1,y:0,duration:.72,ease:"power3.out"},.25)
+        .fromTo("#f4-left",{opacity:0,x:-90},{opacity:1,x:0,duration:.8,ease:"power3.out"},1.35)
+        .fromTo("#f4-right",{opacity:0,x:90},{opacity:1,x:0,duration:.8,ease:"power3.out"},1.75)
+        .fromTo(".f4-fill",{scaleX:0},{scaleX:1,duration:.62,stagger:.34,ease:"power3.out",transformOrigin:"left center"},2.55)
+        .fromTo(".f4-status",{opacity:0,y:30},{opacity:1,y:0,duration:.5,stagger:.4,ease:"power3.out"},6.25)
+        .fromTo(".f4-verdict",{opacity:0,y:38},{opacity:1,y:0,duration:.75,ease:"power3.out"},8.55)
+        .fromTo(".f4-note",{opacity:0},{opacity:1,duration:.3},9.4);
+      window.__timelines=window.__timelines||{};window.__timelines["04-ai-chain"]=tl;})();
+  </script>
+</template>

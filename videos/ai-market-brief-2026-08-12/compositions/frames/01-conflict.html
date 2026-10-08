@@ -1,0 +1,242 @@
+<template>
+  <style>
+    @font-face {
+      font-family: NotoSC;
+      src: url("assets/fonts/NotoSansSC-Variable.ttf");
+    }
+    * {
+      box-sizing: border-box;
+    }
+    #conflict-root {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: NotoSC, Arial, sans-serif;
+      color: #0b0b0b;
+    }
+    .ground {
+      position: absolute;
+      inset: 0;
+      background: #ff6a00;
+    }
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(11, 11, 11, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(11, 11, 11, 0.12) 1px, transparent 1px);
+      background-size: 90px 90px;
+    }
+    .meta {
+      position: absolute;
+      left: 64px;
+      right: 64px;
+      top: 66px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 22px;
+      font-weight: 760;
+      letter-spacing: 0.13em;
+      border-bottom: 2px solid #0b0b0b;
+      padding-bottom: 22px;
+    }
+    .hero {
+      position: absolute;
+      left: 62px;
+      top: 220px;
+      width: 930px;
+      font-size: 126px;
+      line-height: 0.94;
+      font-weight: 930;
+      letter-spacing: -0.065em;
+    }
+    .hero span,
+    .big span {
+      display: block;
+    }
+    .hero .dark {
+      color: #f4ede0;
+      background: #0b0b0b;
+      padding: 12px 24px;
+      width: max-content;
+    }
+    .arena {
+      position: absolute;
+      left: 64px;
+      right: 64px;
+      top: 790px;
+      height: 620px;
+      border: 4px solid #0b0b0b;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .force {
+      position: relative;
+      padding: 48px 38px;
+      overflow: hidden;
+    }
+    .force + .force {
+      border-left: 4px solid #0b0b0b;
+      background: #0b0b0b;
+      color: #f4ede0;
+    }
+    .tag {
+      font-size: 23px;
+      letter-spacing: 0.14em;
+      font-weight: 820;
+    }
+    .big {
+      font-size: 108px;
+      line-height: 0.95;
+      font-weight: 930;
+      margin-top: 82px;
+    }
+    .arrow {
+      position: absolute;
+      left: 38px;
+      bottom: 48px;
+      width: 330px;
+      height: 18px;
+      background: currentColor;
+      transform-origin: left center;
+    }
+    .arrow:after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: -30px;
+      border-left: 54px solid currentColor;
+      border-top: 39px solid transparent;
+      border-bottom: 39px solid transparent;
+    }
+    .gauge {
+      position: absolute;
+      left: 160px;
+      right: 160px;
+      bottom: 250px;
+      height: 130px;
+      border-top: 12px solid #0b0b0b;
+      border-radius: 520px 520px 0 0;
+    }
+    .needle {
+      position: absolute;
+      left: 50%;
+      bottom: -7px;
+      width: 12px;
+      height: 115px;
+      background: #f4ede0;
+      transform-origin: 50% 100%;
+    }
+    .score {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 80px;
+      text-align: center;
+      font-size: 42px;
+      font-weight: 900;
+    }
+    .score b {
+      font-size: 94px;
+    }
+    .footer {
+      position: absolute;
+      left: 64px;
+      right: 64px;
+      bottom: 42px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 20px;
+      font-weight: 760;
+      letter-spacing: 0.1em;
+    }
+  </style>
+  <div
+    id="conflict-root"
+    class="root"
+    data-composition-id="conflict"
+    data-start="0"
+    data-width="1080"
+    data-height="1920"
+    data-duration="7.104"
+  >
+    <div
+      id="conflict-ground"
+      class="ground clip"
+      data-start="0"
+      data-duration="7.104"
+      data-track-index="0"
+    ></div>
+    <div class="grid" data-layout-allow-overflow></div>
+    <div class="meta">
+      <span>US / AI MARKET BRIEF</span><span>08 · 12</span>
+    </div>
+    <div class="hero" data-layout-allow-overlap>
+      <span id="conflict-h1">基本面在</span
+      ><span id="conflict-up" class="dark">加速 ↑</span>
+    </div>
+    <div class="arena">
+      <div id="conflict-ai" class="force">
+        <div class="tag">AI DEMAND</div>
+        <div class="big"><span>需求</span><span>没坏</span></div>
+        <div class="arrow"></div>
+      </div>
+      <div id="conflict-macro" class="force">
+        <div class="tag">MACRO BRAKE</div>
+        <div class="big"><span>宏观</span><span>收紧</span></div>
+        <div class="arrow"></div>
+      </div>
+    </div>
+    <div class="gauge"><div id="conflict-needle" class="needle"></div></div>
+    <div class="score">RISK-ON <b id="conflict-score">6.0</b> / 10</div>
+    <div class="footer">
+      <span>今日核心矛盾</span><span>简报数据 · 非实时</span>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(
+        "#conflict-h1",
+        { x: -120, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.62, ease: "expo.out" },
+        0.18,
+      )
+        .fromTo(
+          "#conflict-up",
+          { scaleX: 0, transformOrigin: "left center" },
+          { scaleX: 1, duration: 0.48, ease: "power4.out" },
+          0.62,
+        )
+        .fromTo(
+          "#conflict-ai",
+          { x: -160, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.52, ease: "back.out(1.4)" },
+          1.22,
+        )
+        .fromTo(
+          "#conflict-macro",
+          { x: 160, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.68, ease: "circ.out" },
+          1.38,
+        )
+        .fromTo(
+          "#conflict-needle",
+          { x: -250 },
+          { x: 90, duration: 2.1, ease: "power3.inOut" },
+          3.05,
+        )
+        .fromTo(
+          "#conflict-score",
+          { scale: 1.35, color: "#0B0B0B" },
+          { scale: 1, color: "#0B0B0B", duration: 0.72, ease: "back.out(2)" },
+          4.5,
+        )
+        .to(".grid", { x: 28, y: 18, duration: 2.4, ease: "none" }, 4.6)
+        .to({}, { duration: 7.104 }, 0);
+      window.__timelines = window.__timelines || {};
+      window.__timelines.conflict = tl;
+    })();
+  </script>
+</template>

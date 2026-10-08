@@ -20,7 +20,9 @@ from scripts.okx_intraday_agent import kill_switch, monitor_control
 
 LOG = logging.getLogger("okx-runtime")
 NY = ZoneInfo("America/New_York")
-V5_REPORT_PATH = ROOT / "data" / "okx_gap_strategy_v5_backtest.json"
+# Keep the frozen V5 research artifact immutable.  The post-close job writes a
+# separate rolling weekly presentation artifact for the dashboard.
+V5_REPORT_PATH = ROOT / "data" / "okx_strategy_weekly_latest.json"
 
 
 def v5_refresh_due(now: datetime, report_path: Path = V5_REPORT_PATH) -> bool:
@@ -185,9 +187,9 @@ class Runtime:
             return
         if self.last_v5_refresh_day == today or not v5_refresh_due(local):
             return
-        LOG.info("starting V5 post-close rolling refresh for %s", today)
+        LOG.info("starting strategy dashboard weekly refresh for %s", today)
         self.v5_refresh = subprocess.Popen(
-            self.command("okx_gap_strategy_v5.py"), cwd=ROOT, env=os.environ.copy()
+            self.command("okx_strategy_weekly_replay.py"), cwd=ROOT, env=os.environ.copy()
         )
         self.v5_refresh_started_at = time.time()
         self.last_v5_refresh_day = today

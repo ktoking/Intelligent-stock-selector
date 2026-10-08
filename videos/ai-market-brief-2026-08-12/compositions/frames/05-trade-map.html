@@ -1,0 +1,257 @@
+<template>
+  <style>
+    @font-face {
+      font-family: NotoSC;
+      src: url("assets/fonts/NotoSansSC-Variable.ttf");
+    }
+    * {
+      box-sizing: border-box;
+    }
+    #trade-root {
+      position: relative;
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: NotoSC, Arial, sans-serif;
+      color: #0b0b0b;
+    }
+    .ground {
+      position: absolute;
+      inset: 0;
+      background: #ff6a00;
+    }
+    .left-block {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 360px;
+      height: 1920px;
+      background: #0b0b0b;
+      color: #f4ede0;
+    }
+    .vertical {
+      position: absolute;
+      left: -70px;
+      top: 530px;
+      font-size: 180px;
+      font-weight: 950;
+      letter-spacing: -0.08em;
+      transform: rotate(-90deg);
+    }
+    .kicker {
+      position: absolute;
+      left: 420px;
+      top: 70px;
+      font-size: 22px;
+      font-weight: 820;
+      letter-spacing: 0.14em;
+    }
+    .title {
+      position: absolute;
+      left: 420px;
+      top: 170px;
+      font-size: 100px;
+      line-height: 0.95;
+      font-weight: 950;
+      letter-spacing: -0.06em;
+    }
+    .title span,
+    .note span {
+      display: block;
+    }
+    .route {
+      position: absolute;
+      left: 420px;
+      right: 60px;
+      top: 600px;
+      height: 760px;
+    }
+    .track {
+      position: absolute;
+      left: 74px;
+      top: 0;
+      width: 18px;
+      height: 710px;
+      background: #0b0b0b;
+      transform-origin: top;
+    }
+    .step {
+      position: absolute;
+      left: 0;
+      width: 560px;
+      height: 190px;
+      border: 4px solid #0b0b0b;
+      background: #ff6a00;
+      padding: 28px 28px 25px 120px;
+    }
+    .step:nth-child(2) {
+      top: 0;
+    }
+    .step:nth-child(3) {
+      top: 250px;
+    }
+    .step:nth-child(4) {
+      top: 500px;
+    }
+    .dot {
+      position: absolute;
+      left: 38px;
+      top: 50px;
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      background: #0b0b0b;
+      color: #ff6a00;
+      display: grid;
+      place-items: center;
+      font-size: 30px;
+      font-weight: 950;
+    }
+    .step .en {
+      font-size: 24px;
+      letter-spacing: 0.13em;
+      font-weight: 850;
+    }
+    .step .cn {
+      font-size: 48px;
+      font-weight: 920;
+      margin-top: 10px;
+    }
+    .step.active {
+      background: #0b0b0b;
+      color: #f4ede0;
+    }
+    .step.active .dot {
+      background: #ff6a00;
+      color: #0b0b0b;
+    }
+    .note {
+      position: absolute;
+      left: 420px;
+      right: 60px;
+      bottom: 220px;
+      border-top: 4px solid #0b0b0b;
+      padding-top: 32px;
+      font-size: 42px;
+      line-height: 1.3;
+      font-weight: 820;
+    }
+    .note b {
+      font-size: 66px;
+    }
+    .foot {
+      position: absolute;
+      left: 420px;
+      right: 60px;
+      bottom: 55px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 19px;
+      letter-spacing: 0.09em;
+      font-weight: 780;
+    }
+  </style>
+  <div
+    id="trade-root"
+    class="root"
+    data-composition-id="trade-map"
+    data-start="0"
+    data-width="1080"
+    data-height="1920"
+    data-duration="9.312"
+  >
+    <div
+      id="trade-ground"
+      class="ground clip"
+      data-start="0"
+      data-duration="9.312"
+      data-track-index="0"
+    ></div>
+    <div class="left-block">
+      <div id="trade-vertical" class="vertical">WAIT</div>
+    </div>
+    <div class="kicker">EXECUTION MAP / NO CHASING</div>
+    <div id="trade-title" class="title" data-layout-allow-overlap>
+      <span>先等确认</span><span>再谈进攻</span>
+    </div>
+    <div class="route">
+      <div id="trade-track" class="track"></div>
+      <div class="step active">
+        <span class="dot">1</span>
+        <div class="en">EVENT GAP</div>
+        <div class="cn">不追盘后高开</div>
+      </div>
+      <div class="step">
+        <span class="dot">2</span>
+        <div class="en">AMD · 5D LINE</div>
+        <div class="cn">收复五日线</div>
+      </div>
+      <div class="step">
+        <span class="dot">3</span>
+        <div class="en">CRWV / SMCI</div>
+        <div class="cn">守住 VWAP</div>
+      </div>
+    </div>
+    <div id="trade-note" class="note">
+      <span><b>CPI 前</b> 不抢方向</span><span>让价格先给答案</span>
+    </div>
+    <div class="foot">
+      <span>观察条件，不是买入建议</span><span>08 · 12</span>
+    </div>
+  </div>
+  <script>
+    (() => {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(
+        "#trade-vertical",
+        { y: 180, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.65, ease: "expo.out" },
+        0.15,
+      )
+        .fromTo(
+          "#trade-title",
+          { x: 100, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.56, ease: "power4.out" },
+          0.55,
+        )
+        .fromTo(
+          "#trade-track",
+          { scaleY: 0 },
+          { scaleY: 1, duration: 1.4, ease: "power3.inOut" },
+          1.45,
+        )
+        .fromTo(
+          ".step",
+          { x: 120, opacity: 0 },
+          {
+            x: 0,
+            opacity: 1,
+            duration: 0.55,
+            stagger: 0.48,
+            ease: "back.out(1.4)",
+          },
+          2.0,
+        )
+        .to(
+          ".step",
+          {
+            backgroundColor: "#0B0B0B",
+            color: "#F4EDE0",
+            duration: 0.34,
+            stagger: 0.75,
+            ease: "none",
+          },
+          4.05,
+        )
+        .fromTo(
+          "#trade-note",
+          { clipPath: "inset(0 100% 0 0)" },
+          { clipPath: "inset(0 0% 0 0)", duration: 0.92, ease: "circ.out" },
+          7.0,
+        )
+        .to({}, { duration: 9.312 }, 0);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["trade-map"] = tl;
+    })();
+  </script>
+</template>

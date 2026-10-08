@@ -1,0 +1,30 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:"Noto Sans SC",sans-serif;color:#111}#root *{box-sizing:border-box}.f3-base{position:absolute;inset:0;background:#F0ECE5}.f3-top-panel{position:absolute;left:0;right:0;top:0;height:780px;background:#F0ECE5}.f3-bottom-panel{position:absolute;left:0;right:0;top:780px;bottom:0;background:#E85D26}.f3-content{position:absolute;inset:0;padding:90px 70px 430px}.f3-kicker{display:flex;justify-content:space-between;font-size:20px;letter-spacing:.15em;font-weight:850;color:#9A3D1C}
+    .f3-surface{position:absolute;left:70px;right:70px;top:175px}.f3-surface h2,.f3-inside h2{font-size:68px;line-height:1;font-weight:900;letter-spacing:-.04em}.f3-surface h2 small,.f3-inside h2 small{display:block;margin-top:15px;font-size:19px;letter-spacing:.16em;color:#77716A}.f3-index-row{margin-top:50px;height:155px;border-top:1px solid #AFAAA2;display:grid;grid-template-columns:230px 1fr 230px;align-items:center;gap:24px}.f3-index-row b{font-size:50px}.f3-index-row em{font-style:normal;font-size:58px;font-weight:900;text-align:right}.f3-index-track{height:18px;background:#D7D1C8;position:relative}.f3-index-fill{position:absolute;inset:0 auto 0 0;width:14%;background:#111;transform-origin:left}
+    .f3-inside{position:absolute;left:70px;right:70px;top:845px;color:#111}.f3-inside h2 small{color:#5B2816}.f3-chip-row{margin-top:52px;height:190px;border-top:2px solid rgba(17,17,17,.46);display:grid;grid-template-columns:280px 1fr;align-items:center}.f3-chip-row b{font-size:66px}.f3-chip-row em{font-style:normal;font-size:88px;font-weight:950;text-align:right;letter-spacing:-.05em}.f3-chip-row span{grid-column:1/3;height:24px;background:rgba(17,17,17,.18);position:relative}.f3-chip-row span i{position:absolute;inset:0 auto 0 0;background:#111;transform-origin:left}.f3-c1 span i{width:58%}.f3-c2 span i{width:82%}.f3-verdict{position:absolute;left:70px;right:70px;top:1370px;font-size:78px;font-weight:950;letter-spacing:-.045em}.f3-verdict em{font-style:normal;background:#111;color:#F0ECE5;padding:0 16px}.f3-note{position:absolute;left:70px;bottom:80px;font-size:18px;letter-spacing:.1em;color:rgba(17,17,17,.62)}
+  </style>
+  <div id="root" data-composition-id="03-cpi-chain" data-start="0" data-width="1080" data-height="1920" data-duration="13.224">
+    <div id="f3-background" class="clip f3-base" data-start="0" data-duration="13.224" data-track-index="0"></div><div id="f3-top-panel" class="clip f3-top-panel" data-start="0" data-duration="13.224" data-track-index="1"></div><div id="f3-bottom-panel" class="clip f3-bottom-panel" data-start="0" data-duration="13.224" data-track-index="2"></div>
+    <div id="f3-content" class="clip f3-content" data-start="0" data-duration="13.224" data-track-index="3">
+      <div class="f3-kicker"><span>MARKET SPLIT SCREEN</span><span>02/06</span></div>
+      <div class="f3-surface"><h2>表面：指数很平静<small>THE INDEX VIEW</small></h2><div class="f3-index-row"><b>SPX</b><div class="f3-index-track"><i id="f3-i1" class="f3-index-fill"></i></div><em>−0.06%</em></div><div class="f3-index-row"><b>NASDAQ</b><div class="f3-index-track"><i id="f3-i2" class="f3-index-fill"></i></div><em>−0.32%</em></div></div>
+      <div class="f3-inside"><h2>内部：芯片在撤退<small>THE HARDWARE VIEW</small></h2><div class="f3-chip-row f3-c1"><b>NVDA</b><em>−2.9%</em><span><i id="f3-c1"></i></span></div><div class="f3-chip-row f3-c2"><b>INTC</b><em>−4.1%</em><span><i id="f3-c2"></i></span></div></div>
+      <div class="f3-verdict">别只看指数，<em>看内部</em></div><div class="f3-note">简报数据 · 非实时 · 不构成投资建议</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f3-kicker",{opacity:0,y:-18},{opacity:1,y:0,duration:.4,ease:"power3.out"},0)
+        .fromTo(".f3-surface h2",{opacity:0,x:-45},{opacity:1,x:0,duration:.65,ease:"power3.out"},.25)
+        .fromTo(".f3-index-row",{opacity:0,y:30},{opacity:1,y:0,duration:.5,stagger:.38,ease:"power3.out"},1.05)
+        .fromTo("#f3-i1,#f3-i2",{scaleX:0},{scaleX:1,duration:.7,stagger:.35,ease:"power3.out"},1.55)
+        .fromTo(".f3-inside h2",{opacity:0,x:55},{opacity:1,x:0,duration:.65,ease:"power3.out"},6.05)
+        .fromTo(".f3-chip-row",{opacity:0,y:45},{opacity:1,y:0,duration:.55,stagger:.65,ease:"power3.out"},6.75)
+        .fromTo("#f3-c1,#f3-c2",{scaleX:0},{scaleX:1,duration:.85,stagger:.7,ease:"power3.out",transformOrigin:"left center"},7.3)
+        .fromTo(".f3-verdict",{opacity:0,y:38},{opacity:1,y:0,duration:.7,ease:"power3.out"},10.45)
+        .fromTo(".f3-note",{opacity:0},{opacity:1,duration:.3},11.35);
+      window.__timelines=window.__timelines||{};window.__timelines["03-cpi-chain"]=tl;})();
+  </script>
+</template>

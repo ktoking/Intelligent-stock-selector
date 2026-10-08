@@ -1,0 +1,12 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:"Noto Sans SC",sans-serif}.caption-overlay{position:absolute;inset:0}.caption-slot{position:absolute;left:54px;right:54px;bottom:205px;height:190px;display:flex;align-items:center;justify-content:center;z-index:90}.caption-inner{visibility:hidden;opacity:0;width:100%;min-height:126px;padding:24px 34px 27px 42px;background:rgba(17,17,17,.94);border-left:9px solid #E85D26;box-shadow:0 18px 52px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;color:#F0ECE5;font-size:45px;font-weight:760;line-height:1.3;letter-spacing:-.02em;text-align:center;overflow:visible}.caption-inner em{font-style:normal;color:#FF7440;font-weight:900}
+  </style>
+  <div id="root" data-composition-id="captions-b" data-width="1080" data-height="1920" data-duration="33">
+    <div id="captions-b-overlay" class="caption-overlay clip" data-start="0" data-duration="33" data-track-index="0"><div id="cap07" class="caption-slot"><div id="cap07-inner" class="caption-inner">今晚别只看收入，两家公司要过<em>四道关</em>。</div></div><div id="cap08" class="caption-slot"><div id="cap08-inner" class="caption-inner">订单、利润、资本开支、现金流，缺一项都可能被砸。</div></div><div id="cap09" class="caption-slot"><div id="cap09-inner" class="caption-inner">所以今天，别急着抄底。</div></div><div id="cap10" class="caption-slot"><div id="cap10-inner" class="caption-inner">英伟达、AMD等止跌；博通等承接；英特尔先回避。</div></div><div id="cap11" class="caption-slot"><div id="cap11-inner" class="caption-inner">油价<em>八十五以下</em>，可以加回进攻。</div></div><div id="cap12" class="caption-slot"><div id="cap12-inner" class="caption-inner">八十五到九十先观察；突破九十叠加热CPI，就继续防守。</div></div></div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});const groups=[["#cap07-inner",1.608,5.936],["#cap08-inner",5.976,11.432],["#cap09-inner",14.268,17.108],["#cap10-inner",17.148,22.772],["#cap11-inner",24.256,27.312],["#cap12-inner",27.352,32.784]];groups.forEach(([s,a,b])=>{tl.set(s,{visibility:"visible"},a).fromTo(s,{opacity:0,y:34,scale:.98},{opacity:1,y:0,scale:1,duration:.2,ease:"power3.out"},a+.02).to(s,{opacity:0,y:-16,duration:.12,ease:"power2.in"},b-.14).set(s,{opacity:0,visibility:"hidden"},b)});tl.to({},{duration:33},0);window.__timelines=window.__timelines||{};window.__timelines["captions-b"]=tl;})();
+  </script>
+</template>

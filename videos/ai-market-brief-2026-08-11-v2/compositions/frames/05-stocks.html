@@ -1,0 +1,32 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:"Noto Sans SC",sans-serif;color:#111}#root *{box-sizing:border-box}.f5-bg{position:absolute;inset:0;background:#F0ECE5}.f5-content{position:absolute;inset:0;padding:90px 62px 430px}.f5-top{display:flex;justify-content:space-between;font-size:20px;letter-spacing:.15em;color:#9A3D1C;font-weight:850}.f5-title{margin-top:55px;font-size:86px;line-height:1.02;letter-spacing:-.05em;font-weight:950}.f5-title em{font-style:normal;color:#C94718}
+    .f5-map{position:absolute;left:62px;right:62px;top:360px;height:1030px}.f5-light{position:absolute;left:0;top:0;width:185px;height:720px;background:#111;padding:38px 44px 110px;display:flex;flex-direction:column;justify-content:space-between}.f5-bulb{width:96px;height:96px;border-radius:50%;border:8px solid #595752;background:#282826}.f5-b1{background:#E85D26;border-color:#E85D26}.f5-b2{border-color:#E85D26}.f5-b3{background:#F0ECE5}.f5-light-label{position:absolute;left:8px;right:8px;bottom:22px;text-align:center;font-size:17px;line-height:1.35;letter-spacing:.1em;font-weight:850;color:#F0ECE5}
+    .f5-lanes{position:absolute;left:225px;right:0;top:0}.f5-lane{height:230px;border-top:2px solid #111;display:grid;grid-template-columns:235px 1fr;align-items:center;gap:28px;position:relative}.f5-lane:before{content:attr(data-n);position:absolute;left:0;top:16px;font-size:15px;letter-spacing:.14em;color:#6F6B64}.f5-state{font-size:42px;font-weight:900;padding-top:18px}.f5-state em{display:block;font-style:normal;font-size:16px;letter-spacing:.12em;color:#6F6B64;margin-top:12px}.f5-tickers{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap}.f5-ticker{min-width:135px;height:76px;border:3px solid #111;display:flex;align-items:center;justify-content:center;font-size:29px;font-weight:900}.f5-lane:nth-child(1) .f5-ticker{background:#E85D26}.f5-lane:nth-child(4) .f5-state{color:#C94718}.f5-lane:nth-child(4) .f5-ticker{background:#111;color:#F0ECE5}.f5-rule{position:absolute;left:62px;right:62px;top:1325px;border-top:2px solid #111;padding-top:25px;display:flex;justify-content:space-between;align-items:end}.f5-rule b{font-size:86px;letter-spacing:-.05em;color:#C94718}.f5-rule span{font-size:20px;line-height:1.4;letter-spacing:.1em;text-align:right}.f5-note{position:absolute;left:62px;bottom:80px;font-size:18px;letter-spacing:.1em;color:#77716A}
+  </style>
+  <div id="root" data-composition-id="05-stocks" data-start="0" data-width="1080" data-height="1920" data-duration="4.332">
+    <div id="f5-background" class="clip f5-bg" data-start="0" data-duration="4.332" data-track-index="0"></div><div id="f5-content" class="clip f5-content" data-start="0" data-duration="4.332" data-track-index="1">
+      <div class="f5-top"><span>TRADE TRAFFIC LIGHT</span><span>04/06</span></div><h1 class="f5-title">今天不是抄底日<br>先看<em>信号灯</em></h1>
+      <div class="f5-map"><div class="f5-light"><i class="f5-bulb f5-b1"></i><i class="f5-bulb f5-b2"></i><i class="f5-bulb f5-b3"></i><div class="f5-light-label">WAIT / WATCH / AVOID</div></div><div class="f5-lanes">
+        <div class="f5-lane" data-n="01"><div class="f5-state">等待止跌<em>WAIT</em></div><div class="f5-tickers"><b class="f5-ticker">NVDA</b><b class="f5-ticker">AMD</b></div></div>
+        <div class="f5-lane" data-n="02"><div class="f5-state">回踩承接<em>WATCH</em></div><div class="f5-tickers"><b class="f5-ticker">AVGO</b></div></div>
+        <div class="f5-lane" data-n="03"><div class="f5-state">财报验证<em>EVENT</em></div><div class="f5-tickers"><b class="f5-ticker">CRWV</b><b class="f5-ticker">SMCI</b></div></div>
+        <div class="f5-lane" data-n="04"><div class="f5-state">短线回避<em>AVOID</em></div><div class="f5-tickers"><b class="f5-ticker">INTC</b><b class="f5-ticker">SNDK</b><b class="f5-ticker">WDC</b></div></div>
+      </div></div>
+      <div class="f5-rule"><b>不抢第一跌</b><span>PRICE ACTION<br>FIRST</span></div><div class="f5-note">简报数据 · 非实时 · 不构成投资建议</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f5-top",{opacity:0,y:-18},{opacity:1,y:0,duration:.4,ease:"power3.out"},0)
+        .fromTo(".f5-title",{opacity:0,y:40},{opacity:1,y:0,duration:.45,ease:"power3.out"},.1)
+        .fromTo(".f5-light",{opacity:0,x:-70},{opacity:1,x:0,duration:.45,ease:"power3.out"},.55)
+        .fromTo(".f5-bulb",{opacity:0,scale:.45},{opacity:1,scale:1,duration:.28,stagger:.18,ease:"power3.out"},.85)
+        .fromTo(".f5-lane",{opacity:0,x:60},{opacity:1,x:0,duration:.35,stagger:.32,ease:"power3.out"},1.1)
+        .fromTo(".f5-ticker",{opacity:0,y:25},{opacity:1,y:0,duration:.3,stagger:.08,ease:"power3.out"},1.9)
+        .fromTo(".f5-rule",{opacity:0,y:38},{opacity:1,y:0,duration:.45,ease:"power3.out"},2.9)
+        .fromTo(".f5-note",{opacity:0},{opacity:1,duration:.25},3.55);
+      window.__timelines=window.__timelines||{};window.__timelines["05-stocks"]=tl;})();
+  </script>
+</template>

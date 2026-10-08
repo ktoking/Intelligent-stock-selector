@@ -1,0 +1,25 @@
+<template>
+  <style>
+    @font-face{font-family:NotoSC;src:url("assets/fonts/NotoSansSC-Variable.ttf")}*{box-sizing:border-box}
+    #captions-root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:NotoSC,sans-serif}.overlay{position:absolute;inset:0}.slot{position:absolute;left:52px;right:52px;bottom:175px;min-height:176px;display:flex;align-items:center;justify-content:center}.caption-inner{visibility:hidden;opacity:0;width:100%;min-height:132px;padding:25px 32px 28px 42px;background:rgba(11,11,11,.95);border-left:10px solid #ff6a00;color:#f4ede0;display:flex;align-items:center;justify-content:center;font-size:43px;font-weight:780;line-height:1.32;letter-spacing:-.022em;text-align:center}.caption-text{display:block;width:100%;writing-mode:horizontal-tb;text-orientation:mixed;white-space:normal;word-break:normal;overflow-wrap:normal;line-break:strict;text-wrap:balance}.caption-text em{font-style:normal;color:#ff7b24;font-weight:930}
+  </style>
+  <div id="captions-root" data-composition-id="daily-captions" data-start="0" data-width="1080" data-height="1920" data-duration="60"><div id="captions-overlay" class="overlay clip" data-start="0" data-duration="60" data-track-index="0">
+    <div class="slot"><div id="cap01-inner" class="caption-inner"><span class="caption-text"><em>美股每日资讯播报</em>。</span></div></div>
+    <div class="slot"><div id="cap02-inner" class="caption-inner"><span class="caption-text">今天的判断是：<em>CPI落地后，AI基建拿回进攻权</em>，</span></div></div>
+    <div class="slot"><div id="cap03-inner" class="caption-inner"><span class="caption-text">但只能做财报验证后的趋势跟踪，<em>不能全面追涨</em>。</span></div></div>
+    <div class="slot"><div id="cap04-inner" class="caption-inner"><span class="caption-text">七月美国CPI环比零点一、同比三点四，<em>核心同比二点五</em>；</span></div></div>
+    <div class="slot"><div id="cap05-inner" class="caption-inner"><span class="caption-text"><em>标普涨零点三，纳指涨零点五</em>。</span></div></div>
+    <div class="slot"><div id="cap06-inner" class="caption-inner"><span class="caption-text">CoreWeave大涨<em>十九点三</em>，Super Micro涨十九，</span></div></div>
+    <div class="slot"><div id="cap07-inner" class="caption-inner"><span class="caption-text"><em>英伟达涨约三</em>，</span></div></div>
+    <div class="slot"><div id="cap08-inner" class="caption-inner"><span class="caption-text">算力租赁、服务器订单和<em>GPU需求同时得到确认</em>。</span></div></div>
+    <div class="slot"><div id="cap09-inner" class="caption-inner"><span class="caption-text">不过新高风险没有消失，<em>今晚PPI是第二道宏观验证</em>。</span></div></div>
+    <div class="slot"><div id="cap10-inner" class="caption-inner"><span class="caption-text">CRWV和SMCI<em>不追首根长阳</em>，</span></div></div>
+    <div class="slot"><div id="cap11-inner" class="caption-inner"><span class="caption-text">等回踩<em>VWAP后能否放量</em>；NVDA观察能否守住强势。</span></div></div>
+    <div class="slot"><div id="cap12-inner" class="caption-inner"><span class="caption-text">如果<em>PPI偏热、十年美债上行</em>，</span></div></div>
+    <div class="slot"><div id="cap13-inner" class="caption-inner"><span class="caption-text">或者<em>财报利好次日无法延续</em>，</span></div></div>
+    <div class="slot"><div id="cap14-inner" class="caption-inner"><span class="caption-text">就把<em>AI优先级降回中性</em>。</span></div></div>
+  </div></div>
+  <script>
+    (()=>{const lines=[["cap01",.12,2.544],["cap02",2.604,7.212],["cap03",7.272,11.328],["cap04",11.388,17.436],["cap05",17.496,20.808],["cap06",20.868,25.26],["cap07",25.32,27.384],["cap08",27.444,32.94],["cap09",33,38.136],["cap10",38.196,43.332],["cap11",43.392,49.08],["cap12",49.14,52.452],["cap13",52.512,55.656],["cap14",55.716,58.308]];const tl=gsap.timeline({paused:true});lines.forEach(([id,s,e])=>{tl.set(`#${id}-inner`,{visibility:"visible"},s).to(`#${id}-inner`,{opacity:1,duration:.14,ease:"power2.out"},s).to(`#${id}-inner`,{opacity:0,duration:.14,ease:"power2.in"},Math.max(s+.2,e-.1));});tl.to({}, {duration:60},0);window.__timelines=window.__timelines||{};window.__timelines["daily-captions"]=tl})();
+  </script>
+</template>

@@ -1,0 +1,35 @@
+<template>
+  <style>
+    @font-face{font-family:"Noto Sans SC";src:url("assets/fonts/NotoSansSC-Variable.ttf") format("truetype");font-weight:100 900;font-display:block}
+    #root{position:relative;width:1080px;height:1920px;overflow:hidden;font-family:"Noto Sans SC",sans-serif;color:#111}
+    #root *{box-sizing:border-box}.f1-bg{position:absolute;inset:0;background:#F0ECE5}.f1-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(17,17,17,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(17,17,17,.055) 1px,transparent 1px);background-size:72px 72px}.f1-content{position:absolute;inset:0;padding:90px 70px 430px}
+    .f1-top{display:flex;justify-content:space-between;font-size:20px;letter-spacing:.15em;font-weight:800;color:#A6401C}.f1-title{margin-top:68px;font-size:78px;line-height:1.06;letter-spacing:-.045em;font-weight:900}.f1-title em{font-style:normal;color:#C94718}
+    .f1-gauge{position:absolute;left:50%;top:430px;width:720px;height:720px;margin-left:-360px}.f1-gauge svg{width:100%;height:100%}.f1-track{fill:none;stroke:#CFC9C0;stroke-width:32}.f1-progress{fill:none;stroke:#E85D26;stroke-width:32;stroke-linecap:round;transform-origin:center;transform:rotate(-90deg)}.f1-tick{stroke:#111;stroke-width:6;opacity:.28}.f1-needle{position:absolute;left:50%;top:170px;width:8px;height:190px;margin-left:-4px;background:#111;transform-origin:50% 100%}.f1-needle:after{content:"";position:absolute;left:50%;bottom:-24px;width:48px;height:48px;margin-left:-24px;border-radius:50%;background:#E85D26;border:8px solid #111}
+    .f1-score{position:absolute;left:0;right:0;top:230px;text-align:center;font-size:185px;line-height:1;font-weight:900;letter-spacing:-.07em}.f1-score small{display:block;margin-top:22px;font-size:22px;letter-spacing:.18em;color:#6E6A64}.f1-scale{position:absolute;left:75px;right:75px;bottom:86px;display:flex;justify-content:space-between;font-size:20px;font-weight:800;letter-spacing:.08em}.f1-scale b:nth-child(2){color:#C94718}
+    .f1-action{position:absolute;left:70px;right:70px;top:1185px;height:220px;display:flex;justify-content:space-between;align-items:end;border-top:2px solid #111;padding-top:28px}.f1-action b{font-size:98px;line-height:1;letter-spacing:-.055em}.f1-action span{font-size:22px;line-height:1.4;text-align:right;color:#6E6A64;letter-spacing:.08em}.f1-note{position:absolute;left:70px;bottom:80px;font-size:18px;letter-spacing:.1em;color:#77716A}
+  </style>
+  <div id="root" data-composition-id="01-hook" data-start="0" data-width="1080" data-height="1920" data-duration="6.24">
+    <div id="f1-background" class="clip f1-bg" data-start="0" data-duration="6.24" data-track-index="0"></div><div id="f1-grid" class="clip f1-grid" data-start="0" data-duration="6.24" data-track-index="1"></div>
+    <div id="f1-content" class="clip f1-content" data-start="0" data-duration="6.24" data-track-index="2">
+      <div class="f1-top"><span>DAILY MARKET BRIEF</span><span>2026.08.11 · 01/06</span></div>
+      <h1 class="f1-title">美股每日资讯播报<br><em>进攻性再降半档</em></h1>
+      <div class="f1-gauge">
+        <svg viewBox="0 0 720 720" aria-hidden="true"><circle class="f1-track" cx="360" cy="360" r="285"/><circle id="f1-progress" class="f1-progress" cx="360" cy="360" r="285" pathLength="1"/><line class="f1-tick" x1="360" y1="42" x2="360" y2="92"/><line class="f1-tick" x1="80" y1="360" x2="130" y2="360"/><line class="f1-tick" x1="590" y1="360" x2="640" y2="360"/></svg>
+        <div id="f1-needle" class="f1-needle"></div><div class="f1-score">6.2<small>RISK-ON / 10</small></div><div class="f1-scale"><b>防守</b><b>当前</b><b>进攻</b></div>
+      </div>
+      <div class="f1-action"><b>6.2 / 10</b><span>RISK-ON<br>LOWER HALF STEP</span></div><div class="f1-note">简报数据 · 非实时 · 不构成投资建议</div>
+    </div>
+  </div>
+  <script>
+    (()=>{const tl=gsap.timeline({paused:true});
+      tl.fromTo(".f1-top",{opacity:0,y:-20},{opacity:1,y:0,duration:.45,ease:"power3.out"},0)
+        .fromTo(".f1-title",{opacity:0,y:42},{opacity:1,y:0,duration:.72,ease:"power3.out"},.25)
+        .fromTo("#f1-progress",{strokeDasharray:1,strokeDashoffset:1},{strokeDashoffset:.38,duration:1.7,ease:"power3.out"},1.05)
+        .fromTo("#f1-needle",{rotation:-118},{rotation:28,duration:1.65,ease:"power3.out",transformOrigin:"50% 100%"},1.1)
+        .fromTo(".f1-score",{opacity:0,scale:.72},{opacity:1,scale:1,duration:.72,ease:"power3.out"},2.35)
+        .fromTo(".f1-scale b",{opacity:0,y:18},{opacity:1,y:0,duration:.4,stagger:.15,ease:"power2.out"},3.05)
+        .fromTo(".f1-action",{opacity:0,y:46},{opacity:1,y:0,duration:.7,ease:"power3.out"},4.15)
+        .fromTo(".f1-note",{opacity:0},{opacity:1,duration:.35},5.1);
+      window.__timelines=window.__timelines||{};window.__timelines["01-hook"]=tl;})();
+  </script>
+</template>
