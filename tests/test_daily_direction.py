@@ -2,6 +2,7 @@ import json
 from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 
 from daily_direction.direction import (
     MarketJob,
@@ -39,7 +40,7 @@ def _signal_frame(last_close: float = 108.0, last_volume: float = 3_000_000.0) -
     rows[-1]["Close"] = last_close
     rows[-1]["High"] = last_close + 0.8
     rows[-1]["Volume"] = last_volume
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, index=pd.bdate_range(end="2026-10-08", periods=len(rows)))
 
 
 def test_eval_daily_signal_returns_rankable_market_signal():
@@ -96,64 +97,79 @@ def test_scan_market_ranks_by_quant_baseline_before_raw_daily_pct(monkeypatch):
         lambda *_args, **_kwargs: {"STRONG": strong, "SPIKE": weak_spike},
     )
 
-    snapshot = scan_market(job, max_items=2)
+    snapshot = scan_market(job, max_items=2, now="2026-10-09T01:00:00Z")
 
     assert [row["ticker"] for row in snapshot["top_signals"]] == ["STRONG", "SPIKE"]
 
 
-def test_scan_market_overlays_cn_quotes_from_hithink(monkeypatch):
+def test_scan_market_excludes_intraday_bar_and_preserves_history(monkeypatch):
     job = MarketJob(key="cn", label="A股", market="cn", pool="csi300", limit=1)
-    frame = _signal_frame(last_close=100.0, last_volume=1_000_000.0)
-    frame.loc[frame.index[-2], "Close"] = 100.0
-    frame.loc[frame.index[-1], "Close"] = 100.0
-
+    frame = _signal_frame(last_close=106.0)
+    frame.loc[pd.Timestamp("2026-10-09")] = {"High": 150, "Low": 100, "Close": 149, "Volume": 99_000_000}
+    original = frame.copy(deep=True)
     monkeypatch.setattr("daily_direction.direction.get_report_tickers", lambda **_: ["600030.SS"])
-    monkeypatch.setattr(
-        "daily_direction.direction._download_ohlcv_by_ticker",
-        lambda *_args, **_kwargs: {"600030.SS": frame},
-    )
-    monkeypatch.setattr(
-        "daily_direction.direction.fetch_hithink_cn_quotes",
-        lambda tickers, **_kwargs: {
-            "600030.SS": {
-                "close": 110.0,
-                "daily_pct": 10.0,
-                "volume": 5_000_000.0,
-                "high": 111.0,
-                "low": 99.0,
-                "open": 101.0,
-            }
-        },
-    )
+    monkeypatch.setattr("daily_direction.direction._download_ohlcv_by_ticker", lambda *_a, **_kw: {"600030.SS": frame})
 
-    snapshot = scan_market(job, max_items=1)
+    snapshot = scan_market(job, max_items=1, now="2026-10-09T05:00:00Z")
 
-    assert snapshot["data_source"] == "yfinance+hithink"
-    assert snapshot["top_signals"][0]["ticker"] == "600030.SS"
-    assert snapshot["top_signals"][0]["close"] == 110.0
-    assert snapshot["top_signals"][0]["daily_pct"] == 10.0
-    assert snapshot["top_signals"][0]["quote_source"] == "hithink"
-
-
-def test_scan_market_falls_back_to_yfinance_when_hithink_fails(monkeypatch):
-    job = MarketJob(key="cn", label="A股", market="cn", pool="csi300", limit=1)
-    frame = _signal_frame(last_close=106.0, last_volume=2_000_000.0)
-
-    monkeypatch.setattr("daily_direction.direction.get_report_tickers", lambda **_: ["600030.SS"])
-    monkeypatch.setattr(
-        "daily_direction.direction._download_ohlcv_by_ticker",
-        lambda *_args, **_kwargs: {"600030.SS": frame},
-    )
-    monkeypatch.setattr(
-        "daily_direction.direction.fetch_hithink_cn_quotes",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("hithink down")),
-    )
-
-    snapshot = scan_market(job, max_items=1)
-
-    assert snapshot["data_source"] == "yfinance"
-    assert snapshot["quote_overlay_error"] == "hithink down"
+    assert snapshot["data_date"] == "2026-10-08"
+    assert snapshot["top_signals"][0]["close"] == 106.0
     assert snapshot["top_signals"][0]["quote_source"] == "yfinance"
+    pd.testing.assert_frame_equal(frame, original)
+
+
+def test_scan_market_retries_stale_tickers_and_filters_mixed_dates(monkeypatch):
+    job = MarketJob("us", "美股", "us", "nasdaq100", 2)
+    fresh = _signal_frame()
+    stale = fresh.iloc[:-1]
+    calls = []
+    monkeypatch.setattr("daily_direction.direction.get_report_tickers", lambda **_: ["FRESH", "STALE"])
+    monkeypatch.setattr("daily_direction.direction.futunn_configured", lambda: False)
+
+    def download(tickers, **kwargs):
+        calls.append((tickers, kwargs))
+        return {"FRESH": fresh, "STALE": stale}
+
+    monkeypatch.setattr("daily_direction.direction._download_ohlcv_by_ticker", download)
+    snapshot = scan_market(job, now="2026-10-09T01:00:00Z")
+
+    assert [row["ticker"] for row in snapshot["top_gainers"]] == ["FRESH"]
+    assert snapshot["coverage_ratio"] == 0.5
+    assert snapshot["rejected"]["STALE"] == "2026-10-07"
+    assert "STALE" in calls[1][0]
+    assert calls[0][1]["end"] is not None
+
+
+def test_scan_market_retries_until_latest_session_is_available(monkeypatch):
+    job = MarketJob("us", "美股", "us", "nasdaq100", 1)
+    fresh = _signal_frame()
+    replies = iter([{"MU": fresh.iloc[:-1]}, {"MU": fresh}])
+    monkeypatch.setattr("daily_direction.direction.get_report_tickers", lambda **_: ["MU"])
+    monkeypatch.setattr("daily_direction.direction.futunn_configured", lambda: False)
+    monkeypatch.setattr("daily_direction.direction._download_ohlcv_by_ticker", lambda *_a, **_kw: next(replies))
+
+    snapshot = scan_market(job, now="2026-10-09T01:00:00Z")
+
+    assert snapshot["top_gainers"][0]["data_date"] == "2026-10-08"
+    assert snapshot["coverage_ratio"] == 1
+    assert snapshot["rejected"] == {}
+
+
+def test_scan_market_source_disagreement_blocks_quality(monkeypatch):
+    from daily_direction.quality import quality_errors
+    frame = _signal_frame()
+    job = MarketJob("us", "美股", "us", "nasdaq100", 1)
+    symbols = ["MU", "SPY", "QQQ", "DIA", "SOXX", "AMGN", "MSTR"]
+    monkeypatch.setattr("daily_direction.direction.get_report_tickers", lambda **_: ["MU"])
+    monkeypatch.setattr("daily_direction.direction._download_ohlcv_by_ticker", lambda *_a, **_kw: {t: frame for t in symbols})
+    monkeypatch.setattr("daily_direction.direction.futunn_configured", lambda: True)
+    quote = {"last_price": 90, "prev_close_price": 100, "update_time": int(pd.Timestamp("2026-10-08T20:01:00Z").timestamp() * 1000)}
+    monkeypatch.setattr("daily_direction.direction.fetch_us_snapshots", lambda _: {t: quote for t in symbols})
+
+    snapshot = scan_market(job, now="2026-10-09T01:00:00Z")
+
+    assert snapshot["crosscheck_errors"]
+    assert any("不一致" in error for error in quality_errors({"us": snapshot}))
 
 
 def test_fetch_hithink_cn_quotes_batches_large_requests(monkeypatch):
@@ -189,7 +205,7 @@ def test_build_llm_prompt_contains_three_market_contexts():
         MarketJob(key="hk", label="港股", market="hk", pool="hsi", limit=20),
     ]
     snapshots = {
-        "us": {"label": "美股", "top_signals": [{"ticker": "NVDA", "daily_pct": 4.2, "vol_ratio": 2.1, "close": 150.0}]},
+        "us": {"label": "美股", "top_signals": [{"ticker": "NVDA", "daily_pct": 4.2, "vol_ratio": 2.1, "close": 150.0, "quant_baseline_score": 65}]},
         "cn": {"label": "A股", "top_signals": [{"ticker": "300750.SZ", "daily_pct": 3.1, "vol_ratio": 1.8, "close": 200.0}]},
         "hk": {"label": "港股", "top_signals": [{"ticker": "0700.HK", "daily_pct": 2.8, "vol_ratio": 1.6, "close": 390.0}]},
     }
@@ -207,13 +223,11 @@ def test_build_llm_prompt_contains_three_market_contexts():
     assert "港股" in prompt
     assert "NVDA" in prompt
     assert "今天方向" in prompt
-    assert "不要使用 Markdown 标题" in prompt
-    assert "📅 今天方向简报" in prompt
-    assert "总判断：今天建议" in prompt
-    assert "✅ 今天优先关注" in prompt
-    assert "今日资讯" in prompt
-    assert "异动" in prompt
-    assert "semiconductor export controls" in prompt
+    assert "benchmarks" in prompt and "breadth" in prompt
+    assert "只输出 JSON" in prompt
+    assert "quant_baseline_score" in prompt
+    assert "不能改写为十分制" in prompt
+    assert "Nvidia supplier warning" in prompt
 
 
 def test_build_news_context_marks_event_risks():
@@ -267,20 +281,23 @@ def test_format_for_seatalk_strips_unsupported_markdown():
     assert "*   强趋势： **AAPL**" in text
 
 
-def test_generate_direction_report_formats_llm_output_for_seatalk():
+def test_generate_direction_report_rejects_unsupported_llm_facts():
     text = generate_direction_report(
         {"us": {"label": "美股", "top_signals": []}},
         [MarketJob(key="us", label="美股", market="us", pool="nasdaq100", limit=1)],
-        llm_func=lambda **_: "### 标题\n**AAPL**",
+        llm_func=lambda **_: "### 标题\n**AAPL** +88%",
+        news_context={},
     )
 
     assert "###" not in text
-    assert "**AAPL**" in text
+    assert "AAPL" not in text
+    assert "+88%" not in text
+    assert "模型选择未通过校验" in text
 
 
 def test_build_fallback_direction_is_readable_without_llm():
     snapshots = {
-        "us": {"label": "美股", "top_signals": [{"ticker": "NVDA", "daily_pct": 4.2, "vol_ratio": 2.1, "close": 150.0}]},
+        "us": {"label": "美股", "top_signals": [{"ticker": "NVDA", "daily_pct": 4.2, "vol_ratio": 2.1, "close": 150.0, "quant_baseline_score": 65}]},
         "cn": {"label": "A股", "top_signals": []},
         "hk": {"label": "港股", "top_signals": [{"ticker": "0700.HK", "daily_pct": -1.5, "vol_ratio": 1.3, "close": 390.0}]},
     }
@@ -292,7 +309,7 @@ def test_build_fallback_direction_is_readable_without_llm():
     assert "美股" in text
     assert "NVDA" in text
     assert "A股" in text
-    assert "无明显强信号" in text
+    assert "暂无达到筛选门槛的强信号" in text
     assert "📢 今日资讯/事件" in text
     assert "✅ 今天优先关注" in text
 

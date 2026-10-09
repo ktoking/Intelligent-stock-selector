@@ -5,7 +5,6 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Any, List, Mapping
 
@@ -19,8 +18,11 @@ from daily_direction.direction import (
     MarketJob,
     generate_direction_report,
     scan_markets,
+    build_llm_prompt,
 )
 from daily_direction.seatalk_webhook import post_text
+from daily_direction.news import collect_direction_news
+from daily_direction.quality import quality_errors, utc_now
 
 
 DELIVERY_CHOICES = ("webhook", "seatalk-bot")
@@ -33,7 +35,7 @@ def _delivered_today(path: Path, *, delivery: str, group_id: str) -> bool:
     except (OSError, ValueError):
         return False
     return (
-        state.get("date") == datetime.now().astimezone().date().isoformat()
+        state.get("date") == utc_now().tz_convert("Asia/Shanghai").date().isoformat()
         and state.get("delivery") == delivery
         and state.get("group_id") == group_id
     )
@@ -42,7 +44,7 @@ def _delivered_today(path: Path, *, delivery: str, group_id: str) -> bool:
 def _record_delivery(path: Path, *, delivery: str, group_id: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     state = {
-        "date": datetime.now().astimezone().date().isoformat(),
+        "date": utc_now().tz_convert("Asia/Shanghai").date().isoformat(),
         "delivery": delivery,
         "group_id": group_id,
     }
@@ -73,6 +75,8 @@ def main() -> int:
     parser.add_argument("--prefer-gpt", action=argparse.BooleanOptionalAction, default=True, help="有 OPENAI_API_KEY 时优先用 GPT")
     parser.add_argument("--send", action="store_true", help="实际推送到 SeaTalk；不传则只打印")
     parser.add_argument("--force-send", action="store_true", help="忽略今天已发送记录，手动补发")
+    parser.add_argument("--correction", action="store_true", help="将本次简报标记为更正")
+    parser.add_argument("--output-dir", type=Path, help="保存本次数据、提示词和报告的目录；默认本地 state 目录")
     parser.add_argument(
         "--delivery",
         default=os.environ.get("DAILY_DIRECTION_DELIVERY", "webhook"),
@@ -101,11 +105,25 @@ def main() -> int:
             return 0
 
     snapshots = scan_markets(jobs, max_items=max(1, args.max_items))
+    run_dir = args.output_dir or DELIVERY_STATE_PATH.parent / "daily-direction-runs" / utc_now().tz_convert("Asia/Shanghai").strftime("%Y%m%d-%H%M%S-%f")
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "snapshots.json").write_text(json.dumps(snapshots, ensure_ascii=False, indent=2), encoding="utf-8")
+    errors = quality_errors(snapshots)
     missing = _missing_market_data(snapshots, jobs)
-    if missing:
-        print(f"行情扫描无有效数据：{'、'.join(missing)}；本次不生成或推送简报", file=sys.stderr)
+    if missing or errors:
+        (run_dir / "quality-errors.json").write_text(json.dumps(errors + missing, ensure_ascii=False, indent=2), encoding="utf-8")
+        print("行情校验失败；本次不生成或推送简报：" + "；".join(errors + missing), file=sys.stderr)
+        print(f"诊断记录：{run_dir}", file=sys.stderr)
         return 1
-    text = generate_direction_report(snapshots, jobs, use_llm=not args.no_llm)
+    news = collect_direction_news(snapshots) if not args.no_llm else {}
+    (run_dir / "news.json").write_text(json.dumps(news, ensure_ascii=False, indent=2), encoding="utf-8")
+    (run_dir / "prompt.txt").write_text(build_llm_prompt(snapshots, jobs, news_context=news), encoding="utf-8")
+    text = generate_direction_report(snapshots, jobs, use_llm=not args.no_llm, news_context=news)
+    if args.correction:
+        text = text.replace("📅 今天方向简报", "📅 今天方向简报（更正）", 1)
+        text = text.replace("\n", "\n早间美股部分数据滞后一天，本条按最近完整收盘重新核对，替代早间简报。\n", 1)
+    (run_dir / "report.txt").write_text(text, encoding="utf-8")
+    print(f"本次审计记录：{run_dir}", file=sys.stderr)
     print(text, flush=True)
 
     if not args.send:

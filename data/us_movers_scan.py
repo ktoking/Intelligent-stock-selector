@@ -17,6 +17,7 @@ def _download_ohlcv_by_ticker(
     tickers: List[str],
     period: str = "6mo",
     chunk: int = 60,
+    end: Any = None,
 ) -> Dict[str, pd.DataFrame]:
     """批量下载日 K，返回 ticker -> DataFrame(Open,High,Low,Close,Volume)。"""
     out: Dict[str, pd.DataFrame] = {}
@@ -28,6 +29,7 @@ def _download_ohlcv_by_ticker(
             data = yf.download(
                 batch,
                 period=period,
+                end=end,
                 interval="1d",
                 auto_adjust=True,
                 threads=True,

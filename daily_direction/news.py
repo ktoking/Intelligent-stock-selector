@@ -6,6 +6,9 @@ from config.yf_suppress import suppress_yf_noise
 
 suppress_yf_noise()
 import yfinance as yf
+import pandas as pd
+
+from daily_direction.quality import utc_now
 
 
 RISK_KEYWORDS = {
@@ -38,7 +41,7 @@ def normalize_yf_news_item(ticker: str, item: Mapping[str, Any]) -> Dict[str, st
             "title": str(inner.get("title") or "").strip(),
             "summary": str(inner.get("summary") or inner.get("description") or "").strip(),
             "publisher": publisher.strip(),
-            "published": str(inner.get("pubDate") or inner.get("displayTime") or "")[:19],
+            "published": str(inner.get("pubDate") or inner.get("displayTime") or ""),
             "url": _news_url(link),
         }
     return {
@@ -46,7 +49,7 @@ def normalize_yf_news_item(ticker: str, item: Mapping[str, Any]) -> Dict[str, st
         "title": str(item.get("title") or "").strip(),
         "summary": str(item.get("summary") or "").strip(),
         "publisher": str(item.get("publisher") or "").strip(),
-        "published": str(item.get("published") or "")[:19] if item.get("published") else "",
+        "published": str(item.get("published") or item.get("providerPublishTime") or ""),
         "url": str(item.get("link") or "").strip(),
     }
 
@@ -55,8 +58,10 @@ def fetch_ticker_news(
     tickers: Iterable[str],
     *,
     max_items_per_ticker: int = 2,
+    now: Any = None,
 ) -> Dict[str, List[Dict[str, str]]]:
     out: Dict[str, List[Dict[str, str]]] = {}
+    moment = utc_now(now)
     for ticker in tickers:
         symbol = str(ticker or "").strip().upper()
         if not symbol:
@@ -70,6 +75,10 @@ def fetch_ticker_news(
             if not isinstance(raw, Mapping):
                 continue
             item = normalize_yf_news_item(symbol, raw)
+            published = item.get("published") or ""
+            timestamp = pd.to_datetime(int(published), unit="s", utc=True, errors="coerce") if published.isdigit() else pd.to_datetime(published, utc=True, errors="coerce")
+            if pd.isna(timestamp) or timestamp > moment or timestamp < moment - pd.Timedelta(hours=72):
+                continue
             if item.get("title"):
                 items.append(item)
             if len(items) >= max_items_per_ticker:
@@ -113,8 +122,9 @@ def build_news_context(
 
 def _unique_tickers_from_snapshots(snapshots: Mapping[str, Mapping[str, Any]], max_tickers: int) -> List[str]:
     tickers: List[str] = []
-    for snap in snapshots.values():
-        rows = list(snap.get("top_signals") or [])[:5] + list(snap.get("top_losers") or [])[:5]
+    groups = [list(snap.get("top_signals") or [])[:5] + list(snap.get("top_losers") or [])[:5] for snap in snapshots.values()]
+    for index in range(max((len(group) for group in groups), default=0)):
+        rows = [group[index] for group in groups if index < len(group)]
         for row in rows:
             ticker = str(row.get("ticker") or "").strip().upper()
             if ticker and ticker not in tickers:
