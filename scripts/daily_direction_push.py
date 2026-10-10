@@ -72,6 +72,7 @@ def main() -> int:
     parser.add_argument("--max-items", type=int, default=15, help="每个市场最多交给 LLM 的标的数")
     parser.add_argument("--test", action="store_true", help="测试模式：每个市场只扫少量标的")
     parser.add_argument("--no-llm", action="store_true", help="不调用 LLM，直接输出规则版")
+    parser.add_argument("--style", choices=("aggressive", "conservative"), default=os.environ.get("DAILY_DIRECTION_STYLE", "aggressive"), help="筛选风格，默认积极寻找进攻机会")
     parser.add_argument("--prefer-gpt", action=argparse.BooleanOptionalAction, default=True, help="有 OPENAI_API_KEY 时优先用 GPT")
     parser.add_argument("--send", action="store_true", help="实际推送到 SeaTalk；不传则只打印")
     parser.add_argument("--force-send", action="store_true", help="忽略今天已发送记录，手动补发")
@@ -115,10 +116,12 @@ def main() -> int:
         print("行情校验失败；本次不生成或推送简报：" + "；".join(errors + missing), file=sys.stderr)
         print(f"诊断记录：{run_dir}", file=sys.stderr)
         return 1
-    news = collect_direction_news(snapshots) if not args.no_llm else {}
+    news = collect_direction_news(snapshots)
     (run_dir / "news.json").write_text(json.dumps(news, ensure_ascii=False, indent=2), encoding="utf-8")
-    (run_dir / "prompt.txt").write_text(build_llm_prompt(snapshots, jobs, news_context=news), encoding="utf-8")
-    text = generate_direction_report(snapshots, jobs, use_llm=not args.no_llm, news_context=news)
+    (run_dir / "prompt.txt").write_text(build_llm_prompt(snapshots, jobs, news_context=news, style=args.style), encoding="utf-8")
+    audit = {"style": args.style, "mode": "rule_only" if args.no_llm else "llm_requested"}
+    text = generate_direction_report(snapshots, jobs, use_llm=not args.no_llm, news_context=news, style=args.style, audit=audit)
+    (run_dir / "selection.json").write_text(json.dumps(audit, ensure_ascii=False, indent=2), encoding="utf-8")
     if args.correction:
         text = text.replace("📅 今天方向简报", "📅 今天方向简报（更正）", 1)
         text = text.replace("\n", "\n早间美股部分数据滞后一天，本条按最近完整收盘重新核对，替代早间简报。\n", 1)

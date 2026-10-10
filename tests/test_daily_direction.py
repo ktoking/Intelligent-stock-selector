@@ -254,6 +254,7 @@ def test_collect_direction_news_uses_top_signals_and_losers(monkeypatch):
         return {ticker: [{"ticker": ticker, "title": f"{ticker} news"}] for ticker in tickers}
 
     monkeypatch.setattr("daily_direction.news.fetch_ticker_news", fake_fetch)
+    monkeypatch.setattr("daily_direction.news.fetch_market_news", lambda **_: ([], []))
     snapshots = {
         "us": {
             "top_signals": [{"ticker": "AAPL"}, {"ticker": "VRTX"}],
@@ -309,9 +310,9 @@ def test_build_fallback_direction_is_readable_without_llm():
     assert "美股" in text
     assert "NVDA" in text
     assert "A股" in text
-    assert "暂无达到筛选门槛的强信号" in text
-    assert "📢 今日资讯/事件" in text
-    assert "✅ 今天优先关注" in text
+    assert "暂无合格进攻候选" in text
+    assert "关键事件" in text
+    assert "优先顺序" in text
 
 
 def test_build_text_payload_is_seatalk_system_account_shape():

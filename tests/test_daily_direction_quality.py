@@ -54,8 +54,8 @@ def test_oct8_selloff_report_is_defensive_despite_positive_candidates():
     assert "纳指100ETF -1.34%" in text
     assert "半导体ETF -3.35%" in text
     assert "MU 美光科技（存储芯片） -4.79%" in text
-    assert "基准分 70/100" in text
-    assert "未取得可用的近期资讯" in text
+    assert "逆势候选" in text
+    assert "资讯源暂不可用" in text
     assert "缺乏统一的宏观驱动" not in text
 
 
