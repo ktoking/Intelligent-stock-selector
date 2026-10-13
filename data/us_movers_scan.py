@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
+import gc
 
 import pandas as pd
 
@@ -21,6 +22,10 @@ def _download_ohlcv_by_ticker(
 ) -> Dict[str, pd.DataFrame]:
     """批量下载日 K，返回 ticker -> DataFrame(Open,High,Low,Close,Volume)。"""
     out: Dict[str, pd.DataFrame] = {}
+    # macOS launchd jobs inherit a 256-file limit. yfinance creates temporary
+    # curl handles per ticker; cycles can retain them until a later GC pass.
+    # Bound each batch and collect after its workers finish, including failures.
+    chunk = max(1, min(chunk, 20))
     for i in range(0, len(tickers), chunk):
         batch = [t.strip().upper() for t in tickers[i : i + chunk] if (t or "").strip()]
         if not batch:
@@ -32,13 +37,17 @@ def _download_ohlcv_by_ticker(
                 end=end,
                 interval="1d",
                 auto_adjust=True,
-                threads=True,
+                threads=8,
                 progress=False,
                 ignore_tz=True,
                 group_by="ticker",
             )
         except Exception:
             continue
+        finally:
+            # Collect abandoned per-ticker handles. yfinance still owns its
+            # active shared session, needed by later Ticker/news calls.
+            gc.collect()
         if data is None or data.empty:
             continue
         need = ("Close", "High", "Low", "Volume")

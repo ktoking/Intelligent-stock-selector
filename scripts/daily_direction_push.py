@@ -27,6 +27,53 @@ from daily_direction.quality import quality_errors, utc_now
 
 DELIVERY_CHOICES = ("webhook", "seatalk-bot")
 DELIVERY_STATE_PATH = Path.home() / ".local" / "state" / "stock-agent" / "daily-direction-delivery.json"
+NEWS_DELIVERY_STATE_PATH = DELIVERY_STATE_PATH.with_name("daily-direction-news-delivery.json")
+
+
+def _deliver(text: str, args: Any, run_dir: Path, *, news_only: bool = False) -> None:
+    if args.delivery == "seatalk-bot":
+        from daily_direction.seatalk_bot import send_group_text_via_bot
+        result = send_group_text_via_bot(text, group_id=args.group_id, thread_id=args.thread_id)
+        _record_delivery(NEWS_DELIVERY_STATE_PATH if news_only else DELIVERY_STATE_PATH,
+                         delivery=args.delivery, group_id=result["group_id"])
+        (run_dir / "delivery.json").write_text(json.dumps({**result, "status": "success", "news_only": news_only,
+                                                          "sent_at": utc_now().isoformat()}, ensure_ascii=False, indent=2), encoding="utf-8")
+        print("SeaTalk bot 推送成功" + ("（独立资讯）" if news_only else ""), flush=True)
+    else:
+        if not args.webhook_url.strip():
+            raise ValueError("未提供 --webhook-url 或 DAILY_DIRECTION_WEBHOOK_URL")
+        post_text(args.webhook_url, text, signing_secret=args.signing_secret, sign_mode=args.sign_mode, at_all=args.at_all)
+        print("SeaTalk 推送已请求发送", flush=True)
+
+
+def _news_fallback(snapshots: Mapping[str, Mapping[str, Any]], args: Any, run_dir: Path, errors: List[str]) -> bool:
+    if not args.news_fallback:
+        return False
+    # A fallback success must not suppress a later valid direction report.
+    if args.send and args.delivery == "seatalk-bot" and not args.force_send and _delivered_today(
+            NEWS_DELIVERY_STATE_PATH, delivery=args.delivery, group_id=args.group_id.strip()):
+        print("今天已发送独立资讯，继续等待合格行情简报", flush=True)
+        return True
+    from daily_direction.reporting import render_news_only
+    news = collect_direction_news(snapshots)
+    (run_dir / "news.json").write_text(json.dumps(news, ensure_ascii=False, indent=2), encoding="utf-8")
+    try:
+        descriptions = []
+        for snap in snapshots.values():
+            rejected_dates = sorted(value for value in (snap.get("rejected") or {}).values()
+                                    if isinstance(value, str) and len(value) == 10 and value[4] == "-" and value[7] == "-")
+            if rejected_dates and snap.get("data_date") != snap.get("expected_session"):
+                descriptions.append(f"{snap['label']}个股历史日线缺少 {snap['expected_session']}，最新可用为 {rejected_dates[-1]}")
+        reason = "；".join(descriptions) or "；".join(errors)
+        text = render_news_only(news, reason=reason + "。完整方向简报待行情校验通过。")
+    except ValueError:
+        print("行情和近期资讯均未取得合格数据，本次不发送", file=sys.stderr)
+        return False
+    (run_dir / "report.txt").write_text(text, encoding="utf-8")
+    print(text, flush=True)
+    if args.send:
+        _deliver(text, args, run_dir, news_only=True)
+    return True
 
 
 def _delivered_today(path: Path, *, delivery: str, group_id: str) -> bool:
@@ -72,6 +119,7 @@ def main() -> int:
     parser.add_argument("--max-items", type=int, default=15, help="每个市场最多交给 LLM 的标的数")
     parser.add_argument("--test", action="store_true", help="测试模式：每个市场只扫少量标的")
     parser.add_argument("--no-llm", action="store_true", help="不调用 LLM，直接输出规则版")
+    parser.add_argument("--news-fallback", action="store_true", help="行情校验不通过时仍发送有日期来源的独立资讯；不生成行情判断")
     parser.add_argument("--style", choices=("aggressive", "conservative"), default=os.environ.get("DAILY_DIRECTION_STYLE", "aggressive"), help="筛选风格，默认积极寻找进攻机会")
     parser.add_argument("--prefer-gpt", action=argparse.BooleanOptionalAction, default=True, help="有 OPENAI_API_KEY 时优先用 GPT")
     parser.add_argument("--send", action="store_true", help="实际推送到 SeaTalk；不传则只打印")
@@ -113,8 +161,10 @@ def main() -> int:
     missing = _missing_market_data(snapshots, jobs)
     if missing or errors:
         (run_dir / "quality-errors.json").write_text(json.dumps(errors + missing, ensure_ascii=False, indent=2), encoding="utf-8")
-        print("行情校验失败；本次不生成或推送简报：" + "；".join(errors + missing), file=sys.stderr)
+        print("行情校验失败；本次不生成或推送完整方向简报：" + "；".join(errors + missing), file=sys.stderr)
         print(f"诊断记录：{run_dir}", file=sys.stderr)
+        if _news_fallback(snapshots, args, run_dir, errors + missing):
+            return 0
         return 1
     news = collect_direction_news(snapshots)
     (run_dir / "news.json").write_text(json.dumps(news, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -131,25 +181,7 @@ def main() -> int:
 
     if not args.send:
         return 0
-    if args.delivery == "seatalk-bot":
-        from daily_direction.seatalk_bot import send_group_text_via_bot
-
-        result = send_group_text_via_bot(text, group_id=args.group_id, thread_id=args.thread_id)
-        _record_delivery(DELIVERY_STATE_PATH, delivery=args.delivery, group_id=result["group_id"])
-        print("SeaTalk bot 推送成功", flush=True)
-        return 0
-
-    if not args.webhook_url.strip():
-        print("未提供 --webhook-url 或 DAILY_DIRECTION_WEBHOOK_URL", file=sys.stderr)
-        return 2
-    post_text(
-        args.webhook_url,
-        text,
-        signing_secret=args.signing_secret,
-        sign_mode=args.sign_mode,
-        at_all=args.at_all,
-    )
-    print("SeaTalk 推送已请求发送", flush=True)
+    _deliver(text, args, run_dir)
     return 0
 
 

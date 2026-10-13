@@ -7,6 +7,7 @@ quoteSummary/topHoldings 仅含约 10 只重仓。完整列表优先使用指数
 api.nasdaq.com（股票代码与 Yahoo/yfinance 一致），失败再回退 Wikipedia。
 """
 import time
+from io import BytesIO
 from typing import List, Optional
 
 import pandas as pd
@@ -200,11 +201,16 @@ def _akshare_code_to_yfinance(code: str) -> Optional[str]:
 
 
 def get_csi300_tickers_akshare() -> Optional[List[str]]:
-    """用 AKShare 拉取沪深300 成分股（yfinance 格式）。未装 akshare 或接口变更时返回 None。"""
+    """用 AKShare 同源的中证官方名单（yfinance 格式），失败返回 None。
+
+    AKShare 的该接口内部 requests.get 没有超时；这里限制等待时间，
+    避免定时简报卡在成分股请求，保留同一官方数据和静态回退。
+    """
     try:
-        import akshare as ak
-        # 中证指数成分：symbol 000300 = 沪深300
-        df = ak.index_stock_cons_csindex(symbol="000300")
+        url = "https://oss-ch.csindex.com.cn/static/html/csindex/public/uploads/file/autofile/cons/000300cons.xls"
+        with requests.get(url, timeout=(4, 10)) as response:
+            response.raise_for_status()
+            df = pd.read_excel(BytesIO(response.content))
         if df is None or df.empty:
             return None
         # 列名可能是 "成分券代码" / "品种代码" / "code" 等

@@ -83,6 +83,26 @@ def default_news_ids(news: list[dict]) -> list[str]:
     return chosen[:3]
 
 
+def render_news_only(context: Mapping[str, Any], *, reason: str) -> str:
+    """News can be delivered even when daily price evidence fails its gate."""
+    items = news_evidence(context)
+    if not items:
+        raise ValueError("No recent news available for independent briefing")
+    chosen = default_news_ids(items)
+    lines = ["📰 每日资讯", "", "**行情简报暂缓，先看已核实来源的近期事件。**"]
+    for item in items:
+        if item["id"] not in chosen:
+            continue
+        stamp = pd.to_datetime(item.get("published"), utc=True, errors="coerce")
+        date = stamp.tz_convert("Asia/Shanghai").strftime("%m-%d %H:%M") if not pd.isna(stamp) else "日期未标注"
+        title = str(item.get("title", ""))[:150].replace("[", "（").replace("]", "）").replace("*", "")
+        link = str(item.get("url") or "")
+        title = f"[{title}]({link})" if link.startswith("https://") else title
+        lines += ["", f"• {title}", f"  {item.get('publisher') or 'Yahoo'} · {date}"]
+    lines += ["", "行情状态：" + reason[:300], "以上为近72小时媒体快讯，时间为北京时间；不替代完整日线的方向判断。", "仅研究参考。"]
+    return "\n".join(lines)
+
+
 def parse_selection(text: str, allowed: dict, news: list[dict]) -> dict:
     value = str(text).strip()
     if value.startswith("```"):
