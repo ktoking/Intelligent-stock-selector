@@ -20,7 +20,7 @@ from data.us_movers_scan import _download_ohlcv_by_ticker
 from agents.score_baseline import compute_quant_baseline
 from daily_direction.news import collect_direction_news
 from daily_direction.quality import BENCHMARKS, completed_bars, data_date, latest_completed_session, utc_now
-from daily_direction.futunn_market import fetch_us_snapshots, configured as futunn_configured
+from daily_direction.futunn_market import fetch_us_snapshots, fetch_daily_history, configured as futunn_configured
 
 
 @dataclass(frozen=True)
@@ -235,7 +235,8 @@ def _row_for_ticker(ticker: str, df: pd.DataFrame) -> Optional[Dict[str, Any]]:
     signal = eval_daily_signal(df)
     if not signal:
         return None
-    return {"ticker": ticker, **signal}
+    return {"ticker": ticker, **signal, "company_name": df.attrs.get("company_name", ""),
+            "quote_source": df.attrs.get("quote_source", "yfinance")}
 
 
 def scan_market(job: MarketJob, *, max_items: int = 15, period: str = "1y", now: Any = None) -> Dict[str, Any]:
@@ -250,12 +251,17 @@ def scan_market(job: MarketJob, *, max_items: int = 15, period: str = "1y", now:
     symbols = list(dict.fromkeys(tickers + list(benchmark_names)))
     # An explicit end changes the Yahoo request from a cacheable range URL to a
     # timestamped interval. Date checks still apply to every returned ticker.
-    frames = _download_ohlcv_by_ticker(symbols, period=period, chunk=60, end=moment.to_pydatetime())
-    bars = {ticker: completed_bars(frame, session) for ticker, frame in frames.items()}
+    frames, source_diagnostics = fetch_daily_history(symbols, session=session) if futunn_configured() else ({}, [])
+    missing_history = [ticker for ticker in symbols if ticker not in frames]
+    if missing_history:
+        fallback = _download_ohlcv_by_ticker(missing_history, period=period, chunk=60, end=moment.to_pydatetime())
+        frames.update(fallback)
+        source_diagnostics.append({"source": "yfinance", "status": "fallback", "tickers": missing_history})
+    bars = {ticker: completed_bars(frame, session, require_volume=ticker not in benchmark_names) for ticker, frame in frames.items()}
     stale = [ticker for ticker in symbols if data_date(bars.get(ticker)) != session]
     if stale:
         retry = _download_ohlcv_by_ticker(stale, period=period, chunk=20, end=(moment + pd.Timedelta(seconds=1)).to_pydatetime())
-        bars.update({ticker: completed_bars(frame, session) for ticker, frame in retry.items()})
+        bars.update({ticker: completed_bars(frame, session, require_volume=ticker not in benchmark_names) for ticker, frame in retry.items()})
 
     rows: List[Dict[str, Any]] = []
     rejected = {}
@@ -266,7 +272,6 @@ def scan_market(job: MarketJob, *, max_items: int = 15, period: str = "1y", now:
             continue
         row = _row_for_ticker(ticker, frame)
         if row:
-            row["quote_source"] = "yfinance"
             row["data_date"] = session
             rows.append(row)
         else:
@@ -280,7 +285,7 @@ def scan_market(job: MarketJob, *, max_items: int = 15, period: str = "1y", now:
             benchmarks.append({**row, "name": name, "data_date": session})
     crosscheck_errors = []
     comparisons = []
-    crosscheck_status = "历史行情使用 Yahoo；此市场未作富途收盘快照核对"
+    crosscheck_status = "使用有交易日期的完整历史日线；此市场未作富途收盘快照核对"
     if job.key == "us" and futunn_configured():
         # last_price is the regular-session price; pre/after/overnight are
         # separate fields. Only compare while the next regular session is closed.
@@ -306,21 +311,21 @@ def scan_market(job: MarketJob, *, max_items: int = 15, period: str = "1y", now:
                     pct = (close / previous - 1) * 100 if close and previous else None
                     row = _row_for_ticker(ticker, frame)
                     comparisons.append({
-                        "ticker": ticker, "session": session, "yahoo_close": row["close"], "yahoo_daily_pct": row["daily_pct"],
+                        "ticker": ticker, "session": session, "history_source": row["quote_source"], "history_close": row["close"], "history_daily_pct": row["daily_pct"],
                         "futunn_regular_price": close, "futunn_previous_close": previous, "futunn_daily_pct": pct,
                         "futunn_update_time": update.isoformat(), "futunn_service_data_date": quote.get("data_date"),
                     })
                     if pct is None or abs(pct - row["daily_pct"]) > 0.15 or abs(close / row["close"] - 1) > 0.002:
-                        crosscheck_errors.append(f"{ticker} 富途与 Yahoo 收盘价格/涨跌幅不一致")
+                        crosscheck_errors.append(f"{ticker} 富途快照与历史日线收盘价格/涨跌幅不一致")
                     else:
                         checked += 1
                 if not all(ticker in independent for ticker in benchmark_names):
                     crosscheck_errors.append("富途缺少市场基准快照")
-                crosscheck_status = f"富途正规时段快照交叉核对 {checked} 个标的；历史 K 线来自 Yahoo"
+                crosscheck_status = f"富途正规时段快照核对 {checked} 个标的，历史日线逐标的记录来源"
             except Exception as exc:
                 crosscheck_errors.append(f"富途校验失败：{type(exc).__name__}")
         else:
-            crosscheck_status = "富途当前已进入下一交易时段，使用带交易日期的 Yahoo 收盘日线"
+            crosscheck_status = "富途当前已进入下一交易时段，使用带交易日期的完整历史日线"
 
     positive = [r for r in rows if r["daily_pct"] > 0]
     positive.sort(key=lambda r: (r.get("quant_baseline_score", 0), r["signal_score"], r["daily_pct"]), reverse=True)
@@ -334,7 +339,8 @@ def scan_market(job: MarketJob, *, max_items: int = 15, period: str = "1y", now:
         "pool": job.pool,
         "requested_limit": job.limit,
         "downloaded": len(rows),
-        "data_source": "yfinance",
+        "data_source": "/".join(sorted(set(row["quote_source"] for row in rows))),
+        "source_diagnostics": source_diagnostics,
         "as_of": moment.tz_convert("Asia/Shanghai").isoformat(),
         "expected_session": session,
         "data_date": session if rows else "",

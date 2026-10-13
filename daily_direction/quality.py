@@ -30,7 +30,7 @@ def latest_completed_session(market: str, now: Any = None) -> str:
     return closed.index[-1].date().isoformat()
 
 
-def completed_bars(frame: pd.DataFrame, session: str) -> pd.DataFrame:
+def completed_bars(frame: pd.DataFrame, session: str, *, require_volume: bool = True) -> pd.DataFrame:
     if frame is None or frame.empty or not isinstance(frame.index, pd.DatetimeIndex):
         return pd.DataFrame()
     out = frame.copy().sort_index()
@@ -43,7 +43,7 @@ def completed_bars(frame: pd.DataFrame, session: str) -> pd.DataFrame:
         return pd.DataFrame()
     out[required] = out[required].apply(pd.to_numeric, errors="coerce")
     out = out.dropna(subset=required)
-    return out.loc[(out["Close"] > 0) & (out["Volume"] > 0)]
+    return out.loc[(out["Close"] > 0) & ((out["Volume"] > 0) if require_volume else (out["Volume"] >= 0))]
 
 
 def data_date(frame: pd.DataFrame) -> str:

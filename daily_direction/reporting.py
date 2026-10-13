@@ -154,24 +154,26 @@ def render_report(snapshots: Mapping[str, Mapping[str, Any]], *, selection: dict
     eligible = [key for key in snapshots if stances[key] != "防守" and selection["focus"].get(key) and snapshots[key].get("benchmarks")]
     if style == "aggressive" and eligible:
         verdict = "进攻" if all(v == "进攻" for v in stances.values()) else "分市场进攻"
-    lines = ["📅 今天方向简报", "", f"**总判断：今天建议【{verdict}】。**"]
+    lines = ["📅 今天方向简报", "", f"总判断：今天建议【{verdict}】。"]
     if eligible and style == "aggressive":
         lines.append("主攻 " + " / ".join(snapshots[key]["label"] for key in eligible) + "的强势候选；放量突破再试探，跳空过大等回踩。")
     else:
         lines.append("优先盯逆势强股，放量突破再试探；市场承压时缩小试探范围。" if verdict == "防守" else "优先盯强势候选，放量续强再行动。")
     icons = {"us": "🇺🇸", "cn": "🇨🇳", "hk": "🇭🇰"}
     for key, snap in snapshots.items():
-        lines += ["", f"{icons.get(key, '')} **{snap['label']} · {stances[key]}** ｜ {snap.get('data_date', '未标注')}收盘"]
+        lines += ["", "────────────", f"{icons.get(key, '')} {snap['label']} · {stances[key]} ｜ {snap.get('data_date', '未标注')}收盘"]
         benchmarks = snap.get("benchmarks", [])
         if benchmarks:
-            lines.append(" / ".join(f"{row['name']} {row['daily_pct']:+.2f}%" for row in benchmarks))
+            for start in range(0, len(benchmarks), 2):
+                lines.append(" / ".join(f"{row['name']} {row['daily_pct']:+.2f}%" for row in benchmarks[start:start + 2]))
         breadth = snap.get("breadth") or {}
         lines.append(f"样本 ↑{breadth.get('advancing', 0)} ↓{breadth.get('declining', 0)} →{breadth.get('unchanged', 0)} · 覆盖 {snap.get('downloaded', 0)}/{snap.get('universe_size', 0)}")
         rows = {row["ticker"]: row for field in ("top_signals", "top_gainers", "top_losers") for row in snap.get(field, [])}
         focus = selection["focus"].get(key, [])
-        for ticker in focus:
+        for index, ticker in enumerate(focus, 1):
             row = rows[ticker]
             name, sector = identity(ticker)
+            name = row.get("company_name") or name
             marks = []
             if row.get("breakout_ma5"): marks.append("突破五日线")
             if row.get("breakout_20d"): marks.append("突破20日高点")
@@ -179,20 +181,22 @@ def render_report(snapshots: Mapping[str, Mapping[str, Any]], *, selection: dict
             mark = " · " + "、".join(marks[:2]) if marks else ""
             display = f"{ticker} {name}{'（' + sector + '）' if sector else ''}".strip()
             label = "逆势候选" if stances[key] == "防守" else "进攻候选"
-            lines.append(f"• **{label}** {display} {row['daily_pct']:+.2f}% · 量比 {row['vol_ratio']:.2f}{mark}")
+            lines.append(f"{index}. {label}｜{display}")
+            lines.append(f"{row['daily_pct']:+.2f}% · 量比 {row['vol_ratio']:.2f}{mark}")
             if row.get("high") and row.get("low"):
-                lines.append(f"  触发：放量站上 {row['high']:g}；失效：跌破 {row['low']:g}。")
+                lines.append(f"触发：放量站上 {row['high']:g} ｜ 失效：跌破 {row['low']:g}")
             else:
-                lines.append("  触发：放量突破收盘日高点；跌破该日低点取消观察。")
+                lines.append("触发：放量突破收盘日高点；跌破该日低点取消观察。")
         if not focus:
             lines.append("• 暂无合格进攻候选，等待放量转强。")
         for ticker in selection["risk"].get(key, [])[:1]:
             row = rows[ticker]
             name, sector = identity(ticker)
+            name = row.get("company_name") or name
             display = f"{ticker} {name}{'（' + sector + '）' if sector else ''}".strip()
             warning = "涨幅过大，等回踩" if row["daily_pct"] >= 7 else "承压，暂不抄底"
             lines.append(f"• 回避：{display} {row['daily_pct']:+.2f}% · {warning}")
-    lines += ["", "📢 **关键事件 · 近72小时**"]
+    lines += ["", "────────────", "📢 关键事件 · 近72小时"]
     chosen = [item for item in news if item["id"] in selection["news_ids"]]
     if chosen:
         for item in chosen:
@@ -202,26 +206,30 @@ def render_report(snapshots: Mapping[str, Mapping[str, Any]], *, selection: dict
             raw_title = str(item.get("title", ""))
             title = (raw_title[:90] + ("…" if len(raw_title) > 90 else "")).replace("[", "（").replace("]", "）").replace("*", "")
             link = str(item.get("url") or "")
-            title = f"[{title}]({link})" if link.startswith("https://") else title
-            lines.append(f"• {title} ｜ {source} {date}")
+            lines.append(f"• {title}")
+            lines.append(f"{source} · {date}" + (f"\n{link}" if link.startswith("https://") else ""))
         lines.append("事件可能晚于收盘；作为下一交易时段线索，非涨跌归因。")
     else:
         lines.append("资讯源暂不可用，事件线索待补；本次仅按量价筛选。")
-    lines += ["", "🎯 **优先顺序**"]
+    lines += ["", "🎯 优先顺序"]
     focus_list = [ticker for values in selection["focus"].values() for ticker in values]
     focus_list.sort(key=lambda ticker: next((stances[key] != "防守", opportunity_rank(row, snap)) for key, snap in snapshots.items() for field in ("top_signals", "top_gainers") for row in snap.get(field, []) if row["ticker"] == ticker), reverse=True)
     lines.append(" → ".join(focus_list[:3]) + "；等触发，跳空过大等回踩。" if focus_list else "等待强势候选，不强行进攻。")
     verified = bool((snapshots.get("us") or {}).get("crosscheck_comparisons"))
-    lines += ["", "行情：Yahoo 完整收盘" + (" / 富途核对" if verified else "") + "；样本不代表全市场。",
+    sources = {source for snap in snapshots.values() for source in str(snap.get("data_source") or "").split("/") if source}
+    if not sources:
+        sources = {row.get("quote_source", "yfinance") for snap in snapshots.values() for field in ("top_signals", "top_gainers", "benchmarks") for row in snap.get(field, [])}
+    source_text = " / ".join("富途历史日线" if source == "futunn" else "Yahoo 日线" for source in sorted(sources)) or "完整历史日线"
+    lines += ["", "行情：" + source_text + ("；美股快照核对" if verified else "") + "。样本不代表全市场。",
               "触发/失效取收盘日高/低点（复权价），需在下一交易时段确认。",
               ("风格：积极寻找机会" if style == "aggressive" else "风格：稳健筛选") + "；仅研究参考，不构成投资建议。"]
     if mode != "llm_selection":
         lines.append("规则版扫描，本次未调用 LLM。" if mode == "rule_only" else "模型选择未通过校验，使用规则版候选。")
     text = "\n".join(lines)
-    if len(text) > 1500:
+    if len(text) > 2000:
         # Preserve numerical facts. Long news URLs remain in the audit JSON.
-        text = re.sub(r"\[([^\]]+)\]\(https?://[^)]+\)", r"\1", text)
-    if len(text) > 1500:
+        text = "\n".join(line for line in text.splitlines() if not line.startswith(("http://", "https://")))
+    if len(text) > 2000:
         compact = {category: {key: items[:1] for key, items in selection[category].items()} for category in ("focus", "risk")}
         compact["news_ids"] = selection["news_ids"]
         if compact != selection:

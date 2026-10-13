@@ -23,6 +23,13 @@ from daily_direction.hithink_market import fetch_hithink_cn_quotes
 from scripts.daily_direction_push import _delivered_today, _missing_market_data, _record_delivery
 
 
+@pytest.fixture(autouse=True)
+def no_live_history_requests(monkeypatch):
+    # Existing scanner tests inject Yahoo fixtures and must stay offline after
+    # Futunn became the primary historical source.
+    monkeypatch.setattr("daily_direction.direction.fetch_daily_history", lambda *a, **kw: ({}, []))
+
+
 def _signal_frame(last_close: float = 108.0, last_volume: float = 3_000_000.0) -> pd.DataFrame:
     rows = []
     for i in range(60):
