@@ -1,0 +1,143 @@
+{
+  "provider": "kokoro-local",
+  "voice": "zf_xiaobei",
+  "phonemizer": "misaki-zh-v1.0",
+  "timeline_duration": 60,
+  "lines": [
+    {
+      "id": "cap01",
+      "text": "把选股、回测、复盘，交给一个AI工作台。",
+      "path": "assets/audio/segments/cap01.wav",
+      "duration": 4.346,
+      "start": 0.02,
+      "end": 4.366,
+      "scene": "s1"
+    },
+    {
+      "id": "cap02",
+      "text": "这是Quant。",
+      "path": "assets/audio/segments/cap02.wav",
+      "duration": 1.215,
+      "start": 4.526,
+      "end": 5.742,
+      "scene": "s1"
+    },
+    {
+      "id": "cap03",
+      "text": "自选股、纳指一百、标普五百，汇入同一个研究池。",
+      "path": "assets/audio/segments/cap03.wav",
+      "duration": 4.507,
+      "start": 7.5,
+      "end": 12.007,
+      "scene": "s2"
+    },
+    {
+      "id": "cap04",
+      "text": "捕捉异动，追踪资讯，让机会持续进入视野。",
+      "path": "assets/audio/segments/cap04.wav",
+      "duration": 4.218,
+      "start": 12.167,
+      "end": 16.385,
+      "scene": "s2"
+    },
+    {
+      "id": "cap05",
+      "text": "AI提出假设、生成因子。",
+      "path": "assets/audio/segments/cap05.wav",
+      "duration": 3.056,
+      "start": 18.5,
+      "end": 21.556,
+      "scene": "s3"
+    },
+    {
+      "id": "cap06",
+      "text": "程序回测、独立核账，逐层筛选。",
+      "path": "assets/audio/segments/cap06.wav",
+      "duration": 3.04,
+      "start": 21.716,
+      "end": 24.756,
+      "scene": "s3"
+    },
+    {
+      "id": "cap07",
+      "text": "每个策略，都能追到判断依据。",
+      "path": "assets/audio/segments/cap07.wav",
+      "duration": 3.044,
+      "start": 24.916,
+      "end": 27.96,
+      "scene": "s3"
+    },
+    {
+      "id": "cap08",
+      "text": "收益曲线只是起点。",
+      "path": "assets/audio/segments/cap08.wav",
+      "duration": 1.993,
+      "start": 29.5,
+      "end": 31.493,
+      "scene": "s4"
+    },
+    {
+      "id": "cap09",
+      "text": "成本、回撤、延迟，都要经受检验。",
+      "path": "assets/audio/segments/cap09.wav",
+      "duration": 3.306,
+      "start": 31.653,
+      "end": 34.959,
+      "scene": "s4"
+    },
+    {
+      "id": "cap10",
+      "text": "每一个买卖点，都能展开交易明细。",
+      "path": "assets/audio/segments/cap10.wav",
+      "duration": 3.342,
+      "start": 35.119,
+      "end": 38.461,
+      "scene": "s4"
+    },
+    {
+      "id": "cap11",
+      "text": "先做未来观察，再进入模拟盘。",
+      "path": "assets/audio/segments/cap11.wav",
+      "duration": 3.125,
+      "start": 40.497,
+      "end": 43.622,
+      "scene": "s5"
+    },
+    {
+      "id": "cap12",
+      "text": "复盘提出新假设，冻结策略保留原规则。",
+      "path": "assets/audio/segments/cap12.wav",
+      "duration": 4.012,
+      "start": 43.782,
+      "end": 47.794,
+      "scene": "s5"
+    },
+    {
+      "id": "cap13",
+      "text": "实盘，始终需要人工授权。",
+      "path": "assets/audio/segments/cap13.wav",
+      "duration": 2.548,
+      "start": 47.954,
+      "end": 50.503,
+      "scene": "s5"
+    },
+    {
+      "id": "cap14",
+      "text": "市场、策略、交易、复盘，一屏掌握。",
+      "path": "assets/audio/segments/cap14.wav",
+      "duration": 3.112,
+      "start": 51.5,
+      "end": 54.612,
+      "scene": "s6"
+    },
+    {
+      "id": "cap15",
+      "text": "Quant，让研究有据可查。",
+      "path": "assets/audio/segments/cap15.wav",
+      "duration": 2.287,
+      "start": 54.772,
+      "end": 57.059,
+      "scene": "s6"
+    }
+  ]
+}

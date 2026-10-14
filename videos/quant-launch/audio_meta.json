@@ -1,0 +1,11 @@
+{
+  "voices": [],
+  "bgm": {
+    "path": "assets/audio/original-score.mp3",
+    "volume": 0.75,
+    "source": "original-local-synthesis"
+  },
+  "sfx": [],
+  "total_duration_s": 60,
+  "narration": "none"
+}

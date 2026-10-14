@@ -1,0 +1,4 @@
+# Private stock-agent project: no native reporting hooks.
+[features]
+codex_hooks = false
+hooks = false

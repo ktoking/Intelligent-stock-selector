@@ -1,0 +1,307 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "-apple-system",
+      "fontSize": "32px",
+      "fontWeight": "650",
+      "lineHeight": "43.2px",
+      "letterSpacing": "-1.1px",
+      "color": "#F5F5F7",
+      "sampleText": "总览"
+    },
+    {
+      "role": "link",
+      "fontFamily": "-apple-system",
+      "fontSize": "20px",
+      "fontWeight": "650",
+      "lineHeight": "30px",
+      "letterSpacing": "-0.65px",
+      "color": "#F5F5F7",
+      "sampleText": "Quant"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "-apple-system",
+      "fontSize": "17px",
+      "fontWeight": "600",
+      "lineHeight": "22.95px",
+      "letterSpacing": "-0.35px",
+      "color": "#F5F5F7",
+      "sampleText": "历史回测与七日预测"
+    },
+    {
+      "role": "body",
+      "fontFamily": "-apple-system",
+      "fontSize": "13px",
+      "fontWeight": "400",
+      "lineHeight": "19.5px",
+      "letterSpacing": "normal",
+      "color": "#929298",
+      "sampleText": "运行、收益与需要关注的变化。"
+    },
+    {
+      "role": "heading-2",
+      "fontFamily": "-apple-system",
+      "fontSize": "11px",
+      "fontWeight": "600",
+      "lineHeight": "14.85px",
+      "letterSpacing": "-0.35px",
+      "color": "#929298",
+      "sampleText": "2026-10-12 · 美股交易日"
+    },
+    {
+      "role": "label",
+      "fontFamily": "-apple-system",
+      "fontSize": "10px",
+      "fontWeight": "500",
+      "lineHeight": "15px",
+      "letterSpacing": "normal",
+      "color": "#929298",
+      "sampleText": "正常"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      2,
+      3,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      12,
+      13,
+      14,
+      15,
+      16,
+      18,
+      20
+    ],
+    "baseUnit": 8
+  },
+  "radius": [
+    "7px",
+    "9px",
+    "12px",
+    "18px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.063) 0px 1px 2px 0px",
+      "count": 7
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.07) 0px 1px 4px 0px",
+      "count": 1
+    },
+    {
+      "value": "rgba(0, 0, 0, 0.133) 0px 12px 36px 0px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "☀白天",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#929298",
+      "padding": "7px 5px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "39.5px"
+    },
+    {
+      "label": "历史 + 预测",
+      "background": "#19191C",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "7px 12px",
+      "borderRadius": "7px",
+      "border": "0px none rgb(245, 245, 247)",
+      "boxShadow": "rgba(0, 0, 0, 0.07) 0px 1px 4px 0px",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "30.5px"
+    },
+    {
+      "label": "Shadow 观察",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#929298",
+      "padding": "7px 12px",
+      "borderRadius": "7px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "30.5px"
+    },
+    {
+      "label": "01残差动量 · 20+19.71%",
+      "background": "#19191C",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "10px 12px",
+      "borderRadius": "9px",
+      "border": "1px solid rgb(128, 185, 255)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "38.5px"
+    },
+    {
+      "label": "02趋势跟踪 · 15+12.70%",
+      "background": "#19191C",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "10px 12px",
+      "borderRadius": "9px",
+      "border": "1px solid rgb(45, 45, 49)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "38.5px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#19191C",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "12px 20px 10px",
+      "borderRadius": "18px",
+      "border": "1px solid rgb(45, 45, 49)",
+      "boxShadow": "rgba(0, 0, 0, 0.063) 0px 1px 2px 0px",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "133.5px"
+    },
+    {
+      "label": "card",
+      "background": "#19191C",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "20px 18px",
+      "borderRadius": "16px",
+      "border": "1px solid rgb(45, 45, 49)",
+      "boxShadow": "none",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "142.5px"
+    },
+    {
+      "label": "card",
+      "background": "#222225",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "12px 16px",
+      "borderRadius": "12px",
+      "border": "0px none rgb(245, 245, 247)",
+      "boxShadow": "none",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "103px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "color(srgb 0.0509804 0.0509804 0.0588235 / 0.88)",
+    "backgroundImage": "",
+    "backdropFilter": "blur(24px)",
+    "color": "#F5F5F7",
+    "padding": "0px 270px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "14px",
+    "fontWeight": "400",
+    "height": "72px"
+  },
+  "chips": [
+    {
+      "label": "服务在线",
+      "background": "transparent",
+      "color": "#929298",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "10px",
+      "fontWeight": "400",
+      "height": "15px"
+    },
+    {
+      "label": "3 个策略未来观察",
+      "background": "#222225",
+      "color": "#80B9FF",
+      "padding": "5px 9px",
+      "borderRadius": "7px",
+      "border": "0px none rgb(128, 185, 255)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "height": "28px"
+    },
+    {
+      "label": "正常",
+      "background": "#222225",
+      "color": "#929298",
+      "padding": "5px 9px",
+      "borderRadius": "7px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "10px",
+      "fontWeight": "500",
+      "height": "25px"
+    },
+    {
+      "label": "✓",
+      "background": "#222225",
+      "color": "#69B493",
+      "padding": "0px",
+      "borderRadius": "50%",
+      "border": "0px none rgb(105, 180, 147)",
+      "boxShadow": "none",
+      "fontSize": "12px",
+      "fontWeight": "600",
+      "height": "22px"
+    }
+  ],
+  "statCells": [
+    {
+      "background": "#19191C",
+      "borderRadius": "16px",
+      "border": "1px solid rgb(45, 45, 49)",
+      "boxShadow": "none",
+      "numberFontSize": "32px",
+      "numberFontWeight": "600",
+      "numberColor": "#F5F5F7"
+    }
+  ],
+  "tabs": [],
+  "backgrounds": [],
+  "glass": [
+    {
+      "backdropFilter": "blur(24px)",
+      "background": "color(srgb 0.0509804 0.0509804 0.0588235 / 0.88)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "",
+      "area": 138240
+    }
+  ]
+}

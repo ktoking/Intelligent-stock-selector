@@ -26,3 +26,5 @@ akshare>=1.12.0
 # 每日报告脚本（可选）：周末/节假日跳过，pip install chinesecalendar
 chinesecalendar>=1.9.0
 pytest>=7.0.0
+jsonschema>=4.23,<5
+websocket-client>=1.8,<2

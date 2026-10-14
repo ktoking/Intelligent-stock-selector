@@ -1,0 +1,263 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "-apple-system",
+      "fontSize": "32px",
+      "fontWeight": "650",
+      "lineHeight": "43.2px",
+      "letterSpacing": "-1.1px",
+      "color": "#F5F5F7",
+      "sampleText": "策略"
+    },
+    {
+      "role": "link",
+      "fontFamily": "-apple-system",
+      "fontSize": "20px",
+      "fontWeight": "650",
+      "lineHeight": "30px",
+      "letterSpacing": "-0.65px",
+      "color": "#F5F5F7",
+      "sampleText": "Quant"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "-apple-system",
+      "fontSize": "13px",
+      "fontWeight": "600",
+      "lineHeight": "17.55px",
+      "letterSpacing": "normal",
+      "color": "#F5F5F7",
+      "sampleText": "每日收益与资金"
+    },
+    {
+      "role": "body",
+      "fontFamily": "-apple-system",
+      "fontSize": "13px",
+      "fontWeight": "400",
+      "lineHeight": "19.5px",
+      "letterSpacing": "normal",
+      "color": "#929298",
+      "sampleText": "先观察，再用未来记录验证。"
+    },
+    {
+      "role": "body-small",
+      "fontFamily": "-apple-system",
+      "fontSize": "10px",
+      "fontWeight": "400",
+      "lineHeight": "15px",
+      "letterSpacing": "normal",
+      "color": "#929298",
+      "sampleText": "北京时间 · 休市待机"
+    },
+    {
+      "role": "code",
+      "fontFamily": "monospace",
+      "fontSize": "10px",
+      "fontWeight": "400",
+      "lineHeight": "17px",
+      "letterSpacing": "normal",
+      "color": "#929298",
+      "sampleText": "{ \"nodes\": [ { \"a\": null, \"b\": null, \"field\": \"residual_mome"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      2,
+      3,
+      5,
+      6,
+      7,
+      8,
+      10,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      20
+    ],
+    "baseUnit": 8
+  },
+  "radius": [
+    "6px",
+    "7px",
+    "8px",
+    "9px",
+    "14px",
+    "18px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.063) 0px 1px 2px 0px",
+      "count": 4
+    }
+  ],
+  "buttons": [
+    {
+      "label": "☀白天",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#929298",
+      "padding": "7px 5px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "39.5px"
+    },
+    {
+      "label": "残差动量 · 20版本 9f1bf26882b7 · 冻结观察版本相对 QQQ ",
+      "background": "#19191C",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "20px",
+      "borderRadius": "14px",
+      "border": "1px solid rgb(45, 45, 49)",
+      "boxShadow": "none",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "220.5px"
+    },
+    {
+      "label": "历史",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#929298",
+      "padding": "7px 12px",
+      "borderRadius": "7px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "30.5px"
+    },
+    {
+      "label": "显示更多交易日",
+      "background": "#222225",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "9px 14px",
+      "borderRadius": "8px",
+      "border": "0px none rgb(245, 245, 247)",
+      "boxShadow": "none",
+      "fontSize": "10px",
+      "fontWeight": "400",
+      "height": "33px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#19191C",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "26px",
+      "borderRadius": "18px",
+      "border": "1px solid rgb(45, 45, 49)",
+      "boxShadow": "rgba(0, 0, 0, 0.063) 0px 1px 2px 0px",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "317.5px"
+    },
+    {
+      "label": "card",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#929298",
+      "padding": "18px 0px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "2480.67px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "color(srgb 0.0509804 0.0509804 0.0588235 / 0.88)",
+    "backgroundImage": "",
+    "backdropFilter": "blur(24px)",
+    "color": "#F5F5F7",
+    "padding": "0px 270px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "14px",
+    "fontWeight": "400",
+    "height": "72px"
+  },
+  "chips": [
+    {
+      "label": "服务在线",
+      "background": "transparent",
+      "color": "#929298",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "10px",
+      "fontWeight": "400",
+      "height": "15px"
+    },
+    {
+      "label": "3 个策略",
+      "background": "#222225",
+      "color": "#929298",
+      "padding": "5px 9px",
+      "borderRadius": "7px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "10px",
+      "fontWeight": "500",
+      "height": "25px"
+    },
+    {
+      "label": "未来观察",
+      "background": "#222225",
+      "color": "#80B9FF",
+      "padding": "4px 8px",
+      "borderRadius": "6px",
+      "border": "0px none rgb(128, 185, 255)",
+      "boxShadow": "none",
+      "fontSize": "9px",
+      "fontWeight": "500",
+      "height": "21.5px"
+    },
+    {
+      "label": "未通过",
+      "background": "#222225",
+      "color": "#929298",
+      "padding": "4px 8px",
+      "borderRadius": "6px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "9px",
+      "fontWeight": "500",
+      "height": "25.0938px"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [],
+  "glass": [
+    {
+      "backdropFilter": "blur(24px)",
+      "background": "color(srgb 0.0509804 0.0509804 0.0588235 / 0.88)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "",
+      "area": 138240
+    }
+  ]
+}

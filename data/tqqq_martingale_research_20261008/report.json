@@ -1,0 +1,1258 @@
+{
+  "source": "Futunn REST history-kline; 5m; autype=1 (split-adjusted, excluding dividends)",
+  "fill_rule": "RTH 5m completed close signal -> next RTH 5m open market fill; integer ETF shares",
+  "capital_usd": 10000.0,
+  "first_order_usd": 1000.0,
+  "base_cost_bps_per_side": 10.0,
+  "stress_cost_bps_per_side": 25.0,
+  "split": "2026-07-08",
+  "tested_rules": 192,
+  "symbols": {
+    "US.TQQQ": {
+      "coverage": {
+        "bars": 9984,
+        "sessions": 128,
+        "first": "2026-04-07",
+        "last": "2026-10-07",
+        "bars_per_session_min": 78,
+        "bars_per_session_max": 78,
+        "short_sessions_under_78_bars": 0,
+        "first_bar_ny": "09:35",
+        "last_bar_ny": "16:00",
+        "intra_session_gaps": [],
+        "gap_count": 0
+      },
+      "development": {
+        "bars": 4914,
+        "sessions": 63,
+        "first": "2026-04-07",
+        "last": "2026-07-07",
+        "bars_per_session_min": 78,
+        "bars_per_session_max": 78,
+        "short_sessions_under_78_bars": 0,
+        "first_bar_ny": "09:35",
+        "last_bar_ny": "16:00",
+        "intra_session_gaps": [],
+        "gap_count": 0
+      },
+      "holdout": {
+        "bars": 5070,
+        "sessions": 65,
+        "first": "2026-07-08",
+        "last": "2026-10-07",
+        "bars_per_session_min": 78,
+        "bars_per_session_max": 78,
+        "short_sessions_under_78_bars": 0,
+        "first_bar_ny": "09:35",
+        "last_bar_ny": "16:00",
+        "intra_session_gaps": [],
+        "gap_count": 0
+      },
+      "buy_and_hold_holdout": {
+        "liquidation_return_pct": 18.0584,
+        "max_drawdown_pct": 25.199
+      },
+      "evaluations": {
+        "fixed_baseline": {
+          "rule": {
+            "drop_pct": 0.05,
+            "take_profit_pct": 0.05,
+            "multiplier": 1.25,
+            "max_adds": 5
+          },
+          "development": {
+            "return_pct": 14.7374,
+            "liquidation_return_pct": 14.702,
+            "max_drawdown_pct": 6.6496,
+            "max_deployed_pct": 79.8048,
+            "max_exposure_pct": 74.6183,
+            "cycles": 16,
+            "winning_cycles": 16,
+            "open_shares": 49,
+            "open_basis_usd": 3661.1,
+            "open_unrealized_usd": -128.67,
+            "realized_usd": 1602.4,
+            "longest_underwater_sessions": 6,
+            "worst_daily_change_pct": -4.4482,
+            "shock_minus_20pct_return_pct": 7.6725,
+            "worst_historical_20pct_shock_return_pct": -13.0545,
+            "worst_historical_20pct_shock_date": "2026-06-09"
+          },
+          "holdout": {
+            "return_pct": 10.4077,
+            "liquidation_return_pct": 10.3977,
+            "max_drawdown_pct": 9.4912,
+            "max_deployed_pct": 80.8819,
+            "max_exposure_pct": 81.1778,
+            "cycles": 8,
+            "winning_cycles": 8,
+            "open_shares": 12,
+            "open_basis_usd": 977.79,
+            "open_unrealized_usd": 25.65,
+            "realized_usd": 1015.12,
+            "longest_underwater_sessions": 15,
+            "worst_daily_change_pct": -4.9257,
+            "shock_minus_20pct_return_pct": 8.4008,
+            "worst_historical_20pct_shock_return_pct": -22.6636,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_stress": {
+            "return_pct": 9.9674,
+            "liquidation_return_pct": 9.9423,
+            "max_drawdown_pct": 9.5977,
+            "max_deployed_pct": 80.5423,
+            "max_exposure_pct": 80.8714,
+            "cycles": 8,
+            "winning_cycles": 8,
+            "open_shares": 12,
+            "open_basis_usd": 987.06,
+            "open_unrealized_usd": 16.38,
+            "realized_usd": 980.37,
+            "longest_underwater_sessions": 15,
+            "worst_daily_change_pct": -4.9019,
+            "shock_minus_20pct_return_pct": 7.9606,
+            "worst_historical_20pct_shock_return_pct": -22.8157,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_trades": [
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 14,
+              "price": 70.72901685749899
+            },
+            {
+              "date": "2026-07-09",
+              "side": "SELL",
+              "shares": 14,
+              "price": 74.87012364628501,
+              "pnl": 57.9755,
+              "adds": 0
+            },
+            {
+              "date": "2026-07-09",
+              "side": "BUY",
+              "shares": 13,
+              "price": 75.56950116715998
+            },
+            {
+              "date": "2026-07-16",
+              "side": "ADD",
+              "shares": 17,
+              "price": 71.423369096079
+            },
+            {
+              "date": "2026-07-17",
+              "side": "ADD",
+              "shares": 23,
+              "price": 65.918504587936
+            },
+            {
+              "date": "2026-07-27",
+              "side": "ADD",
+              "shares": 31,
+              "price": 62.57662223112299
+            },
+            {
+              "date": "2026-07-28",
+              "side": "ADD",
+              "shares": 41,
+              "price": 59.40458143019399
+            },
+            {
+              "date": "2026-08-03",
+              "side": "SELL",
+              "shares": 125,
+              "price": 67.90049185368599,
+              "pnl": 399.372,
+              "adds": 4
+            },
+            {
+              "date": "2026-08-03",
+              "side": "BUY",
+              "shares": 14,
+              "price": 68.226351595402
+            },
+            {
+              "date": "2026-08-04",
+              "side": "SELL",
+              "shares": 14,
+              "price": 71.699435230563,
+              "pnl": 48.6232,
+              "adds": 0
+            },
+            {
+              "date": "2026-08-04",
+              "side": "BUY",
+              "shares": 13,
+              "price": 72.137702694057
+            },
+            {
+              "date": "2026-08-05",
+              "side": "SELL",
+              "shares": 13,
+              "price": 75.966902658396,
+              "pnl": 49.7796,
+              "adds": 0
+            },
+            {
+              "date": "2026-08-05",
+              "side": "BUY",
+              "shares": 13,
+              "price": 76.142166926826
+            },
+            {
+              "date": "2026-08-06",
+              "side": "ADD",
+              "shares": 17,
+              "price": 70.833918994839
+            },
+            {
+              "date": "2026-08-13",
+              "side": "SELL",
+              "shares": 30,
+              "price": 76.79945763603,
+              "pnl": 109.9589,
+              "adds": 1
+            },
+            {
+              "date": "2026-08-13",
+              "side": "BUY",
+              "shares": 12,
+              "price": 76.963200983669
+            },
+            {
+              "date": "2026-08-18",
+              "side": "ADD",
+              "shares": 17,
+              "price": 73.02187784591699
+            },
+            {
+              "date": "2026-08-24",
+              "side": "ADD",
+              "shares": 22,
+              "price": 69.045587329719
+            },
+            {
+              "date": "2026-09-21",
+              "side": "SELL",
+              "shares": 51,
+              "price": 75.991829454648,
+              "pnl": 191.65,
+              "adds": 2
+            },
+            {
+              "date": "2026-09-21",
+              "side": "BUY",
+              "shares": 13,
+              "price": 76.208904666895
+            },
+            {
+              "date": "2026-09-22",
+              "side": "SELL",
+              "shares": 13,
+              "price": 79.941230969778,
+              "pnl": 48.5202,
+              "adds": 0
+            },
+            {
+              "date": "2026-09-22",
+              "side": "BUY",
+              "shares": 12,
+              "price": 80.00536294851099
+            },
+            {
+              "date": "2026-09-28",
+              "side": "ADD",
+              "shares": 16,
+              "price": 75.75568
+            },
+            {
+              "date": "2026-10-02",
+              "side": "SELL",
+              "shares": 28,
+              "price": 81.47844,
+              "pnl": 109.2411,
+              "adds": 1
+            },
+            {
+              "date": "2026-10-02",
+              "side": "BUY",
+              "shares": 12,
+              "price": 81.48240099999998
+            }
+          ]
+        },
+        "development_highest_return": {
+          "rule": {
+            "drop_pct": 0.05,
+            "take_profit_pct": 0.1,
+            "multiplier": 2.0,
+            "max_adds": 3
+          },
+          "development": {
+            "return_pct": 25.6672,
+            "liquidation_return_pct": 25.5417,
+            "max_drawdown_pct": 12.8604,
+            "max_deployed_pct": 128.9314,
+            "max_exposure_pct": 99.838,
+            "cycles": 8,
+            "winning_cycles": 8,
+            "open_shares": 174,
+            "open_basis_usd": 12893.14,
+            "open_unrealized_usd": -349.38,
+            "realized_usd": 2916.1,
+            "longest_underwater_sessions": 5,
+            "worst_daily_change_pct": -6.0225,
+            "shock_minus_20pct_return_pct": 0.5797,
+            "worst_historical_20pct_shock_return_pct": -16.3367,
+            "worst_historical_20pct_shock_date": "2026-06-09"
+          },
+          "holdout": {
+            "return_pct": 17.084,
+            "liquidation_return_pct": 17.0748,
+            "max_drawdown_pct": 9.9653,
+            "max_deployed_pct": 99.9913,
+            "max_exposure_pct": 99.9923,
+            "cycles": 3,
+            "winning_cycles": 3,
+            "open_shares": 11,
+            "open_basis_usd": 930.32,
+            "open_unrealized_usd": -10.5,
+            "realized_usd": 1718.9,
+            "longest_underwater_sessions": 23,
+            "worst_daily_change_pct": -6.1885,
+            "shock_minus_20pct_return_pct": 15.2443,
+            "worst_historical_20pct_shock_return_pct": -26.675,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_stress": {
+            "return_pct": 16.4137,
+            "liquidation_return_pct": 16.3907,
+            "max_drawdown_pct": 10.1101,
+            "max_deployed_pct": 99.6023,
+            "max_exposure_pct": 99.6479,
+            "cycles": 3,
+            "winning_cycles": 3,
+            "open_shares": 11,
+            "open_basis_usd": 931.71,
+            "open_unrealized_usd": -11.89,
+            "realized_usd": 1653.26,
+            "longest_underwater_sessions": 23,
+            "worst_daily_change_pct": -6.1638,
+            "shock_minus_20pct_return_pct": 14.574,
+            "worst_historical_20pct_shock_return_pct": -26.7472,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_trades": [
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 14,
+              "price": 70.72901685749899
+            },
+            {
+              "date": "2026-07-17",
+              "side": "ADD",
+              "shares": 30,
+              "price": 65.918504587936
+            },
+            {
+              "date": "2026-07-27",
+              "side": "ADD",
+              "shares": 63,
+              "price": 62.57662223112299
+            },
+            {
+              "date": "2026-07-28",
+              "side": "ADD",
+              "shares": 52,
+              "price": 59.40458143019399
+            },
+            {
+              "date": "2026-08-04",
+              "side": "SELL",
+              "shares": 159,
+              "price": 71.166001801959,
+              "pnl": 1316.2675,
+              "adds": 3
+            },
+            {
+              "date": "2026-08-04",
+              "side": "BUY",
+              "shares": 14,
+              "price": 71.38340637728298
+            },
+            {
+              "date": "2026-09-14",
+              "side": "ADD",
+              "shares": 29,
+              "price": 67.447078579881
+            },
+            {
+              "date": "2026-09-21",
+              "side": "SELL",
+              "shares": 43,
+              "price": 75.645247286745,
+              "pnl": 297.4127,
+              "adds": 1
+            },
+            {
+              "date": "2026-09-21",
+              "side": "BUY",
+              "shares": 13,
+              "price": 76.143965249352
+            },
+            {
+              "date": "2026-10-06",
+              "side": "SELL",
+              "shares": 13,
+              "price": 84.237441237,
+              "pnl": 105.2152,
+              "adds": 0
+            },
+            {
+              "date": "2026-10-06",
+              "side": "BUY",
+              "shares": 11,
+              "price": 84.57448999999998
+            }
+          ]
+        },
+        "development_risk_adjusted": {
+          "rule": {
+            "drop_pct": 0.05,
+            "take_profit_pct": 0.03,
+            "multiplier": 2.0,
+            "max_adds": 3
+          },
+          "development": {
+            "return_pct": 19.8615,
+            "liquidation_return_pct": 19.7937,
+            "max_drawdown_pct": 5.2779,
+            "max_deployed_pct": 108.109,
+            "max_exposure_pct": 99.5834,
+            "cycles": 30,
+            "winning_cycles": 30,
+            "open_shares": 94,
+            "open_basis_usd": 6908.48,
+            "open_unrealized_usd": -131.96,
+            "realized_usd": 2118.11,
+            "longest_underwater_sessions": 4,
+            "worst_daily_change_pct": -5.0426,
+            "shock_minus_20pct_return_pct": 6.3084,
+            "worst_historical_20pct_shock_return_pct": -17.4818,
+            "worst_historical_20pct_shock_date": "2026-06-05"
+          },
+          "holdout": {
+            "return_pct": 14.7863,
+            "liquidation_return_pct": 14.7771,
+            "max_drawdown_pct": 10.1896,
+            "max_deployed_pct": 102.4584,
+            "max_exposure_pct": 99.6823,
+            "cycles": 17,
+            "winning_cycles": 17,
+            "open_shares": 11,
+            "open_basis_usd": 931.15,
+            "open_unrealized_usd": -11.33,
+            "realized_usd": 1489.95,
+            "longest_underwater_sessions": 9,
+            "worst_daily_change_pct": -6.1679,
+            "shock_minus_20pct_return_pct": 12.9466,
+            "worst_historical_20pct_shock_return_pct": -25.8844,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_stress": {
+            "return_pct": 13.7022,
+            "liquidation_return_pct": 13.6793,
+            "max_drawdown_pct": 10.3269,
+            "max_deployed_pct": 102.0934,
+            "max_exposure_pct": 99.5622,
+            "cycles": 14,
+            "winning_cycles": 14,
+            "open_shares": 11,
+            "open_basis_usd": 931.71,
+            "open_unrealized_usd": -11.89,
+            "realized_usd": 1382.12,
+            "longest_underwater_sessions": 9,
+            "worst_daily_change_pct": -6.1598,
+            "shock_minus_20pct_return_pct": 11.8626,
+            "worst_historical_20pct_shock_return_pct": -26.2199,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_trades": [
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 14,
+              "price": 70.72901685749899
+            },
+            {
+              "date": "2026-07-09",
+              "side": "SELL",
+              "shares": 14,
+              "price": 74.87012364628501,
+              "pnl": 57.9755,
+              "adds": 0
+            },
+            {
+              "date": "2026-07-09",
+              "side": "BUY",
+              "shares": 13,
+              "price": 75.56950116715998
+            },
+            {
+              "date": "2026-07-16",
+              "side": "ADD",
+              "shares": 28,
+              "price": 71.423369096079
+            },
+            {
+              "date": "2026-07-17",
+              "side": "ADD",
+              "shares": 60,
+              "price": 65.918504587936
+            },
+            {
+              "date": "2026-07-21",
+              "side": "SELL",
+              "shares": 101,
+              "price": 70.881836329881,
+              "pnl": 221.6973,
+              "adds": 2
+            },
+            {
+              "date": "2026-07-21",
+              "side": "BUY",
+              "shares": 14,
+              "price": 71.16241254222099
+            },
+            {
+              "date": "2026-07-23",
+              "side": "ADD",
+              "shares": 29,
+              "price": 67.33218576384299
+            },
+            {
+              "date": "2026-07-24",
+              "side": "ADD",
+              "shares": 62,
+              "price": 63.940250102728996
+            },
+            {
+              "date": "2026-07-28",
+              "side": "ADD",
+              "shares": 55,
+              "price": 60.593472313373994
+            },
+            {
+              "date": "2026-07-31",
+              "side": "SELL",
+              "shares": 160,
+              "price": 66.275364479814,
+              "pnl": 358.2147,
+              "adds": 3
+            },
+            {
+              "date": "2026-07-31",
+              "side": "BUY",
+              "shares": 15,
+              "price": 65.58881215786899
+            },
+            {
+              "date": "2026-08-03",
+              "side": "SELL",
+              "shares": 15,
+              "price": 67.556601779994,
+              "pnl": 29.5168,
+              "adds": 0
+            },
+            {
+              "date": "2026-08-03",
+              "side": "BUY",
+              "shares": 14,
+              "price": 67.7517943102
+            },
+            {
+              "date": "2026-08-04",
+              "side": "SELL",
+              "shares": 14,
+              "price": 71.166001801959,
+              "pnl": 47.7989,
+              "adds": 0
+            },
+            {
+              "date": "2026-08-04",
+              "side": "BUY",
+              "shares": 14,
+              "price": 71.38340637728298
+            },
+            {
+              "date": "2026-08-04",
+              "side": "SELL",
+              "shares": 14,
+              "price": 73.524076677648,
+              "pnl": 29.9694,
+              "adds": 0
+            },
+            {
+              "date": "2026-08-04",
+              "side": "BUY",
+              "shares": 13,
+              "price": 73.60143717526599
+            },
+            {
+              "date": "2026-08-05",
+              "side": "SELL",
+              "shares": 13,
+              "price": 75.966902658396,
+              "pnl": 30.7511,
+              "adds": 0
+            },
+            {
+              "date": "2026-08-05",
+              "side": "BUY",
+              "shares": 13,
+              "price": 76.142166926826
+            },
+            {
+              "date": "2026-08-06",
+              "side": "ADD",
+              "shares": 28,
+              "price": 70.833918994839
+            },
+            {
+              "date": "2026-08-10",
+              "side": "SELL",
+              "shares": 41,
+              "price": 74.630726700867,
+              "pnl": 86.6619,
+              "adds": 1
+            },
+            {
+              "date": "2026-08-10",
+              "side": "BUY",
+              "shares": 13,
+              "price": 74.640367956154
+            },
+            {
+              "date": "2026-08-13",
+              "side": "SELL",
+              "shares": 13,
+              "price": 76.809428354331,
+              "pnl": 28.1978,
+              "adds": 0
+            },
+            {
+              "date": "2026-08-13",
+              "side": "BUY",
+              "shares": 12,
+              "price": 76.97319166336798
+            },
+            {
+              "date": "2026-08-18",
+              "side": "ADD",
+              "shares": 27,
+              "price": 73.02187784591699
+            },
+            {
+              "date": "2026-08-24",
+              "side": "ADD",
+              "shares": 57,
+              "price": 69.045587329719
+            },
+            {
+              "date": "2026-08-28",
+              "side": "SELL",
+              "shares": 96,
+              "price": 73.409413416687,
+              "pnl": 216.4362,
+              "adds": 2
+            },
+            {
+              "date": "2026-08-28",
+              "side": "BUY",
+              "shares": 13,
+              "price": 73.661281346653
+            },
+            {
+              "date": "2026-09-01",
+              "side": "ADD",
+              "shares": 29,
+              "price": 68.89572713523499
+            },
+            {
+              "date": "2026-09-04",
+              "side": "SELL",
+              "shares": 42,
+              "price": 72.606770594955,
+              "pnl": 93.9116,
+              "adds": 1
+            },
+            {
+              "date": "2026-09-04",
+              "side": "BUY",
+              "shares": 13,
+              "price": 72.70217609654999
+            },
+            {
+              "date": "2026-09-10",
+              "side": "ADD",
+              "shares": 29,
+              "price": 68.87574577583699
+            },
+            {
+              "date": "2026-09-18",
+              "side": "SELL",
+              "shares": 42,
+              "price": 72.12817611650699,
+              "pnl": 86.8585,
+              "adds": 1
+            },
+            {
+              "date": "2026-09-21",
+              "side": "BUY",
+              "shares": 13,
+              "price": 74.761255180612
+            },
+            {
+              "date": "2026-09-21",
+              "side": "SELL",
+              "shares": 13,
+              "price": 77.00385736070099,
+              "pnl": 29.1538,
+              "adds": 0
+            },
+            {
+              "date": "2026-09-21",
+              "side": "BUY",
+              "shares": 12,
+              "price": 77.32796069898899
+            },
+            {
+              "date": "2026-09-22",
+              "side": "SELL",
+              "shares": 12,
+              "price": 79.636126990167,
+              "pnl": 27.698,
+              "adds": 0
+            },
+            {
+              "date": "2026-09-22",
+              "side": "BUY",
+              "shares": 12,
+              "price": 79.81563994203799
+            },
+            {
+              "date": "2026-09-28",
+              "side": "ADD",
+              "shares": 26,
+              "price": 75.75568
+            },
+            {
+              "date": "2026-09-30",
+              "side": "SELL",
+              "shares": 38,
+              "price": 79.295625,
+              "pnl": 85.7984,
+              "adds": 1
+            },
+            {
+              "date": "2026-09-30",
+              "side": "BUY",
+              "shares": 12,
+              "price": 79.29921999999999
+            },
+            {
+              "date": "2026-10-02",
+              "side": "SELL",
+              "shares": 12,
+              "price": 81.72819,
+              "pnl": 29.1476,
+              "adds": 0
+            },
+            {
+              "date": "2026-10-02",
+              "side": "BUY",
+              "shares": 12,
+              "price": 81.89180999999999
+            },
+            {
+              "date": "2026-10-06",
+              "side": "SELL",
+              "shares": 12,
+              "price": 84.40550999999999,
+              "pnl": 30.1644,
+              "adds": 0
+            },
+            {
+              "date": "2026-10-06",
+              "side": "BUY",
+              "shares": 11,
+              "price": 84.649565
+            }
+          ]
+        }
+      }
+    },
+    "US.SOXL": {
+      "coverage": {
+        "bars": 9984,
+        "sessions": 128,
+        "first": "2026-04-07",
+        "last": "2026-10-07",
+        "bars_per_session_min": 78,
+        "bars_per_session_max": 78,
+        "short_sessions_under_78_bars": 0,
+        "first_bar_ny": "09:35",
+        "last_bar_ny": "16:00",
+        "intra_session_gaps": [],
+        "gap_count": 0
+      },
+      "development": {
+        "bars": 4914,
+        "sessions": 63,
+        "first": "2026-04-07",
+        "last": "2026-07-07",
+        "bars_per_session_min": 78,
+        "bars_per_session_max": 78,
+        "short_sessions_under_78_bars": 0,
+        "first_bar_ny": "09:35",
+        "last_bar_ny": "16:00",
+        "intra_session_gaps": [],
+        "gap_count": 0
+      },
+      "holdout": {
+        "bars": 5070,
+        "sessions": 65,
+        "first": "2026-07-08",
+        "last": "2026-10-07",
+        "bars_per_session_min": 78,
+        "bars_per_session_max": 78,
+        "short_sessions_under_78_bars": 0,
+        "first_bar_ny": "09:35",
+        "last_bar_ny": "16:00",
+        "intra_session_gaps": [],
+        "gap_count": 0
+      },
+      "buy_and_hold_holdout": {
+        "liquidation_return_pct": -0.3186,
+        "max_drawdown_pct": 54.2067
+      },
+      "evaluations": {
+        "fixed_baseline": {
+          "rule": {
+            "drop_pct": 0.05,
+            "take_profit_pct": 0.05,
+            "multiplier": 1.25,
+            "max_adds": 5
+          },
+          "development": {
+            "return_pct": 53.0635,
+            "liquidation_return_pct": 52.9776,
+            "max_drawdown_pct": 17.4329,
+            "max_deployed_pct": 106.3973,
+            "max_exposure_pct": 76.4388,
+            "cycles": 56,
+            "winning_cycles": 55,
+            "open_shares": 52,
+            "open_basis_usd": 10568.84,
+            "open_unrealized_usd": -1979.91,
+            "realized_usd": 7286.26,
+            "longest_underwater_sessions": 4,
+            "worst_daily_change_pct": -9.0672,
+            "shock_minus_20pct_return_pct": 35.8856,
+            "worst_historical_20pct_shock_return_pct": -5.8819,
+            "worst_historical_20pct_shock_date": "2026-04-28"
+          },
+          "holdout": {
+            "return_pct": -3.9766,
+            "liquidation_return_pct": -4.0719,
+            "max_drawdown_pct": 47.1175,
+            "max_deployed_pct": 102.1723,
+            "max_exposure_pct": 99.3386,
+            "cycles": 3,
+            "winning_cycles": 3,
+            "open_shares": 60,
+            "open_basis_usd": 10217.23,
+            "open_unrealized_usd": -682.63,
+            "realized_usd": 284.97,
+            "longest_underwater_sessions": 62,
+            "worst_daily_change_pct": -16.828,
+            "shock_minus_20pct_return_pct": -23.0458,
+            "worst_historical_20pct_shock_return_pct": -55.1963,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_stress": {
+            "return_pct": -4.3213,
+            "liquidation_return_pct": -4.5597,
+            "max_drawdown_pct": 47.3724,
+            "max_deployed_pct": 102.4873,
+            "max_exposure_pct": 99.6741,
+            "cycles": 3,
+            "winning_cycles": 3,
+            "open_shares": 60,
+            "open_basis_usd": 10248.73,
+            "open_unrealized_usd": -714.13,
+            "realized_usd": 282.0,
+            "longest_underwater_sessions": 62,
+            "worst_daily_change_pct": -16.9071,
+            "shock_minus_20pct_return_pct": -23.3905,
+            "worst_historical_20pct_shock_return_pct": -55.541,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_trades": [
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 6,
+              "price": 159.264895042253
+            },
+            {
+              "date": "2026-07-08",
+              "side": "SELL",
+              "shares": 6,
+              "price": 168.710508376236,
+              "pnl": 56.6737,
+              "adds": 0
+            },
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 5,
+              "price": 169.35837403885398
+            },
+            {
+              "date": "2026-07-08",
+              "side": "ADD",
+              "shares": 7,
+              "price": 160.91546395624698
+            },
+            {
+              "date": "2026-07-08",
+              "side": "SELL",
+              "shares": 12,
+              "price": 172.504223577522,
+              "pnl": 96.8506,
+              "adds": 1
+            },
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 5,
+              "price": 173.85992562238297
+            },
+            {
+              "date": "2026-07-09",
+              "side": "SELL",
+              "shares": 5,
+              "price": 200.148427239984,
+              "pnl": 131.4425,
+              "adds": 0
+            },
+            {
+              "date": "2026-07-09",
+              "side": "BUY",
+              "shares": 4,
+              "price": 202.929945407189
+            },
+            {
+              "date": "2026-07-09",
+              "side": "ADD",
+              "shares": 6,
+              "price": 192.03849136772297
+            },
+            {
+              "date": "2026-07-10",
+              "side": "ADD",
+              "shares": 8,
+              "price": 180.77730989017698
+            },
+            {
+              "date": "2026-07-13",
+              "side": "ADD",
+              "shares": 11,
+              "price": 171.95927050902597
+            },
+            {
+              "date": "2026-07-13",
+              "side": "ADD",
+              "shares": 14,
+              "price": 163.49635353151098
+            },
+            {
+              "date": "2026-07-15",
+              "side": "ADD",
+              "shares": 17,
+              "price": 154.503253810906
+            }
+          ]
+        },
+        "development_highest_return": {
+          "rule": {
+            "drop_pct": 0.05,
+            "take_profit_pct": 0.1,
+            "multiplier": 2.0,
+            "max_adds": 5
+          },
+          "development": {
+            "return_pct": 140.9087,
+            "liquidation_return_pct": 140.6692,
+            "max_drawdown_pct": 28.0495,
+            "max_deployed_pct": 294.1745,
+            "max_exposure_pct": 99.9976,
+            "cycles": 28,
+            "winning_cycles": 28,
+            "open_shares": 145,
+            "open_basis_usd": 29417.45,
+            "open_unrealized_usd": -5467.54,
+            "realized_usd": 19558.41,
+            "longest_underwater_sessions": 4,
+            "worst_daily_change_pct": -15.0136,
+            "shock_minus_20pct_return_pct": 93.0089,
+            "worst_historical_20pct_shock_return_pct": -17.1759,
+            "worst_historical_20pct_shock_date": "2026-04-28"
+          },
+          "holdout": {
+            "return_pct": -10.2954,
+            "liquidation_return_pct": -10.3844,
+            "max_drawdown_pct": 50.5617,
+            "max_deployed_pct": 101.4839,
+            "max_exposure_pct": 99.3067,
+            "cycles": 2,
+            "winning_cycles": 2,
+            "open_shares": 56,
+            "open_basis_usd": 10148.39,
+            "open_unrealized_usd": -1249.43,
+            "realized_usd": 219.89,
+            "longest_underwater_sessions": 62,
+            "worst_daily_change_pct": -16.8078,
+            "shock_minus_20pct_return_pct": -28.0933,
+            "worst_historical_20pct_shock_return_pct": -58.1005,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_stress": {
+            "return_pct": -10.5059,
+            "liquidation_return_pct": -10.7284,
+            "max_drawdown_pct": 50.6868,
+            "max_deployed_pct": 101.636,
+            "max_exposure_pct": 99.5098,
+            "cycles": 2,
+            "winning_cycles": 2,
+            "open_shares": 56,
+            "open_basis_usd": 10163.6,
+            "open_unrealized_usd": -1264.64,
+            "realized_usd": 214.05,
+            "longest_underwater_sessions": 62,
+            "worst_daily_change_pct": -16.8593,
+            "shock_minus_20pct_return_pct": -28.3038,
+            "worst_historical_20pct_shock_return_pct": -58.3109,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_trades": [
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 6,
+              "price": 159.264895042253
+            },
+            {
+              "date": "2026-07-08",
+              "side": "SELL",
+              "shares": 6,
+              "price": 175.898700171054,
+              "pnl": 99.8028,
+              "adds": 0
+            },
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 5,
+              "price": 176.13120848322998
+            },
+            {
+              "date": "2026-07-09",
+              "side": "SELL",
+              "shares": 5,
+              "price": 200.148427239984,
+              "pnl": 120.0861,
+              "adds": 0
+            },
+            {
+              "date": "2026-07-09",
+              "side": "BUY",
+              "shares": 4,
+              "price": 202.929945407189
+            },
+            {
+              "date": "2026-07-09",
+              "side": "ADD",
+              "shares": 10,
+              "price": 192.03849136772297
+            },
+            {
+              "date": "2026-07-10",
+              "side": "ADD",
+              "shares": 22,
+              "price": 180.77730989017698
+            },
+            {
+              "date": "2026-07-13",
+              "side": "ADD",
+              "shares": 20,
+              "price": 171.95927050902597
+            }
+          ]
+        },
+        "development_risk_adjusted": {
+          "rule": {
+            "drop_pct": 0.05,
+            "take_profit_pct": 0.05,
+            "multiplier": 1.5,
+            "max_adds": 5
+          },
+          "development": {
+            "return_pct": 99.2948,
+            "liquidation_return_pct": 99.2205,
+            "max_drawdown_pct": 14.5467,
+            "max_deployed_pct": 190.4289,
+            "max_exposure_pct": 99.9369,
+            "cycles": 60,
+            "winning_cycles": 59,
+            "open_shares": 45,
+            "open_basis_usd": 7596.61,
+            "open_unrealized_usd": -163.88,
+            "realized_usd": 10093.36,
+            "longest_underwater_sessions": 2,
+            "worst_daily_change_pct": -10.2333,
+            "shock_minus_20pct_return_pct": 84.4293,
+            "worst_historical_20pct_shock_return_pct": -11.0225,
+            "worst_historical_20pct_shock_date": "2026-04-28"
+          },
+          "holdout": {
+            "return_pct": -6.2291,
+            "liquidation_return_pct": -6.3229,
+            "max_drawdown_pct": 49.3298,
+            "max_deployed_pct": 103.0675,
+            "max_exposure_pct": 99.986,
+            "cycles": 3,
+            "winning_cycles": 3,
+            "open_shares": 59,
+            "open_basis_usd": 10306.75,
+            "open_unrealized_usd": -931.06,
+            "realized_usd": 308.14,
+            "longest_underwater_sessions": 62,
+            "worst_daily_change_pct": -16.9808,
+            "shock_minus_20pct_return_pct": -24.9805,
+            "worst_historical_20pct_shock_return_pct": -56.5952,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_stress": {
+            "return_pct": -7.1168,
+            "liquidation_return_pct": -7.3472,
+            "max_drawdown_pct": 49.4004,
+            "max_deployed_pct": 102.2378,
+            "max_exposure_pct": 99.3301,
+            "cycles": 3,
+            "winning_cycles": 3,
+            "open_shares": 58,
+            "open_basis_usd": 10223.78,
+            "open_unrealized_usd": -1007.0,
+            "realized_usd": 295.32,
+            "longest_underwater_sessions": 62,
+            "worst_daily_change_pct": -16.8137,
+            "shock_minus_20pct_return_pct": -25.5504,
+            "worst_historical_20pct_shock_return_pct": -56.6292,
+            "worst_historical_20pct_shock_date": "2026-07-29"
+          },
+          "holdout_trades": [
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 6,
+              "price": 159.264895042253
+            },
+            {
+              "date": "2026-07-08",
+              "side": "SELL",
+              "shares": 6,
+              "price": 168.710508376236,
+              "pnl": 56.6737,
+              "adds": 0
+            },
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 5,
+              "price": 169.35837403885398
+            },
+            {
+              "date": "2026-07-08",
+              "side": "ADD",
+              "shares": 9,
+              "price": 160.91546395624698
+            },
+            {
+              "date": "2026-07-08",
+              "side": "SELL",
+              "shares": 14,
+              "price": 172.504223577522,
+              "pnl": 120.0281,
+              "adds": 1
+            },
+            {
+              "date": "2026-07-08",
+              "side": "BUY",
+              "shares": 5,
+              "price": 173.85992562238297
+            },
+            {
+              "date": "2026-07-09",
+              "side": "SELL",
+              "shares": 5,
+              "price": 200.148427239984,
+              "pnl": 131.4425,
+              "adds": 0
+            },
+            {
+              "date": "2026-07-09",
+              "side": "BUY",
+              "shares": 4,
+              "price": 202.929945407189
+            },
+            {
+              "date": "2026-07-09",
+              "side": "ADD",
+              "shares": 7,
+              "price": 192.03849136772297
+            },
+            {
+              "date": "2026-07-10",
+              "side": "ADD",
+              "shares": 12,
+              "price": 180.77730989017698
+            },
+            {
+              "date": "2026-07-13",
+              "side": "ADD",
+              "shares": 19,
+              "price": 171.95927050902597
+            },
+            {
+              "date": "2026-07-13",
+              "side": "ADD",
+              "shares": 16,
+              "price": 163.49635353151098
+            },
+            {
+              "date": "2026-07-29",
+              "side": "ADD",
+              "shares": 1,
+              "price": 98.26286901030599
+            }
+          ]
+        }
+      }
+    }
+  }
+}

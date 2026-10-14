@@ -1,0 +1,14 @@
+{
+  "duration": 11,
+  "assertions": [
+    {
+      "kind": "appearsBy",
+      "selector": ".f5-approval",
+      "bySec": 9
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": ".f5-title"
+    }
+  ]
+}

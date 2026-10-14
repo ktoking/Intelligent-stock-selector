@@ -1,0 +1,192 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "-apple-system",
+      "fontSize": "32px",
+      "fontWeight": "650",
+      "lineHeight": "43.2px",
+      "letterSpacing": "-1.1px",
+      "color": "#F5F5F7",
+      "sampleText": "每日复盘"
+    },
+    {
+      "role": "link",
+      "fontFamily": "-apple-system",
+      "fontSize": "20px",
+      "fontWeight": "650",
+      "lineHeight": "30px",
+      "letterSpacing": "-0.65px",
+      "color": "#F5F5F7",
+      "sampleText": "Quant"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "-apple-system",
+      "fontSize": "14px",
+      "fontWeight": "600",
+      "lineHeight": "18.9px",
+      "letterSpacing": "normal",
+      "color": "#929298",
+      "sampleText": "软件、云计算强于半导体"
+    },
+    {
+      "role": "body",
+      "fontFamily": "-apple-system",
+      "fontSize": "13px",
+      "fontWeight": "400",
+      "lineHeight": "19.5px",
+      "letterSpacing": "normal",
+      "color": "#929298",
+      "sampleText": "重点、观察条件与可能改变判断的信息。"
+    },
+    {
+      "role": "body-small",
+      "fontFamily": "-apple-system",
+      "fontSize": "10px",
+      "fontWeight": "400",
+      "lineHeight": "15px",
+      "letterSpacing": "normal",
+      "color": "#929298",
+      "sampleText": "北京时间 · 休市待机"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      5,
+      6,
+      7,
+      8,
+      10,
+      13,
+      14,
+      24,
+      34,
+      40
+    ],
+    "baseUnit": 8
+  },
+  "radius": [
+    "5px",
+    "9px"
+  ],
+  "shadows": [
+    {
+      "value": "rgba(0, 0, 0, 0.063) 0px 1px 2px 0px",
+      "count": 1
+    }
+  ],
+  "buttons": [
+    {
+      "label": "☀白天",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#929298",
+      "padding": "7px 5px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "11px",
+      "fontWeight": "400",
+      "height": "39.5px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "#19191C",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "26px",
+      "borderRadius": "18px",
+      "border": "1px solid rgb(45, 45, 49)",
+      "boxShadow": "rgba(0, 0, 0, 0.063) 0px 1px 2px 0px",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "335.234px"
+    },
+    {
+      "label": "card",
+      "background": "#222225",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#F5F5F7",
+      "padding": "20px",
+      "borderRadius": "14px",
+      "border": "0px none rgb(245, 245, 247)",
+      "boxShadow": "none",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "160.734px"
+    },
+    {
+      "label": "card",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#929298",
+      "padding": "18px 0px",
+      "borderRadius": "0px",
+      "border": "",
+      "boxShadow": "none",
+      "fontSize": "14px",
+      "fontWeight": "400",
+      "height": "192.094px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "color(srgb 0.0509804 0.0509804 0.0588235 / 0.88)",
+    "backgroundImage": "",
+    "backdropFilter": "blur(24px)",
+    "color": "#F5F5F7",
+    "padding": "0px 270px",
+    "borderRadius": "0px",
+    "border": "",
+    "boxShadow": "none",
+    "fontSize": "14px",
+    "fontWeight": "400",
+    "height": "72px"
+  },
+  "chips": [
+    {
+      "label": "服务在线",
+      "background": "transparent",
+      "color": "#929298",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "10px",
+      "fontWeight": "400",
+      "height": "15px"
+    },
+    {
+      "label": "行情基准 2026-10-09 · 生成 10/",
+      "background": "#222225",
+      "color": "#929298",
+      "padding": "5px 9px",
+      "borderRadius": "7px",
+      "border": "0px none rgb(146, 146, 152)",
+      "boxShadow": "none",
+      "fontSize": "10px",
+      "fontWeight": "500",
+      "height": "25px"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [],
+  "glass": [
+    {
+      "backdropFilter": "blur(24px)",
+      "background": "color(srgb 0.0509804 0.0509804 0.0588235 / 0.88)",
+      "border": "",
+      "borderRadius": "0px",
+      "boxShadow": "",
+      "area": 138240
+    }
+  ]
+}

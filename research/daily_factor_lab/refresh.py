@@ -27,7 +27,7 @@ def latest_completed_session(now=None):
     return str(completed[-1].date())
 
 
-def merge_daily(old, batch, asof):
+def merge_daily(old, batch, asof, *, allow_flow_revisions=False,allow_close_corrections=False):
     new = pd.DataFrame(batch)
     if new.empty or "date" not in new:
         raise ValueError("Empty historical response")
@@ -44,13 +44,17 @@ def merge_daily(old, batch, asof):
         after = new.set_index("date").loc[overlap, list(keys)]
         # A changed adjustment basis cannot be spliced into an older cache.
         changed = (before-after).abs() > (before.abs()*1e-9 + 1e-7)
-        if changed.any().any():
+        guarded = changed[['open','high','low','close']] if allow_flow_revisions else changed
+        if allow_close_corrections and allow_flow_revisions:
+            guarded=guarded.copy()
+            guarded['close']=(before['close']-after['close']).abs()>before['close'].abs()*.005
+        if guarded.any().any():
             raise ValueError("Historical values revised; full symbol refresh and paper-version review required")
     merged = pd.concat([old, new]).drop_duplicates("date", keep="last").sort_values("date")
     return merged.reset_index(drop=True)
 
 
-def refresh(source, output, asof, symbols=None, fetch=signed_get, sleep=time.sleep):
+def refresh(source, output, asof, symbols=None, fetch=signed_get, sleep=time.sleep, *, allow_flow_revisions=False,allow_close_corrections=False):
     source, output = Path(source), Path(output)
     if asof > latest_completed_session():
         raise ValueError("Requested daily bar is not yet complete")
@@ -88,7 +92,7 @@ def refresh(source, output, asof, symbols=None, fetch=signed_get, sleep=time.sle
             failures.append({"symbol":symbol, "reason":error_type})
             continue
         try:
-            merged = merge_daily(old, batch, asof)
+            merged = merge_daily(old, batch, asof,allow_flow_revisions=allow_flow_revisions,allow_close_corrections=allow_close_corrections)
             merged.to_pickle(output/name)
             successes.append({"symbol":symbol, "rows":len(merged)})
         except ValueError as exc:

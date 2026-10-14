@@ -1,0 +1,79 @@
+{
+  "source": "https://mixkit.co/free-stock-music/tag/technology/",
+  "license": "https://mixkit.co/license/#musicFree",
+  "tracks": [
+    {
+      "@id": "Close Up",
+      "@type": "MusicRecording",
+      "name": "Close Up",
+      "genre": "Corporate Music",
+      "byArtist": "Michael Ramir C.",
+      "duration": "PT1M35S",
+      "url": "https://assets.mixkit.co/music/1167/1167.mp3",
+      "waveformUrl": "https://assets.mixkit.co/music/1167/1167-waveform.json",
+      "copyrightNotice": "Mixkit Stock Music Free License",
+      "encodingFormat": "audio/mpeg",
+      "isAccessibleForFree": true,
+      "license": "https://mixkit.co/license/#musicFree",
+      "publisher": {
+        "@id": "https://mixkit.co/#organization"
+      },
+      "datePublished": "2020-01-28"
+    },
+    {
+      "@id": "Digital Clouds",
+      "@type": "MusicRecording",
+      "name": "Digital Clouds",
+      "genre": "Chillout",
+      "byArtist": "Alejandro Magaña (A. M.)",
+      "duration": "PT1M41S",
+      "url": "https://assets.mixkit.co/music/175/175.mp3",
+      "waveformUrl": "https://assets.mixkit.co/music/175/175-waveform.json",
+      "copyrightNotice": "Mixkit Stock Music Free License",
+      "encodingFormat": "audio/mpeg",
+      "isAccessibleForFree": true,
+      "license": "https://mixkit.co/license/#musicFree",
+      "publisher": {
+        "@id": "https://mixkit.co/#organization"
+      },
+      "datePublished": "2020-01-28"
+    },
+    {
+      "@id": "Hazy After Hours",
+      "@type": "MusicRecording",
+      "name": "Hazy After Hours",
+      "genre": "Electronica",
+      "byArtist": "Alejandro Magaña (A. M.)",
+      "duration": "PT2M7S",
+      "url": "https://assets.mixkit.co/music/132/132.mp3",
+      "waveformUrl": "https://assets.mixkit.co/music/132/132-waveform.json",
+      "copyrightNotice": "Mixkit Stock Music Free License",
+      "encodingFormat": "audio/mpeg",
+      "isAccessibleForFree": true,
+      "license": "https://mixkit.co/license/#musicFree",
+      "publisher": {
+        "@id": "https://mixkit.co/#organization"
+      },
+      "datePublished": "2020-01-28"
+    },
+    {
+      "@id": "Deep Urban",
+      "@type": "MusicRecording",
+      "name": "Deep Urban",
+      "genre": "House",
+      "byArtist": "Eugenio Mininni",
+      "duration": "PT4M49S",
+      "url": "https://assets.mixkit.co/music/623/623.mp3",
+      "waveformUrl": "https://assets.mixkit.co/music/623/623-waveform.json",
+      "copyrightNotice": "Mixkit Stock Music Free License",
+      "encodingFormat": "audio/mpeg",
+      "isAccessibleForFree": true,
+      "license": "https://mixkit.co/license/#musicFree",
+      "publisher": {
+        "@id": "https://mixkit.co/#organization"
+      },
+      "datePublished": "2020-01-28"
+    }
+  ],
+  "delivery": "stream official previews in browser; no audio downloaded"
+}

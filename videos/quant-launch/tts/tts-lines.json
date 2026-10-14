@@ -1,0 +1,114 @@
+{
+  "provider": "volcengine-doubao-tts-2.0",
+  "speaker": "zh_female_sajiaoxuemei_uranus_bigtts",
+  "voice_label": "中文女声",
+  "speech_rate": 13,
+  "context": "科技产品宣传片中文旁白，专业、清晰、有力度，克制自信。第一句直截了当，重读选股、回测、复盘。不要撒娇，不要可爱语气，不要拖尾。句间换气短，英文AI清楚读出，Quant读作宽特。",
+  "timeline_duration": 60,
+  "placement": "scene-centered",
+  "inter_line_gap": 0.16,
+  "scenes": [
+    {
+      "id": "s1",
+      "start": 0,
+      "end": 7,
+      "lines": [
+        {
+          "id": "cap01",
+          "text": "把选股、回测、复盘，交给一个AI工作台。"
+        },
+        {
+          "id": "cap02",
+          "text": "这是Quant。"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "start": 7,
+      "end": 18,
+      "lines": [
+        {
+          "id": "cap03",
+          "text": "自选股、纳指一百、标普五百，汇入同一个研究池。"
+        },
+        {
+          "id": "cap04",
+          "text": "捕捉异动，追踪资讯，让机会持续进入视野。"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "start": 18,
+      "end": 29,
+      "lines": [
+        {
+          "id": "cap05",
+          "text": "AI提出假设、生成因子。"
+        },
+        {
+          "id": "cap06",
+          "text": "程序回测、独立核账，逐层筛选。"
+        },
+        {
+          "id": "cap07",
+          "text": "每个策略，都能追到判断依据。"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "start": 29,
+      "end": 40,
+      "lines": [
+        {
+          "id": "cap08",
+          "text": "收益曲线只是起点。"
+        },
+        {
+          "id": "cap09",
+          "text": "成本、回撤、延迟，都要经受检验。"
+        },
+        {
+          "id": "cap10",
+          "text": "每一个买卖点，都能展开交易明细。"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "start": 40,
+      "end": 51,
+      "lines": [
+        {
+          "id": "cap11",
+          "text": "先做未来观察，再进入模拟盘。"
+        },
+        {
+          "id": "cap12",
+          "text": "复盘提出新假设，冻结策略保留原规则。"
+        },
+        {
+          "id": "cap13",
+          "text": "实盘，始终需要人工授权。"
+        }
+      ]
+    },
+    {
+      "id": "s6",
+      "start": 51,
+      "end": 60,
+      "lines": [
+        {
+          "id": "cap14",
+          "text": "市场、策略、交易、复盘，一屏掌握。"
+        },
+        {
+          "id": "cap15",
+          "text": "Quant，让研究有据可查。"
+        }
+      ]
+    }
+  ]
+}

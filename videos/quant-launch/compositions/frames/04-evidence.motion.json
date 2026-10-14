@@ -1,0 +1,14 @@
+{
+  "duration": 11,
+  "assertions": [
+    {
+      "kind": "appearsBy",
+      "selector": ".f4-tip",
+      "bySec": 8.2
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": ".f4-chart"
+    }
+  ]
+}

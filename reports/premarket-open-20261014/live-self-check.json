@@ -1,0 +1,398 @@
+{
+  "status": "completed",
+  "started_at": "2026-10-14T10:02:36.831709+00:00",
+  "finished_at": "2026-10-14T10:02:47.126144+00:00",
+  "items": [
+    {
+      "id": "runtime",
+      "name": "服务与账本",
+      "group": "本地",
+      "required": true,
+      "status": "ok",
+      "detail": "服务心跳与本地账本检查通过。",
+      "evidence": {
+        "heartbeat_age_seconds": 2.3,
+        "database_ok": true,
+        "mode": "idle"
+      },
+      "latency_ms": 83,
+      "checked_at": "2026-10-14T10:02:36.975969+00:00"
+    },
+    {
+      "id": "ai",
+      "name": "AI 模型",
+      "group": "研究核心",
+      "required": true,
+      "status": "ok",
+      "detail": "实际模型请求成功，返回值已通过 JSON schema 校验。",
+      "evidence": {
+        "provider": "codex",
+        "model": "gpt-6.1-sol",
+        "reasoning_effort": "high",
+        "requested_model": "gpt-6.1-sol",
+        "requested_reasoning_effort": "high"
+      },
+      "latency_ms": 10231,
+      "checked_at": "2026-10-14T10:02:47.125426+00:00"
+    },
+    {
+      "id": "quote",
+      "name": "富途行情 REST",
+      "group": "行情",
+      "required": true,
+      "status": "ok",
+      "detail": "签名与行情业务响应通过；行情新鲜度按日期、时段另行判断。",
+      "evidence": {
+        "ret_code": 0,
+        "symbol": "US.QQQ",
+        "data_date": "2026-10-14",
+        "update_time": 1791972145456
+      },
+      "latency_ms": 226,
+      "checked_at": "2026-10-14T10:02:37.141008+00:00"
+    },
+    {
+      "id": "watchlist",
+      "name": "富途自选列表",
+      "group": "研究池",
+      "required": false,
+      "status": "ok",
+      "detail": "自选列表业务响应通过。",
+      "evidence": {
+        "entries": 228
+      },
+      "latency_ms": 852,
+      "checked_at": "2026-10-14T10:02:37.772265+00:00"
+    },
+    {
+      "id": "ndx",
+      "name": "纳指 100 成分接口",
+      "group": "研究池",
+      "required": false,
+      "status": "ok",
+      "detail": "指数成分首分页业务响应通过；自检不做全量成分校验。",
+      "evidence": {
+        "entries": 1,
+        "complete_universe_verified": false
+      },
+      "latency_ms": 843,
+      "checked_at": "2026-10-14T10:02:37.819628+00:00"
+    },
+    {
+      "id": "spx",
+      "name": "标普 500 成分接口",
+      "group": "研究池",
+      "required": false,
+      "status": "ok",
+      "detail": "指数成分首分页业务响应通过；自检不做全量成分校验。",
+      "evidence": {
+        "entries": 1,
+        "complete_universe_verified": false
+      },
+      "latency_ms": 549,
+      "checked_at": "2026-10-14T10:02:37.690398+00:00"
+    },
+    {
+      "id": "history_api",
+      "name": "富途历史日线",
+      "group": "行情",
+      "required": false,
+      "status": "ok",
+      "detail": "历史日线接口业务响应通过；未更新研究数据。",
+      "evidence": {
+        "bars": 7,
+        "requested_end": "2026-10-13"
+      },
+      "latency_ms": 239,
+      "checked_at": "2026-10-14T10:02:37.929783+00:00"
+    },
+    {
+      "id": "paper",
+      "name": "富途模拟账户",
+      "group": "模拟",
+      "required": true,
+      "status": "ok",
+      "detail": "已核实美股模拟账户；资产、持仓、委托及历史委托查询通过。未调用下单接口。",
+      "evidence": {
+        "account_verified": true,
+        "read_endpoints_verified": 5,
+        "order_endpoint_tested": false,
+        "paper_enabled": true
+      },
+      "latency_ms": 2538,
+      "checked_at": "2026-10-14T10:02:40.310026+00:00"
+    },
+    {
+      "id": "websocket",
+      "name": "富途 WebSocket",
+      "group": "行情",
+      "required": false,
+      "status": "ok",
+      "detail": "WebSocket 鉴权与订阅确认通过；未验证持续实时行情。",
+      "evidence": {
+        "auth_ok": true,
+        "subscribe_ok": true,
+        "streaming_freshness_verified": false
+      },
+      "latency_ms": 1125,
+      "checked_at": "2026-10-14T10:02:38.945055+00:00"
+    },
+    {
+      "id": "news",
+      "name": "富途资讯 REST",
+      "group": "资讯",
+      "required": false,
+      "status": "ok",
+      "detail": "富途资讯业务响应通过。",
+      "evidence": {
+        "ret_code": 0,
+        "items": 1
+      },
+      "latency_ms": 370,
+      "checked_at": "2026-10-14T10:02:38.300209+00:00"
+    },
+    {
+      "id": "news_search",
+      "name": "富途备用资讯",
+      "group": "资讯",
+      "required": false,
+      "status": "ok",
+      "detail": "备用资讯搜索业务响应通过。",
+      "evidence": {
+        "code": 0,
+        "items": 1
+      },
+      "latency_ms": 292,
+      "checked_at": "2026-10-14T10:02:38.592174+00:00"
+    },
+    {
+      "id": "wallstreetcn",
+      "name": "华尔街见闻",
+      "group": "备用资讯",
+      "required": false,
+      "status": "ok",
+      "detail": "公开资讯解析通过。",
+      "evidence": {
+        "raw": 50,
+        "accepted": 50,
+        "error_type": null
+      },
+      "latency_ms": 1129,
+      "checked_at": "2026-10-14T10:02:39.721095+00:00"
+    },
+    {
+      "id": "eastmoney",
+      "name": "东方财富",
+      "group": "备用资讯",
+      "required": false,
+      "status": "ok",
+      "detail": "公开资讯解析通过。",
+      "evidence": {
+        "raw": 50,
+        "accepted": 50,
+        "error_type": null
+      },
+      "latency_ms": 489,
+      "checked_at": "2026-10-14T10:02:39.434014+00:00"
+    },
+    {
+      "id": "history",
+      "name": "日线缓存",
+      "group": "数据",
+      "required": true,
+      "status": "ok",
+      "detail": "日线缓存已加载；与最近完成交易日核对。",
+      "evidence": {
+        "data_date": "2026-10-13",
+        "expected_completed_session": "2026-10-13",
+        "symbols": 232
+      },
+      "latency_ms": 3589,
+      "checked_at": "2026-10-14T10:02:43.022970+00:00"
+    },
+    {
+      "id": "execution",
+      "name": "模拟执行就绪",
+      "group": "执行",
+      "required": true,
+      "status": "ok",
+      "detail": "冻结策略、预算与本地执行状态通过；尚未验证真实模拟成交。",
+      "evidence": {
+        "ready": true,
+        "observed_at": "2026-10-14T10:02:46.586070+00:00",
+        "data_asof": "2026-10-13",
+        "checks": {
+          "bound_simulated_account": true,
+          "stock_allocations": true,
+          "stock_owners": true,
+          "strategy_cash_reconciled": true,
+          "frozen_strategies": [
+            "5b3083fb7764",
+            "ac32278508e1",
+            "e40e1894eef6",
+            "39fa42ead888",
+            "d059cef220a4"
+          ],
+          "option_allocation": true,
+          "option_freeze": true
+        },
+        "blockers": [],
+        "order_endpoint_tested": false,
+        "live_enabled": false
+      },
+      "latency_ms": 6870,
+      "checked_at": "2026-10-14T10:02:46.591384+00:00"
+    },
+    {
+      "id": "power",
+      "name": "常驻防休眠",
+      "group": "本机",
+      "required": false,
+      "status": "ok",
+      "detail": "服务防闲置休眠保护已实际生效。",
+      "evidence": {
+        "active": true,
+        "supported": true,
+        "guard_pid": 78176,
+        "service_pid": 78175,
+        "scope": "服务生命周期内防闲置系统休眠；不阻止显示器休眠或手动休眠。"
+      },
+      "latency_ms": 402,
+      "checked_at": "2026-10-14T10:02:40.712129+00:00"
+    },
+    {
+      "id": "mcp",
+      "name": "富途 MCP",
+      "group": "MCP",
+      "required": false,
+      "status": "unverified",
+      "detail": "服务返回鉴权/权限响应；此探针未使用 Codex OAuth，登录后的 MCP 工具调用未验证。",
+      "evidence": {
+        "reachable": true,
+        "http_status": 401,
+        "authenticated": false
+      },
+      "latency_ms": 89,
+      "checked_at": "2026-10-14T10:02:40.801381+00:00"
+    },
+    {
+      "id": "option_chain",
+      "name": "富途期权链",
+      "group": "期权",
+      "required": true,
+      "status": "ok",
+      "detail": "真实期权链业务响应通过；不代表合约报价足够新鲜。",
+      "evidence": {
+        "contracts": 400
+      },
+      "latency_ms": 277,
+      "checked_at": "2026-10-14T10:02:41.078462+00:00"
+    },
+    {
+      "id": "option_capacity",
+      "name": "期权模拟账户权限",
+      "group": "期权",
+      "required": true,
+      "status": "ok",
+      "detail": "模拟账户接受期权数量查询；探测价格1美元仅用于接口验证，不会下单。",
+      "evidence": {
+        "account_verified": true,
+        "contract_verified": true,
+        "order_endpoint_tested": false
+      },
+      "latency_ms": 1478,
+      "checked_at": "2026-10-14T10:02:42.556583+00:00"
+    }
+  ],
+  "mcp_servers": [
+    {
+      "name": "digital-bank",
+      "transport": "stdio",
+      "enabled": true,
+      "project_scope": false,
+      "status": "skipped",
+      "detail": "非本项目依赖；不启动、不发送请求"
+    },
+    {
+      "name": "skynet-base",
+      "transport": "stdio",
+      "enabled": true,
+      "project_scope": false,
+      "status": "skipped",
+      "detail": "非本项目依赖；不启动、不发送请求"
+    },
+    {
+      "name": "skynet-bcf-java-code-gen",
+      "transport": "stdio",
+      "enabled": true,
+      "project_scope": false,
+      "status": "skipped",
+      "detail": "非本项目依赖；不启动、不发送请求"
+    },
+    {
+      "name": "codegraph",
+      "transport": "stdio",
+      "enabled": true,
+      "project_scope": false,
+      "status": "skipped",
+      "detail": "非本项目依赖；不启动、不发送请求"
+    },
+    {
+      "name": "skynet-skill-plan-to-code",
+      "transport": "stdio",
+      "enabled": true,
+      "project_scope": false,
+      "status": "skipped",
+      "detail": "非本项目依赖；不启动、不发送请求"
+    },
+    {
+      "name": "skynet-td-kit",
+      "transport": "stdio",
+      "enabled": true,
+      "project_scope": false,
+      "status": "skipped",
+      "detail": "非本项目依赖；不启动、不发送请求"
+    },
+    {
+      "name": "mem0",
+      "transport": "http",
+      "enabled": true,
+      "project_scope": false,
+      "status": "skipped",
+      "detail": "非本项目依赖；不启动、不发送请求"
+    },
+    {
+      "name": "computer-use",
+      "transport": "stdio",
+      "enabled": false,
+      "project_scope": false,
+      "status": "skipped",
+      "detail": "未启用"
+    },
+    {
+      "name": "futu-mcp",
+      "transport": "http",
+      "enabled": true,
+      "project_scope": true,
+      "status": "unverified",
+      "detail": "服务返回鉴权/权限响应；此探针未使用 Codex OAuth，登录后的 MCP 工具调用未验证。"
+    },
+    {
+      "name": "node_repl",
+      "transport": "stdio",
+      "enabled": true,
+      "project_scope": false,
+      "status": "skipped",
+      "detail": "非本项目依赖；不启动、不发送请求"
+    }
+  ],
+  "scope": "本项目使用的服务；无交易操作，无公司 MCP 调用",
+  "counts": {
+    "ok": 18,
+    "failed": 0,
+    "warning": 0,
+    "unconfigured": 0,
+    "unverified": 1
+  },
+  "overall": "warning"
+}

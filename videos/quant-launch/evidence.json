@@ -1,0 +1,25 @@
+{
+  "captured_at": "2026-10-12T08:31:24.425602+00:00",
+  "asof": "2026-10-09",
+  "universe_count": 595,
+  "nasdaq100": 101,
+  "sp500": 503,
+  "stages": {
+    "shadow": 3,
+    "paper": 0,
+    "rejected": 20
+  },
+  "fill_count": 0,
+  "live_enabled": false,
+  "intervals": {
+    "orders": 60,
+    "broad_scan": 300,
+    "news": 1800,
+    "push_focus_limit": 40
+  },
+  "ai_model": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high"
+  },
+  "notes": "只导出宣传所需公开能力及统计；不包含账户、密钥、私人持仓。"
+}

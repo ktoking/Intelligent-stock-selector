@@ -1,0 +1,14 @@
+{
+  "duration": 11,
+  "assertions": [
+    {
+      "kind": "appearsBy",
+      "selector": ".f2-market",
+      "bySec": 4
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": ".f2-title"
+    }
+  ]
+}

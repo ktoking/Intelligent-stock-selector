@@ -1,0 +1,117 @@
+{
+  "typography": [
+    {
+      "role": "display",
+      "fontFamily": "Times New Roman",
+      "fontSize": "32px",
+      "fontWeight": "700",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "#000000",
+      "sampleText": "每日复盘"
+    },
+    {
+      "role": "heading",
+      "fontFamily": "Times New Roman",
+      "fontSize": "16px",
+      "fontWeight": "700",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "#000000",
+      "sampleText": "软件、云计算强于半导体"
+    },
+    {
+      "role": "body",
+      "fontFamily": "Times New Roman",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "#000000",
+      "sampleText": "重点、观察条件与可能改变判断的信息。"
+    },
+    {
+      "role": "body-small",
+      "fontFamily": "Times New Roman",
+      "fontSize": "13.3333px",
+      "fontWeight": "400",
+      "lineHeight": "normal",
+      "letterSpacing": "normal",
+      "color": "#000000",
+      "sampleText": "北京时间 · 休市待机"
+    }
+  ],
+  "spacing": {
+    "observed": [
+      1,
+      6
+    ],
+    "baseUnit": 8
+  },
+  "radius": [],
+  "shadows": [],
+  "buttons": [
+    {
+      "label": "☀白天",
+      "background": "#EFEFEF",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#000000",
+      "padding": "1px 6px",
+      "borderRadius": "0px",
+      "border": "2px outset rgb(0, 0, 0)",
+      "boxShadow": "none",
+      "fontSize": "13.3333px",
+      "fontWeight": "400",
+      "height": "25.5px"
+    }
+  ],
+  "cards": [
+    {
+      "label": "card",
+      "background": "transparent",
+      "backgroundImage": "",
+      "backdropFilter": "",
+      "color": "#000000",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(0, 0, 0)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "489.227px"
+    }
+  ],
+  "nav": {
+    "label": "navigation",
+    "background": "transparent",
+    "backgroundImage": "",
+    "backdropFilter": "",
+    "color": "#000000",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "border": "0px none rgb(0, 0, 0)",
+    "boxShadow": "none",
+    "fontSize": "16px",
+    "fontWeight": "400",
+    "height": "1974.5px"
+  },
+  "chips": [
+    {
+      "label": "服务在线",
+      "background": "transparent",
+      "color": "#000000",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "border": "0px none rgb(0, 0, 0)",
+      "boxShadow": "none",
+      "fontSize": "16px",
+      "fontWeight": "400",
+      "height": "auto"
+    }
+  ],
+  "statCells": [],
+  "tabs": [],
+  "backgrounds": [],
+  "glass": []
+}

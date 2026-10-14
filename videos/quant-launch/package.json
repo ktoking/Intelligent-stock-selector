@@ -1,0 +1,11 @@
+{
+  "name": "quant-launch",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "HYPERFRAMES_NO_TELEMETRY=1 npx --yes hyperframes@0.8.149 preview",
+    "check": "HYPERFRAMES_NO_TELEMETRY=1 npx --yes hyperframes@0.8.149 check",
+    "render": "HYPERFRAMES_NO_TELEMETRY=1 npx --yes hyperframes@0.8.149 render",
+    "publish": "HYPERFRAMES_NO_TELEMETRY=1 npx --yes hyperframes@0.8.149 publish"
+  }
+}

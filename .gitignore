@@ -30,6 +30,11 @@ data/rag_chroma/
 data/memory/*.sqlite
 data/memory/*.sqlite-*
 
+# Isolated rehearsal runtime copies; retain reports and research evidence.
+reports/**/state.sqlite
+reports/**/state.sqlite-*
+reports/**/supervisor.lock
+
 # Quant / trading runtime artifacts
 data/okx_*.json
 data/okx_*.pkl

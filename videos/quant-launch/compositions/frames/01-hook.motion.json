@@ -1,0 +1,14 @@
+{
+  "duration": 7,
+  "assertions": [
+    {
+      "kind": "appearsBy",
+      "selector": ".f1-hook2",
+      "bySec": 2
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": ".f1-product"
+    }
+  ]
+}

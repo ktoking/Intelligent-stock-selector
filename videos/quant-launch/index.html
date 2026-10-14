@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #000;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0D0D0F;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="60"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div
+        id="el-01-hook"
+        class="clip scene"
+        data-composition-id="01-hook"
+        data-composition-src="compositions/frames/01-hook.html"
+        data-start="0"
+        data-duration="7"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-02-market"
+        class="clip scene"
+        data-composition-id="02-market"
+        data-composition-src="compositions/frames/02-market.html"
+        data-start="7"
+        data-duration="11"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-03-research"
+        class="clip scene"
+        data-composition-id="03-research"
+        data-composition-src="compositions/frames/03-research.html"
+        data-start="18"
+        data-duration="11"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-04-evidence"
+        class="clip scene"
+        data-composition-id="04-evidence"
+        data-composition-src="compositions/frames/04-evidence.html"
+        data-start="29"
+        data-duration="11"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-05-control"
+        class="clip scene"
+        data-composition-id="05-control"
+        data-composition-src="compositions/frames/05-control.html"
+        data-start="40"
+        data-duration="11"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-06-close"
+        class="clip scene"
+        data-composition-id="06-close"
+        data-composition-src="compositions/frames/06-close.html"
+        data-start="51"
+        data-duration="9"
+        data-track-index="1"
+      ></div>
+
+      <!-- BGM -->
+      <audio
+        id="el-bgm"
+        src="assets/audio/original-score.mp3"
+        data-start="0"
+        data-duration="60"
+        data-track-index="11"
+        data-volume="0.75"
+      ></audio>
+
+      <!-- captions -->
+      <div
+        id="el-captions" data-track-kind="captions"
+        class="clip scene"
+        data-composition-id="captions"
+        data-composition-src="compositions/captions.html"
+        data-start="0"
+        data-duration="60"
+        data-track-index="2"
+      ></div>
+
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

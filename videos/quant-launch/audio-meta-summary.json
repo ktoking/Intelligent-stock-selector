@@ -1,0 +1,12 @@
+{
+  "voice_provider": "none",
+  "voice": "none",
+  "voice_lines": 0,
+  "voice_sum_seconds": 0,
+  "caption_lines": 15,
+  "caption_source": "captions/captions-meta.json",
+  "last_caption_end": 59.6,
+  "music_seconds": 60,
+  "timeline": 60,
+  "font_subset_bytes": 136596
+}

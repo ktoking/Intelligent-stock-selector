@@ -1,0 +1,14 @@
+{
+  "duration": 9,
+  "assertions": [
+    {
+      "kind": "appearsBy",
+      "selector": ".f6-promise",
+      "bySec": 5.6
+    },
+    {
+      "kind": "staysInFrame",
+      "selector": ".f6-title"
+    }
+  ]
+}

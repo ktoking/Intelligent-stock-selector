@@ -1,0 +1,9 @@
+# Generated local deliverables and visual verification artifacts.
+renders/
+snapshots/
+
+# Local preview and audio analysis caches.
+.waveform-cache/
+.hyperframes/preview/
+.hyperframes/history-id
+.hyperframes/hf-ids-stamped.json
