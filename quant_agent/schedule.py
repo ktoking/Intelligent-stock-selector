@@ -29,9 +29,18 @@ def daily_due(store,now=None):
     asof=state["completed_session"]
     retry=store.meta("daily_retry_after:"+asof)
     from .research_evidence import research_pending
+    from .market_data import finalization_due
     return (not state["session"] and stamp>=pd.Timestamp(state["completed_close"])+pd.Timedelta(minutes=15)
-            and (not store.meta("daily_completed:"+asof) or research_pending(store,asof))
+            and (not store.meta("daily_completed:"+asof) or research_pending(store,asof) or finalization_due(store,stamp))
             and (not retry or stamp>=pd.Timestamp(retry)))
+
+
+def safe_research_due(store,now):
+    try:return daily_due(store,now)
+    except Exception as exc:
+        from .recovery import failed
+        failed(store,'research_scheduler',exc)
+        return False
 
 
 def activity(store,now=None,boot=False):
@@ -45,11 +54,11 @@ def activity(store,now=None,boot=False):
         mode="close_settlement"
     elif boot:
         mode="startup_reconcile"
-    elif any(r['status']=='ready' for r in store.meta('promotion_queue',[])):
+    elif store.meta('promotion_policy',{}).get('mode')!='account_champion' and any(r['status']=='ready' for r in store.meta('promotion_queue',[])):
         mode='paper_promotion'
     elif stamp>=pd.Timestamp(state["next_open"])-pd.Timedelta(minutes=5) and store.meta("preflight_session")!=state["next_session"]:
         mode="pre_open"
-    elif daily_due(store,stamp):
+    elif safe_research_due(store,stamp):
         mode="daily_research"
     else:
         mode="idle"

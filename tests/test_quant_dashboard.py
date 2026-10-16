@@ -99,3 +99,44 @@ def test_quote_display_rejects_old_wrong_day_and_untimestamped_push(tmp_path):
     # A more recent REST snapshot must outrank a delayed WebSocket message.
     store.set_meta('last_tick', {'quotes': {'US.AAA': {'price': 103, 'update_time': stamp-5000, 'data_date': '2026-10-12'}}})
     assert focus_quote_view(store, calendar)['US.AAA']['price'] == 103
+
+
+def test_readiness_display_invalidates_old_preflight_immediately_on_pause(tmp_path,monkeypatch):
+    from quant_agent import readiness
+    s=Store(tmp_path,initialize(tmp_path,quote_push_enabled=False))
+    s.set_meta('execution_readiness',{'ready':True,'observed_at':'2026-10-14T13:25Z'})
+    calls=[]
+    def current(store):
+        calls.append(1)
+        return {'ready':not store.meta('paused'),'observed_at':'current','blockers':['paused'] if store.meta('paused') else []}
+    monkeypatch.setattr(readiness,'execution_readiness',current)
+    assert public_status(s)['execution_readiness']['ready']
+    assert public_status(s)['execution_readiness']['ready'] and len(calls)==1
+    s.pause('history changed')
+    view=public_status(s)['execution_readiness']
+    assert not view['ready'] and len(calls)==2
+    assert view['preflight_observed_at']=='2026-10-14T13:25Z'
+    assert s.meta('execution_readiness')['ready']  # Original preflight evidence retained.
+
+
+def test_strategy_labels_distinguish_slots_and_versions_and_follow_slot_successor(tmp_path):
+    from copy import deepcopy
+    from tests.test_quant_supervisor_mock import rehearsal_store
+    from quant_agent.presentation import strategy_labels
+    s=rehearsal_store(tmp_path);records=s.strategies(['paper'])
+    for r in records:r['spec']['policy']['name']='residual_momentum20'
+    original=deepcopy(records);labels=strategy_labels(records)
+    assert len({v['display_name'] for v in labels.values()})==3
+    assert {v['identity_label'] for v in labels.values()}=={'模拟 A','模拟 B','模拟 C'}
+    assert strategy_labels(list(reversed(records)))==labels
+    unused=deepcopy(records[0]);unused['id']='unused-old-authorization';unused['stage']='rejected';unused['created']='2025-01-01T00:00Z'
+    assert {k:v for k,v in strategy_labels([unused]+records).items() if k!=unused['id']}==labels
+    shadow=deepcopy(records[0]);shadow['id']='new-shadow-identifier';shadow['stage']='shadow';shadow['evidence'].pop('paper_authorization')
+    shadow['created']='2026-10-15T02:00:00Z'
+    assert '观察 10/15' in strategy_labels(records+[shadow])[shadow['id']]['display_name']
+    records[0]['stage']='retired';successor=deepcopy(records[0]);successor['id']='replacement-strategy';successor['stage']='paper'
+    successor['evidence']['paper_authorization']['predecessor']=records[0]['id']
+    after=strategy_labels(records+[successor])
+    assert after[successor['id']]['identity_label']==labels[records[0]['id']]['identity_label']
+    assert '归档' in after[records[0]['id']]['display_name']
+    assert original[1:]==records[1:]

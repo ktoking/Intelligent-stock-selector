@@ -1,0 +1,36 @@
+{
+  "observed_at": "2026-10-16T03:26:28.338996+00:00",
+  "after_second_restart": true,
+  "health": {
+    "execution_status": "rotating",
+    "mode": "idle",
+    "status": "ok",
+    "time": "2026-10-16T03:26:20.486209+00:00"
+  },
+  "paused": false,
+  "daily_completed": true,
+  "orders_verified_against_broker_history": 12,
+  "cumulative_quantity_and_value_match": true,
+  "positions": {
+    "US.PLTR": 2,
+    "US.CRM": 1,
+    "US.SONY": 26,
+    "US.MSFT": 1
+  },
+  "broker_cash": "998137.805",
+  "broker_equity": "999966.925",
+  "order_state_unchanged": true,
+  "checkpoint_preserved": {
+    "status": "completed",
+    "attempts": 1
+  },
+  "logging": {
+    "file_enabled": true,
+    "write_failures": 0,
+    "rotation_bytes": 5242880,
+    "retained_files": 6,
+    "scope": "本机 JSONL；SQLite 保存订单意图、成交、任务检查点和故障事件；不记录签名、私钥、请求正文或查询参数。"
+  },
+  "rotation_status": "settling",
+  "external_orders_sent_by_verification": 0
+}

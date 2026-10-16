@@ -33,7 +33,7 @@ SYSTEM = """你是量化研究员。输出符合给定 schema 的 JSON，中文�
 选择给定策略目录的风险与再平衡参数，最多3个候选，也可以返回空列表。factor_weights=[]保留原因子；或用1-4个不同支持因子的截面百分位排名加权生成新组合，权重须加总为1。
 提出 Alpha 假设并说明经济逻辑、成本、回撤、过拟合风险、反证条件。
 历史样本已被研究过，不能声称 untouched holdout 或保证收益。新增因子想法仅为研究待办，不能执行代码或改交易参数。
-股票预算10000美元、期权预算1000美元，无融资。没有期权历史链时不得用股票K线替代期权回测。
+模拟执行预算以输入授权为准，历史回测使用10000美元标准本金，不代表券商额度；无融资。没有期权历史链时不得用股票K线替代期权回测。
 你没有下单权限。复盘区分信号错误、执行错误和市场变化；未给资讯时明确资讯缺失。"""
 SYSTEM+='\n当前回测基准信号滞后1个交易日，压力测试滞后2个交易日，表示额外延迟1日；不要把总滞后写成额外延迟。'
 
@@ -46,12 +46,33 @@ def validate(value):
     return value
 
 
+class AIUnavailable(RuntimeError):
+    pass
+
+
 def ask(provider, packet, timeout=240, model_name='gpt-6.1-sol', reasoning_effort='high', output_schema=None,system_instruction=None):
+    from .observability import emit,error_evidence
+    import time
+    started=time.monotonic()
+    fields={'provider':provider,'model':model_name,'reasoning_effort':reasoning_effort,'input_sha256':digest(packet)}
+    emit('ai_started',**fields)
+    try:
+        result=_ask(provider,packet,timeout,model_name,reasoning_effort,output_schema,system_instruction)
+    except Exception as exc:
+        emit('ai_failed',**fields,elapsed_seconds=round(time.monotonic()-started,2),**error_evidence(exc))
+        raise
+    emit('ai_completed',**fields,elapsed_seconds=round(time.monotonic()-started,2),response_sha256=result['response_sha256'])
+    from .store import utcnow
+    result['completed_at']=utcnow()
+    return result
+
+
+def _ask(provider, packet, timeout=240, model_name='gpt-6.1-sol', reasoning_effort='high', output_schema=None,system_instruction=None):
     output_schema=output_schema or SCHEMA
     prompt = canonical({"instruction":(system_instruction or SYSTEM)+"\n这是一次纯分析调用：只使用传入证据，不调用任何工具，不读取本机文件，不查询网络；直接返回精简JSON。", "schema":output_schema,"evidence":packet,
                         "policy_catalog":{k:asdict(v) for k,v in catalog().items()}})
     if len(prompt) > 180000:
-        raise ValueError("AI evidence packet too large")
+        exc=AIUnavailable('AI evidence packet too large');exc.prompt_chars=len(prompt);exc.diagnostic_code='evidence_too_large';raise exc
     if provider == "ollama":
         model = os.environ.get("OLLAMA_MODEL","gemma4:31b-cloud")
         with requests.Session() as session:
@@ -86,9 +107,16 @@ def ask(provider, packet, timeout=240, model_name='gpt-6.1-sol', reasoning_effor
                        "--disable","codex_hooks","--disable","hooks",
                        "--disable","browser_use","--disable","computer_use","--disable","memories",
                        "-c",'web_search="disabled"',"--cd",directory,"--output-schema",str(schema),"--output-last-message",str(output),"-"]
-            result = subprocess.run(command,input=prompt,text=True,capture_output=True,env=env,timeout=timeout)
+            try:result = subprocess.run(command,input=prompt,text=True,capture_output=True,env=env,timeout=timeout)
+            except subprocess.TimeoutExpired:
+                exc=AIUnavailable('Codex analysis timed out');exc.diagnostic_code='timeout';raise exc from None
             if result.returncode or not output.exists():
-                raise RuntimeError("Codex analysis failed; inspect CLI authentication separately")
+                # Classify known failures; never retain arbitrary stderr which
+                # may contain the full prompt or local authentication context.
+                stderr=result.stderr.lower()
+                code=('authentication' if any(s in stderr for s in ('unauthorized','authentication failed','not logged in')) else
+                      'rate_limit' if 'rate limit' in stderr or '429' in stderr else 'cli_exit')
+                exc=AIUnavailable('Codex analysis unavailable: '+code);exc.exit_code=result.returncode;exc.diagnostic_code=code;raise exc
             raw = output.read_text()
         import re
         actual_model=re.search(r'^model: (.+)$',result.stderr,re.M)

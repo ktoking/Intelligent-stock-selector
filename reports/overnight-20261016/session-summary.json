@@ -1,0 +1,123 @@
+{
+  "session": "2026-10-15",
+  "regular_utc": [
+    "13:30",
+    "20:00"
+  ],
+  "counts": {
+    "price_anomaly": 291,
+    "champion_rotation_status": 3,
+    "reserved": 4,
+    "shadow_observed_plan": 5,
+    "strategy_quote_deferred": 11,
+    "option_execution_status": 344,
+    "universe_scanned": 65,
+    "news_refreshed": 13,
+    "fill": 4,
+    "supervisor_deferred": 23,
+    "pause": 1,
+    "supervisor_failed": 1
+  },
+  "fills": [
+    {
+      "created": "2026-10-15T13:31:54.278733+00:00",
+      "kind": "fill",
+      "payload": {
+        "delta_qty": 1,
+        "fee_reserve": 0.5819700000000001,
+        "id": "5cb083cd1228c50ee59e1a4545a436f1",
+        "realized_pnl": -14.328314999999975
+      }
+    },
+    {
+      "created": "2026-10-15T13:31:54.287074+00:00",
+      "kind": "fill",
+      "payload": {
+        "delta_qty": 1,
+        "fee_reserve": 0.72327,
+        "id": "93c2e9959015a9002e858597fe64275d",
+        "realized_pnl": 1.0810200000000236
+      }
+    },
+    {
+      "created": "2026-10-15T13:31:54.298313+00:00",
+      "kind": "fill",
+      "payload": {
+        "delta_qty": 1,
+        "fee_reserve": 0.5819700000000001,
+        "id": "645aefe3220b5433fbd9dfdcb77b2e0d",
+        "realized_pnl": -14.328314999999947
+      }
+    },
+    {
+      "created": "2026-10-15T13:31:54.308069+00:00",
+      "kind": "fill",
+      "payload": {
+        "delta_qty": 1,
+        "fee_reserve": 0.72327,
+        "id": "aa2b81269c553c58c2e72dffb184ae44",
+        "realized_pnl": 1.0810200000000236
+      }
+    }
+  ],
+  "failures": [
+    {
+      "created": "2026-10-15T19:38:11.978130+00:00",
+      "kind": "pause",
+      "payload": {
+        "reason": "Supervisor failure: HTTPError"
+      }
+    },
+    {
+      "created": "2026-10-15T19:38:11.984060+00:00",
+      "kind": "supervisor_failed",
+      "payload": {
+        "error_type": "HTTPError",
+        "frames": [
+          {
+            "file": "request.py",
+            "function": "open",
+            "line": 493
+          },
+          {
+            "file": "request.py",
+            "function": "http_response",
+            "line": 602
+          },
+          {
+            "file": "request.py",
+            "function": "error",
+            "line": 531
+          },
+          {
+            "file": "request.py",
+            "function": "_call_chain",
+            "line": 464
+          },
+          {
+            "file": "request.py",
+            "function": "http_error_default",
+            "line": 611
+          }
+        ]
+      }
+    }
+  ],
+  "intervals": {
+    "universe_scanned": {
+      "count": 65,
+      "first": "2026-10-15T13:31:01.203134+00:00",
+      "last": "2026-10-15T19:59:17.663103+00:00"
+    },
+    "news_refreshed": {
+      "count": 13,
+      "first": "2026-10-15T13:31:12.780691+00:00",
+      "last": "2026-10-15T19:41:22.388600+00:00"
+    },
+    "supervisor_deferred": {
+      "count": 23,
+      "first": "2026-10-15T14:21:58.629313+00:00",
+      "last": "2026-10-15T19:21:14.138416+00:00"
+    }
+  }
+}

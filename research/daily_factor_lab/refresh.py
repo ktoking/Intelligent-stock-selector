@@ -65,6 +65,17 @@ def refresh(source, output, asof, symbols=None, fetch=signed_get, sleep=time.sle
     output.mkdir(parents=True, exist_ok=False)
     failures = []
     successes = []
+    from quant_agent.files import atomic_write
+    types=json.loads((source/'security_types.json').read_text())
+    atomic_write(output/'universe.json',json.dumps({**universe,'symbols':selected}))
+    atomic_write(output/'security_types.json',json.dumps({s:types[s] for s in selected}))
+    def checkpoint_progress():
+        done={r['symbol'] for r in successes}|{r['symbol'] for r in failures}
+        pending=[{'symbol':s,'reason':'Refresh interrupted before symbol checkpoint'} for s in selected if s not in done]
+        value={'status':'incomplete','asof':asof,'source_cache':str(source.resolve()),
+               'success':successes,'failures':failures+pending}
+        atomic_write(output/'refresh_report.json',json.dumps(value))
+    checkpoint_progress()
     for number, symbol in enumerate(selected, 1):
         if not re.fullmatch(r"US\.[A-Za-z0-9]+", symbol):
             raise ValueError("Unexpected US symbol")
@@ -90,13 +101,16 @@ def refresh(source, output, asof, symbols=None, fetch=signed_get, sleep=time.sle
                     sleep(min(2**attempt * 2, 8))
         if batch is None:
             failures.append({"symbol":symbol, "reason":error_type})
+            checkpoint_progress()
             continue
         try:
             merged = merge_daily(old, batch, asof,allow_flow_revisions=allow_flow_revisions,allow_close_corrections=allow_close_corrections)
-            merged.to_pickle(output/name)
+            import pickle
+            atomic_write(output/name,pickle.dumps(merged,protocol=pickle.HIGHEST_PROTOCOL))
             successes.append({"symbol":symbol, "rows":len(merged)})
         except ValueError as exc:
             failures.append({"symbol":symbol, "reason":str(exc)})
+        checkpoint_progress()
         if number % 20 == 0:
             print(f"history refresh {number}/{len(selected)}, failed={len(failures)}",flush=True)
         sleep(.8)

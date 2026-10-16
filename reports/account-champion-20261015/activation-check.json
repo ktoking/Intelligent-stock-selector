@@ -1,0 +1,80 @@
+{
+  "capital_mode": "broker_equity",
+  "stock_budget": 999000.0,
+  "option_budget": 1000,
+  "broker_capital": {
+    "cash": 997271.645,
+    "observed_at": "2026-10-15T08:21:01.119036+00:00",
+    "option_reserve": 1000,
+    "source": "Futunn sim-trade cash-info; no margin buying power",
+    "stock_cash_cap": 996271.645,
+    "stock_equity_cap": 998934.575,
+    "total_asset": 999934.575
+  },
+  "champion_rotation": {
+    "created_at": "2026-10-15T08:17:54.329915+00:00",
+    "data_sha256": "8b89590af5071ccdfbaa3851e3c401ed3df2b9ddbcc191d86abee56967a4c378",
+    "id": "55b9788952701fe59461eba527864f5da61c26ab4b768fdc89507200803d8ef7",
+    "order_ids": [],
+    "outgoing": [
+      "ac32278508e1a403e91e2d92a239e9e256747aee06f9bfe3c4d5de2539d574b4",
+      "e40e1894eef694aab1861c631840c053d1b72440a5842adf21b935f11e3f9f89"
+    ],
+    "owners": [
+      "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+      "ac32278508e1a403e91e2d92a239e9e256747aee06f9bfe3c4d5de2539d574b4",
+      "e40e1894eef694aab1861c631840c053d1b72440a5842adf21b935f11e3f9f89"
+    ],
+    "reason": "等待正常交易时段；不使用盘前报价清仓",
+    "screen_artifact": "/Users/kaiyi.wang/.local/share/stock-agent/quant-agent/artifacts/champion-screen-8e04033a44ea6206f06f.json",
+    "status": "queued",
+    "target": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+    "target_spec_sha256": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+    "updated_at": "2026-10-15T08:21:07.772667+00:00"
+  },
+  "health": {
+    "execution_status": "rotating",
+    "mode": "startup_reconcile",
+    "status": "ok",
+    "time": "2026-10-15T08:21:07.792669+00:00"
+  },
+  "execution_readiness": {
+    "ready": false,
+    "observed_at": "2026-10-15T08:21:53.052402+00:00",
+    "data_asof": "2026-10-14",
+    "checks": {
+      "bound_simulated_account": true,
+      "stock_allocations": true,
+      "stock_owners": true,
+      "account_champion": null,
+      "rotation_status": "queued",
+      "strategy_cash_reconciled": true,
+      "frozen_strategies": [
+        "5b3083fb7764",
+        "ac32278508e1",
+        "e40e1894eef6",
+        "39fa42ead888",
+        "d059cef220a4",
+        "b7aa4bd19b6e",
+        "11bb4d0f1410",
+        "14895b0396fb"
+      ],
+      "option_allocation": true,
+      "option_freeze": true
+    },
+    "blockers": [
+      "账户换仓：等待正常交易时段；不使用盘前报价清仓"
+    ],
+    "order_endpoint_tested": true,
+    "live_enabled": false,
+    "broker_reconciled_at": "2026-10-15T08:21:07.790589+00:00",
+    "preflight_observed_at": "2026-10-14T13:26:01.186998+00:00"
+  },
+  "orders_preserved": 8,
+  "all_strategy_specs_preserved": true,
+  "original_positions_preserved": true,
+  "paper_pnl": -49.81630499998573,
+  "paper_time_weighted_return_pct": -0.4981630499998113,
+  "real_broker_rotation_completed": false,
+  "verification": "120 local tests passed; DOM smoke separate; broker orders unchanged, rotation queued outside regular session"
+}

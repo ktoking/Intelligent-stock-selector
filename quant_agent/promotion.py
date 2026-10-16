@@ -29,6 +29,9 @@ def rule_signature(record):
 def plan_promotions(store,panel):
     policy=store.meta('promotion_policy',{})
     if not policy.get('enabled'):return {'enabled':False,'items':[]}
+    if policy.get('mode')=='account_champion':
+        from .champion import screen
+        return screen(store,panel)
     candidates=[r for r in store.strategies(['shadow']) if r['evidence'].get('passed')
         and r['spec'].get('research_data_sha256')==panel.metadata['input_sha256']]
     owners=store.strategies(['paper']);comparisons=[]

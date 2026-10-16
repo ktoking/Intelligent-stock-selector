@@ -28,6 +28,12 @@ def dashboard_summary(store, calendar, snapshot, strategies, paper, tasks):
     valued=same_day and fills_valued and (not calendar['session'] or (age_seconds(observed,now) is not None and age_seconds(observed,now)<=120))
     no_fills=paper['fill_count']==0
     base=baseline['nav'] if baseline else store.settings.stock_budget
+    if store.settings.capital_mode=='broker_equity' and baseline:
+        # Deposits between the prior close and this mark are not today's P&L.
+        with store.transaction() as db:
+            previous=db.execute('SELECT observed FROM paper_nav WHERE session<? ORDER BY observed DESC LIMIT 1',(session,)).fetchone()
+        end=observed or now
+        base+=sum(f['amount'] for f in store.meta('capital_flows',[]) if previous['observed']<f['observed']<=end)
     pnl=latest['nav']-base if valued else 0. if no_fills else None
     orders=snapshot['orders']
     working=[o for o in orders if o['status'] not in ('filled','cancelled','rejected')]
@@ -37,14 +43,14 @@ def dashboard_summary(store, calendar, snapshot, strategies, paper, tasks):
     shadow=[r for r in active if r['stage']=='shadow']
     progress=[r['shadow_sessions'] for r in shadow]
     health_age=age_seconds(health.get('time'),now)
-    online=health.get('status')=='ok' and health_age is not None and health_age<180
+    online=bool(health.get('status')) and health_age is not None and health_age<180
     expected=calendar['session'] or calendar['completed_session']
     dates={r.get('data_date') for r in scan.get('hits',[]) if r.get('data_date')}
     market_date=max(dates) if dates else None
     scan_age=age_seconds(scan.get('created_at'),now)
     market_ok=(market_date==expected and (not calendar['session'] or (scan_age is not None and scan_age<=store.settings.broad_scan_seconds+120)))
     news_age=age_seconds(news.get('observed_at'),now)
-    fresh=[{'id':'service','name':'服务','tone':'waiting' if online and snapshot['paused'] else 'good' if online else 'stale','label':'在线 · 执行暂停' if online and snapshot['paused'] else '服务在线' if online else '心跳待检查','observed_at':health.get('time')},
+    fresh=[{'id':'service','name':'服务','tone':'waiting' if online and (snapshot['paused'] or health.get('status')!='ok') else 'good' if online else 'stale','label':'在线 · 执行暂停' if online and snapshot['paused'] else '在线 · 局部降级' if online and health.get('status')!='ok' else '服务在线' if online else '心跳待检查','observed_at':health.get('time')},
            {'id':'market','name':'行情','tone':'good' if market_ok else 'waiting' if not calendar['session'] else 'stale',
             'label':('盘中快照' if calendar['session'] else '休市缓存') if market_ok else '等待最新扫描','asof':market_date,'observed_at':scan.get('created_at')},
            {'id':'news','name':'资讯','tone':'good' if news_age is not None and news_age<=store.settings.news_scan_seconds+120 else 'waiting',
@@ -52,6 +58,13 @@ def dashboard_summary(store, calendar, snapshot, strategies, paper, tasks):
            {'id':'review','name':'复盘','tone':'good' if brief.get('asof')==calendar['completed_session'] else 'waiting',
             'label':'最新收盘复盘' if brief.get('asof')==calendar['completed_session'] else '等待收盘流程','asof':brief.get('asof'),'observed_at':brief.get('generated_at')}]
     attention=[]
+    from .recovery import summary
+    active_ids={r['full_id'] for r in active}
+    for component in summary(store):
+        if component['status']=='ok':continue
+        if component['component'].startswith('strategy:') and component['component'].split(':',1)[1] not in active_ids:continue
+        attention.append({'id':'component:'+component['component'],'tone':'watch','title':component['component']+' 等待恢复',
+                          'detail':component.get('reason') or component.get('error_type','查看运行记录与重试时间。'),'target':'runtime'})
     if snapshot['paused']:attention.append({'id':'paused','tone':'critical','title':'新增执行已暂停','detail':snapshot.get('pause_reason') or '请查看运行记录。','target':'runtime'})
     uncertain=[o for o in working if o['status'] in ('unknown','submitting')]
     if uncertain:attention.append({'id':'orders','tone':'critical','title':str(len(uncertain))+' 笔委托等待核对','detail':'成交状态未明确，请查看委托记录。','target':'paper'})

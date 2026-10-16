@@ -320,3 +320,34 @@ def test_quote_block_is_visible_separately_from_service_heartbeat(tmp_path,monke
     runner.serve(s,Stop())
     assert s.meta('health')['status']=='ok' and s.meta('health')['execution_status']=='blocked'
     assert not s.meta('paused')
+
+
+def test_new_shadow_with_expanded_members_can_resolve_its_own_cache(tmp_path,monkeypatch):
+    from copy import deepcopy
+    import numpy as np
+    s,p,ids=setup_open(tmp_path,monkeypatch);broad=deepcopy(p)
+    broad.symbols=p.symbols+['US.NEW']
+    broad.stock_mask=np.append(p.stock_mask,True)
+    broad.fields={k:np.column_stack([v,v[:,0]]) for k,v in p.fields.items()}
+    record=deepcopy(next(r for r in s.strategies() if r['id']==ids[0]))
+    record['id']='new-broad-shadow';record['evidence']['symbols']=broad.symbols
+    record['evidence']['seed_hash']=data_prefix_hash(broad,record['evidence']['seed_asof'])
+    s.set_meta('execution_cache:'+record['id'],'broad-cache')
+    monkeypatch.setattr(runner,'load_panel',lambda directory:broad if directory=='broad-cache' else p)
+    assert runner.execution_view(s,record,p).symbols==broad.symbols
+
+
+def test_shadow_window_missed_retains_real_gate_reason(tmp_path,monkeypatch):
+    s,p,ids=setup_open(tmp_path,monkeypatch);record=next(r for r in s.strategies() if r['id']==ids[0])
+    record['evidence']['shadow_started_at']='2026-10-12T20:00Z'
+    s.set_meta('shadow_outcome:2026-10-13:'+record['id'],{'status':'blocked','reason':'US.QMCO: Spread gate exceeded'})
+    class AfterOpen(pd.Timestamp):
+        @classmethod
+        def now(cls,tz=None):return OPEN+pd.Timedelta(minutes=6)
+    monkeypatch.setattr(runner,'pd',SimpleNamespace(Timestamp=AfterOpen,Timedelta=pd.Timedelta))
+    for _ in range(2):
+        result=runner.shadow_tick(s,record,{},'2026-10-13',p)
+        assert result['status']=='missed_window' and 'QMCO' in result['reason']
+    with s.transaction() as db:
+        assert db.execute("SELECT COUNT(*) FROM events WHERE kind='shadow_window_missed'").fetchone()[0]==1
+    assert not s.orders()

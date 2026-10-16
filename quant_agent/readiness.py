@@ -6,15 +6,47 @@ import re
 from pathlib import Path
 import subprocess
 import sys
+import copy
+import threading
+import time
 
 from .config import digest
 from .store import utcnow
 
+_DISPLAY_CACHE={}
+_DISPLAY_LOCK=threading.Lock()
+
+
+def readiness_view(store,snapshot):
+    """Current local gates, independently of the last preflight's timestamp.
+
+    Immutable data pointers and state changes invalidate immediately. A short
+    cache keeps dashboard polling from repeatedly loading all history files.
+    """
+    from .exchange_clock import latest_completed_session
+    active=[r for r in snapshot['strategies'] if r['stage'] in ('paper','shadow')]
+    paths=[store.meta('execution_data_dir'),store.meta('current_data_dir'),store.meta('option_data_dir'),store.meta('option_data_blocked')]
+    paths += [store.meta('execution_cache:'+r['id']) for r in active]
+    key=digest([snapshot['paused'],snapshot['pause_reason'],store.settings.sha256,
+        latest_completed_session(),paths,[(r['id'],r['stage']) for r in active],
+        store.meta('paper_allocations'),[(o['id'],o['status'],o['filled']) for o in snapshot['orders']],
+        store.meta('last_tick',{}).get('time')])
+    with _DISPLAY_LOCK:
+        cached=_DISPLAY_CACHE.get(str(store.home))
+        if cached and cached[0]==key and time.monotonic()-cached[1]<30:
+            return copy.deepcopy(cached[2])
+        value=execution_readiness(store)
+        value['broker_reconciled_at']=store.meta('last_tick',{}).get('time')
+        value['preflight_observed_at']=(store.meta('execution_readiness') or {}).get('observed_at')
+        if len(_DISPLAY_CACHE)>4:_DISPLAY_CACHE.clear()
+        _DISPLAY_CACHE[str(store.home)]=(key,time.monotonic(),value)
+        return copy.deepcopy(value)
+
 
 def execution_readiness(store,remote=None):
     from .runner import checked_panel
-    from research.daily_factor_lab.core import load_panel
-    blockers=[];checks={};panel=None
+    from .panel_cache import load_panel
+    blockers=[];checks={};panel=None;warnings=[]
     if store.meta('paused'):blockers.append('执行暂停：'+str(store.meta('pause_reason')))
     if not store.settings.paper_enabled:blockers.append('股票模拟执行未启用')
     if any(o['status'] in ('submitting','unknown') for o in store.orders(active=True)):blockers.append('存在未核对的订单提交结果')
@@ -25,7 +57,18 @@ def execution_readiness(store,remote=None):
     if store.settings.parallel_paper:
         checks['stock_allocations']=math.isclose(sum(alloc.get('stock',{}).values()),store.settings.stock_budget,abs_tol=.001)
         owners={r['id'] for r in store.strategies(['paper','live_review'])}
-        checks['stock_owners']=owners=={k for k,v in alloc.get('stock',{}).items() if v>0} and bool(owners)
+        from .capital import TREASURY
+        funded={k for k,v in alloc.get('stock',{}).items() if v>0 and k!=TREASURY}
+        checks['stock_owners']=owners==funded and bool(owners)
+        if store.settings.capital_mode=='broker_equity' and not owners and not funded and alloc.get('stock',{}).get(TREASURY,0)>0:
+            checks['stock_owners']=True
+        if store.settings.capital_mode=='broker_equity':
+            from .champion import pending
+            rotation=pending(store)
+            checks['account_champion']=store.meta('account_champion')
+            checks['rotation_status']=rotation['status'] if rotation else 'completed'
+            if rotation:blockers.append('账户换仓：'+rotation.get('reason','等待交接'))
+            elif owners!=({store.meta('account_champion')} if store.meta('account_champion') else set()):blockers.append('账户优胜策略与交易权限不一致')
     else:checks['stock_allocations']=checks['stock_owners']=len(store.strategies(['paper']))==1
     if not checks['stock_allocations'] or not checks['stock_owners']:blockers.append('股票策略成员或资金分配不一致')
     if store.settings.parallel_paper:
@@ -36,7 +79,10 @@ def execution_readiness(store,remote=None):
         panel=load_panel(store.meta('execution_data_dir',store.meta('current_data_dir',store.settings.data_dir)))
         checked=[]
         for record in store.strategies(['shadow','paper']):
-            checked_panel(store,record,panel);checked.append(record['id'][:12])
+            try:checked_panel(store,record,panel);checked.append(record['id'][:12])
+            except Exception:
+                if record['stage']=='paper':raise
+                warnings.append('Shadow '+record['id'][:12]+' 数据待恢复；不授予交易权限。')
         checks['frozen_strategies']=checked
     except Exception as exc:
         checks['frozen_error_type']=type(exc).__name__
@@ -44,7 +90,7 @@ def execution_readiness(store,remote=None):
     if store.settings.option_paper_enabled:
         from . import option_paper
         agent=store.meta('option_paper_strategy',{});option=alloc.get('option',{})
-        checks['option_allocation']=set(option)=={agent.get('id')} and math.isclose(sum(option.values()),store.settings.option_budget,abs_tol=.001)
+        checks['option_allocation']={k for k,v in option.items() if v>0}=={agent.get('id')} and math.isclose(sum(option.values()),store.settings.option_budget,abs_tol=.001)
         checks['option_freeze']=agent.get('authorized') is True and agent.get('spec',{}).get('engine_sha256')==hashlib.sha256(Path(option_paper.__file__).read_bytes()).hexdigest()
         if not checks['option_allocation'] or not checks['option_freeze']:blockers.append('期权实验版本或预算校验未通过')
     if remote is not None:
@@ -62,7 +108,8 @@ def execution_readiness(store,remote=None):
         checks['blocked_stock_strategies']=blocked
         if blocked:blockers.append('盘中有股票模拟策略等待报价或信号条件；其余策略仍独立检查。')
     return {'ready':not blockers,'observed_at':utcnow(),'data_asof':panel.metadata['end'] if panel is not None else None,
-        'checks':checks,'blockers':blockers,'order_endpoint_tested':False,'live_enabled':False}
+        'checks':checks,'blockers':blockers,'warnings':warnings,
+        'order_endpoint_tested':any(o['broker_id'] and o['filled']>0 for o in store.orders()),'live_enabled':False}
 
 
 def power_guard():

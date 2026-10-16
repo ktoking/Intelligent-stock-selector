@@ -25,9 +25,11 @@ def trial_evidence(store,identity):
 def research_summary(store,asof):
     directory=Path(store.meta('current_data_dir',store.settings.data_dir));manifest=directory/'completed.json'
     data_hash=json.loads(manifest.read_text()).get('input_sha256') if manifest.exists() else None
-    artifacts={}
+    artifacts={};artifact_errors=[]
     for path in (store.home/'artifacts').glob('evolution-*.json'):
-        value=json.loads(path.read_text())
+        try:value=json.loads(path.read_text())
+        except (OSError,ValueError) as exc:
+            artifact_errors.append({'file':path.name,'error_type':type(exc).__name__});continue
         if value.get('strategy'):artifacts[value['strategy']]=value
     with store.transaction() as db:
         shadows={r[0]:r[1] for r in db.execute('SELECT strategy,COUNT(*) FROM shadow GROUP BY strategy')}
@@ -60,14 +62,15 @@ def research_summary(store,asof):
             'paper_allocation':store.meta('paper_allocations',{}).get('stock',{}).get(record['id']),
             'initial_capital':initial.get(record['id']),'retirement':e.get('retirement')})
     steps=[]
+    cycle_matches=store.meta('research_cycle_completed:'+asof)==str(directory)
     for key,label in [('review','每日复盘'),('discovery','因子组合假设'),('evolution','新表达式因子'),('backtest','回测与独立核账'),('promotion','晋升比较')]:
         job=store.meta('task:'+key) or {}
-        current=job.get('asof')==asof
+        current=job.get('asof')==asof and (job['data_dir']==str(directory) if job.get('data_dir') else cycle_matches)
         steps.append({'key':key,'label':label,'status':job.get('status') if current else 'pending',
             'finished_at':job.get('finished_at') if current else None,
-            'last_asof':job.get('asof'),'reason':job.get('reason') or ('本日尚未执行；上次记录 '+job['asof'] if not current and job.get('asof') else None)})
+            'last_asof':job.get('asof'),'reason':job.get('reason') or ('当前数据版本尚未完成此步骤；旧记录不作为新版本完成证据。' if not current and job.get('asof')==asof else '本日尚未执行；上次记录 '+job['asof'] if not current and job.get('asof') else None)})
     latest=[r for r in rows if r['current_version']]
-    return {'asof':asof,'data_sha256':data_hash,'pending':research_pending(store,asof),'steps':steps,
+    return {'asof':asof,'data_sha256':data_hash,'pending':research_pending(store,asof),'steps':steps,'artifact_errors':artifact_errors,
         'trials':rows,'factor_count':sum(r['is_factor'] for r in rows),'current_trials':len(latest),
         'current_factors':sum(r['is_factor'] for r in latest),'current_rejected':sum(r['stage']=='rejected' for r in latest),
         'queued':len([r for r in queue if r['status'] in ('ready','waiting')]),'promotion_policy':store.meta('promotion_policy',{}),
@@ -94,5 +97,8 @@ def append_research_review(store,asof):
         lines.append('实验材料：http://127.0.0.1:8791'+trial['evidence_url'])
         if trial['code_url']:lines.append('独立因子代码：http://127.0.0.1:8791'+trial['code_url'])
         lines.append('')
-    lines.append('自动晋升只替换空仓、无未完成订单且资金已交收的槽位；保留原始规则和历史记录，股票总额度10000美元、期权1000美元独立。模拟等待期按用户授权豁免；历史筛选及因果检查不等于未来Alpha验证。')
-    path.write_text(content+'\n'+'\n'.join(lines))
+    if store.meta('promotion_policy',{}).get('mode')=='account_champion':
+        lines.append(f'账户优胜策略模式：候选并行观察，通过统一区间检验后收益择优；撤旧委托、退出淘汰持仓并交收后交接。股票授权本金 {store.settings.stock_budget:,.2f} 美元，期权预留 {store.settings.option_budget:,.2f} 美元。资金流不计盈利，历史选优不是未来保证。')
+    else:lines.append('自动晋升只替换空仓、无未完成订单且资金已交收的槽位；保留原始规则和历史记录，股票总额度10000美元、期权1000美元独立。模拟等待期按用户授权豁免；历史筛选及因果检查不等于未来Alpha验证。')
+    from .files import atomic_write
+    atomic_write(path,content+'\n'+'\n'.join(lines))

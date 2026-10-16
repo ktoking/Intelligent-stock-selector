@@ -14,22 +14,29 @@ from .store import utcnow
 NAME='option-trend-long-v1'
 
 
+def strategy_spec(settings):
+    spec={'name':NAME,'underlyings':['US.NVDA','US.QQQ'],'long_only':True,'max_contracts':1,
+          'budget':settings.option_budget,'dte':[14,28],'delta':[.35,.60],'minimum_oi':500,
+          'max_spread_bps':settings.option_max_spread_bps,'stop_loss_pct':30,'take_profit_pct':50,
+          'exit_before_expiry_days':7,'historical_option_backtest_verified':False,
+          'engine_sha256':sha256(Path(__file__).read_bytes()).hexdigest()}
+    if settings.option_funding_mode=='shared_ratio':
+        spec.update(funding_mode='shared_ratio',equity_fraction=settings.option_equity_fraction)
+    return spec
+
+
 def activate_option_agent(store, authorization):
     if not store.settings.option_paper_enabled or not authorization:
         raise ValueError('Explicit option paper authorization required')
-    spec={'name':NAME,'underlyings':['US.NVDA','US.QQQ'],'long_only':True,'max_contracts':1,
-          'budget':1000,'dte':[14,28],'delta':[.35,.60],'minimum_oi':500,
-          'max_spread_bps':store.settings.option_max_spread_bps,'stop_loss_pct':30,'take_profit_pct':50,
-          'exit_before_expiry_days':7,'historical_option_backtest_verified':False,
-          'engine_sha256':sha256(Path(__file__).read_bytes()).hexdigest()}
+    spec=strategy_spec(store.settings)
     ident=digest(spec)
     if store.portfolio('option')['positions'] or any(o['bucket']=='option' for o in store.orders()):
         raise ValueError('Cannot reset an option strategy with trading activity')
-    allocation=store.meta('paper_allocations',{});allocation['option']={ident:1000}
+    allocation=store.meta('paper_allocations',{});allocation['option']={ident:store.settings.option_budget}
     with store.transaction() as db:
         store.set_meta('paper_allocations',allocation,db)
         store.set_meta('option_paper_strategy',{'id':ident,'spec':spec,'authorized':True,'source':authorization,'observed_at':utcnow()},db)
-        store.event('option_paper_authorized',{'id':ident,'name':NAME,'budget':1000,'historical_backtest_verified':False},db)
+        store.event('option_paper_authorized',{'id':ident,'name':NAME,'budget':store.settings.option_budget,'historical_backtest_verified':False},db)
     return ident
 
 
@@ -51,7 +58,7 @@ def option_quote(q, settings):
         max_quote_age_seconds=settings.max_quote_age_seconds))
 
 
-def candidates(chain, quotes, signal, session, settings):
+def candidates(chain, quotes, signal, session, settings, capital_cap=None):
     """Actual chain metadata and fresh executable quotes; no fabricated premiums."""
     selected=[]
     for c in chain:
@@ -62,7 +69,7 @@ def candidates(chain, quotes, signal, session, settings):
         try:bid,ask=option_quote(q,settings)
         except (BrokerError,ValueError,KeyError,TypeError):continue
         delta=abs(float(q.get('delta') or 0));oi=float(q.get('option_open_interest') or 0)
-        if not .35<=delta<=.60 or oi<500 or ask*100*(1+settings.fee_reserve_bps/10000)>settings.option_budget:
+        if not .35<=delta<=.60 or oi<500 or ask*100*(1+settings.fee_reserve_bps/10000)>(settings.option_budget if capital_cap is None else capital_cap):
             continue
         selected.append({'code':c['code'],'expiry':c['strike_time'],'type':c['option_type'],
             'underlying':signal['symbol'],'bid':bid,'ask':ask,'delta':delta,'open_interest':oi,'dte':dte,
@@ -90,7 +97,7 @@ def submit(store,broker,owner,code,side,qty,price,session):
 
 
 def option_tick(store,broker,panel,quotes,session):
-    allocations=store.meta('paper_allocations',{}).get('option',{})
+    allocations={k:v for k,v in store.meta('paper_allocations',{}).get('option',{}).items() if v>0}
     if not allocations:return
     owner=next(iter(allocations));book=store.portfolio('option')
     agent=store.meta('option_paper_strategy',{})
@@ -99,6 +106,8 @@ def option_tick(store,broker,panel,quotes,session):
     base={'name':NAME,'observed_at':utcnow(),'historical_option_backtest_verified':False,
           'budget':store.settings.option_budget,'long_only':True,'status':'closed' if not session else 'monitoring',
           'rules':'NVDA/QQQ 已完成日线趋势与5日方向；14–28天标准期权，Delta 0.35–0.60，OI≥500，价差≤3%，最多1张；-30%/+50%或到期前7天平仓。'}
+    from .capital import option_cap
+    base['capital_cap']=option_cap(store)
     if not session:
         store.set_meta('option_paper_status',base);return
     if store.meta('paused'):return
@@ -148,9 +157,9 @@ def option_tick(store,broker,panel,quotes,session):
     spot=float(quotes[signal['symbol']]['last_price'])
     near=sorted(near,key=lambda r:abs(r['strike_price']/spot-1))[:30]
     snapshot={q['code']:q for q in broker.snapshots([r['code'] for r in near])} if near else {}
-    choices=candidates(near,snapshot,signal,session,store.settings)
+    choices=candidates(near,snapshot,signal,session,store.settings,capital_cap=base['capital_cap'])
     if not choices:
-        store.set_meta('option_paper_status',base|{'status':'waiting','detail':'无合约通过真实报价、流动性或1000美元预算检查'});return
+        store.set_meta('option_paper_status',base|{'status':'waiting','detail':'无合约通过真实报价、流动性或当前期权资金上限检查'});return
     selected=choices[0];code=selected['code'];price=math.ceil(selected['ask']*100)/100
     contracts[code]=selected;store.set_meta('option_contracts',contracts)
     # One paid premium position at a time; cash/fees are reserved by the shared ledger.

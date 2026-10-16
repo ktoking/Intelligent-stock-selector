@@ -164,18 +164,27 @@ def strategy_activity(store, strategy, mode='history'):
     activity = (own | {'curve':owner_curve}) if allocated else store.paper_activity()
     if allocated and record['stage']=='retired':activity={**activity,'nav':own['performance_nav']}
     curve = [{'date':r['observed'], 'session':r['session'], 'equity':r['nav'], 'cash':r['cash']} for r in activity['curve']] if attributable and fills else []
+    performance_curve=None
+    if allocated and store.settings.capital_mode=='broker_equity':
+        from .capital import strategy_performance
+        performance_return,performance_curve=strategy_performance(store,strategy,own)
+        curve=[{'date':r['observed'],'session':r['session'],'equity':r['performance_equity'],'cash':r['cash']} for r in performance_curve]
+        activity={**activity,'nav':own['initial_capital']*(1+performance_return/100)}
     daily = []
     if attributable and fills:
         prior = activity.get('initial_capital',activity.get('budget',10000.))
         for point in closing_nav:
             day = point['session']
             rows = [f for f in fills if f['session']==day]
+            neutral=next((r for r in performance_curve or [] if r['observed']==point['observed']),None)
+            performance_nav=neutral['performance_equity'] if neutral else point['nav']
             daily.append({'date':day,'nav':point['nav'],'cash':point['cash'],'held_value':point['nav']-point['cash'],
-                          'pnl':point['nav']-prior,'return_pct':(point['nav']/prior-1)*100,'fees':sum(f['fee'] for f in rows),
+                          'pnl':sum(f['realized_pnl'] for f in rows)+point['unrealized']-(daily[-1].get('unrealized',0) if daily else 0) if neutral else point['nav']-prior,
+                          'unrealized':point.get('unrealized',0),'return_pct':(performance_nav/prior-1)*100,'fees':sum(f['fee'] for f in rows),
                           'order_count':sum(o['session']==day for o in orders),
                           'buy_amount':sum(f['qty']*f['price']*f['multiplier'] for f in rows if f['side']=='BUY'),
                           'sell_amount':sum(f['qty']*f['price']*f['multiplier'] for f in rows if f['side']=='SELL')})
-            prior = point['nav']
+            prior = performance_nav
     trades = [{'date':f['observed'],'session':f['session'],'symbol':f['symbol'],'side':f['side'],'qty':f['qty'],'price':f['price'],
                'amount':f['qty']*f['price']*f['multiplier'],'fee':f['fee'],'realized_pnl':f['realized_pnl'],'evidence_kind':'paper'} for f in fills]
     return {'kind':'paper','trades':trades,'daily':daily,'orders':orders,'curve':curve,

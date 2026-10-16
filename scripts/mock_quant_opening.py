@@ -26,7 +26,7 @@ import pandas as pd
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from quant_agent import broker,runner,schedule,exchange_clock,option_paper,store as store_module
-from quant_agent import promotion
+from quant_agent import promotion,capital,champion
 from quant_agent.broker import FutuSim
 from quant_agent.config import DEFAULT_HOME,Settings,canonical,digest
 from quant_agent.store import Store
@@ -100,7 +100,13 @@ class Wire:
             return {'ret_code':-11,'ret_msg':'retry after 1s'}
         if path.endswith('/accounts'):
             data={'accounts':[{'account_id':self.settings.stock_account,'market_id':100,'account_title':'美股模拟 MOCK'}]}
-        elif path.endswith('/cash-info'):data={'balance':100000}
+        elif path.endswith('/cash-info'):
+            cash=self.settings.stock_budget+self.settings.option_budget
+            for row in self.rows:
+                value=row.get('cum_qty',0)*float(row.get('avg_fill_price') or 0)*(100 if 'US.'+row['symbol'] in self.contracts else 1)
+                cash-=(1 if row['side']==1 else -1)*value+value*self.settings.fee_reserve_bps/10000
+            mv=sum(qty*self.quote(symbol)['last_price']*(100 if symbol in self.contracts else 1) for symbol,qty in self.positions.items() if qty)
+            data={'balance':cash,'total_asset':cash+mv}
         elif path.endswith('/positions'):
             data={'positions':[{'symbol':s[3:],'qty':qty,'pstn_type':0} for s,qty in self.positions.items() if qty]}
         elif method=='GET' and (path.endswith('/orders') or path.endswith('/history-orders')):
@@ -120,7 +126,7 @@ class Wire:
                 return {'ret_code':0,'data':{'option_chain':[]}}
             owner=path.split('/')[-2];expiry=(self.clock.now+pd.Timedelta(days=21)).date().isoformat()
             code=owner+self.clock.now.__class__(expiry).strftime('%y%m%d')+'C'+str(round(self.prices.get(owner,100)*1000))
-            premium=12. if self.case=='option_over_budget' else 6.
+            premium=max(12.,self.settings.option_budget/100*1.2) if self.case=='option_over_budget' else 6.
             self.contracts[code]={'premium':premium}
             data={'option_chain':[{'code':code,'strike_time':expiry,'stock_owner':owner,'option_type':'CALL',
                 'lot_size':100,'option_standard_type':'STANDARD','strike_price':self.prices.get(owner,100)}]}
@@ -211,7 +217,7 @@ def invariants(store,wire):
     # The last wire advance can precede the next reconciliation; callers run
     # this immediately after a tick, before advancing the simulated clock.
     assert actual==expected,('positions',actual,expected)
-    for bucket,budget in [('stock',10000),('option',1000)]:
+    for bucket,budget in [('stock',store.settings.stock_budget),('option',store.settings.option_budget)]:
         book=store.portfolio(bucket);assert book['cash']>=-1e-7
         with store.transaction() as db:
             rows=db.execute('SELECT f.*,o.side,o.multiplier FROM fills f JOIN orders o ON o.id=f.order_id WHERE o.bucket=?',(bucket,)).fetchall()
@@ -275,9 +281,9 @@ def run_case(home,settings,case,cycles=11,http_mock=False,quote_capture=None,quo
         else:
             stack.enter_context(patch('urllib.request.urlopen',side_effect=AssertionError('MOCK network access forbidden')))
             factory=lambda config:FutuSim(config,transport=wire)
-        for module in (runner,broker,schedule,exchange_clock,option_paper):stack.enter_context(patch.object(module,'pd',fake_pd))
+        for module in (runner,broker,schedule,exchange_clock,option_paper,capital,champion):stack.enter_context(patch.object(module,'pd',fake_pd))
         for module in (broker,schedule,exchange_clock):stack.enter_context(patch.object(module,'datetime',DateTime))
-        for module in (runner,store_module,option_paper,promotion):stack.enter_context(patch.object(module,'utcnow',lambda:clock.now.isoformat()))
+        for module in (runner,store_module,option_paper,promotion,capital,champion):stack.enter_context(patch.object(module,'utcnow',lambda:clock.now.isoformat()))
         stack.enter_context(patch.object(broker.time,'time',lambda:clock.now.timestamp()))
         stack.enter_context(patch.object(runner,'FutuSim',factory))
         stack.enter_context(patch.object(runner,'load_panel',cached))
@@ -297,7 +303,10 @@ def run_case(home,settings,case,cycles=11,http_mock=False,quote_capture=None,quo
     orders=store.orders();stock=[o for o in orders if o['bucket']=='stock'];option=[o for o in orders if o['bucket']=='option']
     submissions=[c for c in wire.calls if c['method']=='POST' and c['route']=='orders']
     assert len(submissions)==len(orders),('duplicate submit',len(submissions),len(orders))
-    safe_pause=case in ('accepted_ack_lost','cancel_ack_lost','risk_drawdown')
+    safe_pause=case=='risk_drawdown' or any(o['status'] in ('unknown','submitting') for o in orders)
+    if case in ('accepted_ack_lost','cancel_ack_lost') and not safe_pause:
+        with store.read() as db:
+            assert db.execute("SELECT 1 FROM events WHERE kind='acknowledgement_recovered'").fetchone()
     assert bool(store.meta('paused'))==safe_pause,(case,store.meta('pause_reason'),timeline)
     captured_block=quote_capture is not None and quote_mode in ('original','premarket-age')
     if not safe_pause and case!='all_quotes_unavailable' and not captured_block:

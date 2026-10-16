@@ -1,0 +1,66 @@
+{
+  "created_at": "2026-10-15T09:32:38.021844+00:00",
+  "stock_budget": 900000.0,
+  "option_budget": 100000.0,
+  "fraction": 0.1,
+  "option_account": {
+    "account_id_verified": true,
+    "authorized": true,
+    "balance_verified": true,
+    "detail": "与股票共用已核实的美股模拟账户；期权上限为最新净资产10%，独立核账，不使用融资。",
+    "equity_fraction": 0.1,
+    "market": "US",
+    "observed_at": "2026-10-15T09:32:37.990121+00:00",
+    "status": "shared_verified"
+  },
+  "broker_capital": {
+    "cash": 997271.645,
+    "observed_at": "2026-10-15T09:32:38.003292+00:00",
+    "option_cash_cap": 100000.24130500003,
+    "option_equity_cap": 99993.6435,
+    "option_equity_fraction": 0.1,
+    "option_reserve": 99993.6435,
+    "source": "Futunn sim-trade cash-info; no margin buying power",
+    "stock_cash_cap": 897271.645,
+    "stock_equity_cap": 899936.435,
+    "total_asset": 999936.435
+  },
+  "option_agent": {
+    "authorized": true,
+    "id": "d357055557fc6b52a7802e5a4548dcee0aaf6bafa114a08972a20c8922d84434",
+    "observed_at": "2026-10-15T09:32:37.990121+00:00",
+    "source": "2026-10-15用户最新授权：不用单独账号，使用当前100万美元美股模拟账户10%操作期权、90%股票；沿用多头Call/Put和已有持仓平仓规则，不融资，仅模拟。",
+    "spec": {
+      "budget": 100000.0,
+      "delta": [
+        0.35,
+        0.6
+      ],
+      "dte": [
+        14,
+        28
+      ],
+      "engine_sha256": "dd2fb126ace552cb84ef5a527cadab56cbf3145668c64f556b78f49bee084a1f",
+      "equity_fraction": 0.1,
+      "exit_before_expiry_days": 7,
+      "funding_mode": "shared_ratio",
+      "historical_option_backtest_verified": false,
+      "long_only": true,
+      "max_contracts": 1,
+      "max_spread_bps": 300,
+      "minimum_oi": 500,
+      "name": "option-trend-long-v1",
+      "stop_loss_pct": 30,
+      "take_profit_pct": 50,
+      "underlyings": [
+        "US.NVDA",
+        "US.QQQ"
+      ]
+    }
+  },
+  "preserved_stock_specs_and_orders": true,
+  "total_cash_unchanged": true,
+  "old_option_agent_archived": true,
+  "option_orders_sent": 0,
+  "rotation_status": "queued"
+}

@@ -69,3 +69,16 @@ def test_daily_job_rejects_invalid_brief_and_records_retry_instead_of_persisting
     assert s.meta('daily_retry_after:2026-10-09')
     assert s.meta('task:review')['status']=='failed'
     assert not s.orders()
+
+
+def test_report_capital_labels_follow_evidence_version_not_legacy_constants(tmp_path):
+    from quant_agent.briefing import render_brief_markdown
+    s=Store(tmp_path,initialize(tmp_path));evidence=packet()
+    evidence['capital_authorization']={'stock':900000,'option':100000,'mode':'broker_equity'}
+    value=persist_brief(s,response(),evidence,'2026-10-15')
+    text=render_brief_markdown(value)
+    assert '$900,000' in text and '$100,000' in text
+    assert '股票 $10,000 / 期权 $1,000' not in text
+    assert value['capital_authorization']==evidence['capital_authorization']
+    value.pop('capital_authorization')
+    assert '对应版本授权记录' in render_brief_markdown(value)

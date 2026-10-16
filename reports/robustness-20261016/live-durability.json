@@ -1,0 +1,16 @@
+{
+  "database": "ok",
+  "journal_mode": "wal",
+  "orders": 12,
+  "fills": 12,
+  "order_state_unchanged": true,
+  "checkpoints": 1,
+  "protected_files_unchanged_during_deploy": true,
+  "http_completed": 15,
+  "http_correlated": true,
+  "http_statuses": [
+    200
+  ],
+  "log_mode": "0o600",
+  "checkpoint_replay_uses_existing_result": true
+}

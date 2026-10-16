@@ -1,0 +1,11 @@
+{
+  "asof": "2026-10-15",
+  "frozen_strategy_seeds_verified": 10,
+  "option_underlyings": [
+    "US.NVDA",
+    "US.QQQ"
+  ],
+  "option_data_asof": "2026-10-15",
+  "external_orders_sent": 0,
+  "checkpoint_reused_without_reexecution": true
+}

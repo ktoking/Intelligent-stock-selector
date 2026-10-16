@@ -1,0 +1,75 @@
+{
+  "observed_at": "2026-10-16T03:23:26.768913+00:00",
+  "paused": false,
+  "pause_reason": null,
+  "health": {
+    "execution_status": "rotating",
+    "mode": "startup_reconcile",
+    "status": "ok",
+    "time": "2026-10-16T03:23:18.746873+00:00"
+  },
+  "daily_asof": "2026-10-15",
+  "daily_completed": true,
+  "stock_budget": 900000.0,
+  "option_budget": 100000.0,
+  "live_enabled": false,
+  "order_counts": {
+    "filled": 12
+  },
+  "recovery": {
+    "components": [],
+    "checkpoints": [],
+    "pause_policy": null,
+    "logging": {
+      "file_enabled": true,
+      "write_failures": 0,
+      "rotation_bytes": 5242880,
+      "retained_files": 6,
+      "scope": "本机 JSONL；SQLite 保存订单意图、成交、任务检查点和故障事件；不记录签名、私钥、请求正文或查询参数。"
+    },
+    "data_gate": null,
+    "option_data_gate": null,
+    "artifact_errors": []
+  },
+  "rotation": {
+    "status": "settling",
+    "reason": "等待正常交易时段；不使用盘前报价清仓"
+  },
+  "last_tick": {
+    "time": "2026-10-16T03:23:18.741657+00:00",
+    "signal_cache_asof": "2026-10-15",
+    "execution_blockers": [
+      "US regular market closed"
+    ]
+  },
+  "option_status": {
+    "chain_contracts": 320,
+    "daily_bars": 3,
+    "daily_contract": "US.NVDA261030C222500",
+    "documentation": "https://open.futunn.com/api/quote/basic-data/history-kline.md",
+    "expirations": 25,
+    "fields": [
+      "bid",
+      "ask",
+      "IV",
+      "delta",
+      "gamma",
+      "theta",
+      "vega",
+      "rho",
+      "OI",
+      "volume"
+    ],
+    "historical_bid_ask_verified": false,
+    "historical_greeks_verified": false,
+    "historical_option_chain_verified": false,
+    "limitation": "历史完整链、历史买卖价及历史Greeks尚未验证，不能视为完整期权回测数据。",
+    "minute5_bars": 0,
+    "observed_at": "2026-10-15T09:17:43.025492+00:00",
+    "orders_sent": 0,
+    "quote_contracts": 4,
+    "quote_date": "2026-10-14",
+    "source": "Futunn AppKey REST",
+    "underlying": "US.NVDA"
+  }
+}

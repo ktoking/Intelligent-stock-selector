@@ -38,7 +38,9 @@ def artifact(store, name, value):
         temporary=Path(f.name)
         f.write(canonical(value));f.flush();os.fsync(f.fileno())
     try:
-        os.link(temporary,path)  # Atomic create, never replace a frozen artifact.
+        try:os.link(temporary,path)  # Atomic create, never replace a frozen artifact.
+        except FileExistsError:
+            if json.loads(path.read_text())!=value:raise ValueError('Immutable artifact differs: '+name) from None
     finally:
         temporary.unlink()
     return str(path)
@@ -48,13 +50,20 @@ def propose(store, names=None, ai=False):
     panel = load_panel(store.meta("current_data_dir",store.settings.data_dir))
     proposals = [{"policy_name":n,"rationale":"Fixed catalog baseline; not an AI finding"} for n in (names or ["trend_buffer15","momentum_blend20","residual_momentum20"])]
     if ai:
-        packet = {"purpose":"alpha_discovery","data":panel.metadata,"budgets":{"stock":10000,"option":1000},
+        records=store.strategies()
+        recent={r['id']:r for r in records[-16:]+[r for r in records if r['stage'] in ('paper','live_review')]}
+        packet = {"purpose":"alpha_discovery","data":panel.metadata,"budgets":{"stock":store.settings.stock_budget,"option":store.settings.option_budget},
+                  "trial_archive":{"total":len(records),"included":len(recent),"note":"Older trials remain in the local immutable archive."},
                   "strategy_references":store.meta("strategy_references",[]),"universe_scan":store.meta("universe_scan"),
                   "previous_trials":[{"id":r["id"][:12],"stage":r["stage"],"policy":r["spec"]["policy"],
                       "factor_weights":r["spec"].get("factor_weights",[]),"gates":r["evidence"].get("gates"),
-                      "stats":r["evidence"].get("stats"),"reason":r["evidence"].get("reason")} for r in store.strategies()],
+                      "stats":r["evidence"].get("stats"),"reason":r["evidence"].get("reason")} for r in recent.values()],
                   "news":__import__('quant_agent.news',fromlist=['evidence_at']).evidence_at(store),"news_status":"Timestamped headlines only; no historical replay or causal proof"}
-        response = ask(store.settings.ai_provider,packet,model_name=store.settings.ai_model,reasoning_effort=store.settings.ai_reasoning_effort)
+        response_key='discovery_response:'+digest([panel.metadata['input_sha256'],engine_hash(),store.settings.sha256])
+        response=store.meta(response_key)
+        if response is None:
+            response = ask(store.settings.ai_provider,packet,model_name=store.settings.ai_model,reasoning_effort=store.settings.ai_reasoning_effort)
+            store.set_meta(response_key,response)
         store.set_meta('ai_runtime',{'model':response['model'],'reasoning_effort':response.get('reasoning_effort'),'observed_at':utcnow()})
         name="discovery-"+digest(response)[:16]
         if not (store.home/"artifacts"/(name+".json")).exists():
@@ -95,6 +104,23 @@ def _evaluate(store):
                "validation":(str(dates[a].date()),str(dates[b-1].date())),
                "retrospective_test":(str(dates[b].date()),str(dates[-1].date()))}
     results = []
+    # A process can stop between validated and shadow. Resume the validated
+    # protocol, never rerun it with changed thresholds or credit past sessions.
+    for record in store.strategies(['validated']):
+        evidence=record['evidence'];spec=record['spec']
+        if (not evidence.get('passed') or len(evidence.get('independent_ledger',{}))!=3
+                or spec.get('research_data_sha256')!=source_panel.metadata['input_sha256']):continue
+        if spec['engine_sha256']!=engine_hash(spec):raise ValueError('Validated checkpoint engine changed')
+        protocol_path=Path(evidence.get('protocol',''))
+        if not protocol_path.is_file():raise ValueError('Validated checkpoint protocol missing')
+        protocol=json.loads(protocol_path.read_text())
+        if (digest(protocol)!=evidence.get('protocol_sha256') or protocol.get('data',{}).get('input_sha256')!=spec['research_data_sha256']
+                or protocol.get('engine_sha256')!=spec['engine_sha256']):raise ValueError('Validated checkpoint protocol changed')
+        recovered=frozen_view(source_panel,{'evidence':{'symbols':spec.get('research_symbols',source_panel.symbols)}})
+        frozen={**evidence,'shadow_started_at':utcnow(),'seed_asof':recovered.metadata['end'],'symbols':recovered.symbols,
+                'seed_hash':data_prefix_hash(recovered,recovered.metadata['end']),'engine_sha256':engine_hash(spec),'state':engine.empty()}
+        store.transition(record['id'],'validated','shadow',frozen)
+        store.event('validated_checkpoint_recovered',{'strategy':record['id']})
     for record in store.strategies(["proposed","backtested"]):
         key, spec = record["id"],record["spec"]
         panel=frozen_view(source_panel,{'evidence':{'symbols':spec.get('research_symbols',source_panel.symbols)}})
@@ -192,7 +218,7 @@ def live_review(store, strategy):
         raise ValueError("Paper evidence required")
     request = {"created":utcnow(),"strategy":strategy,"strategy_sha256":digest(record["spec"]),
                "configuration_sha256":store.settings.sha256,"account_tail":store.settings.stock_account[-4:],
-               "budgets":{"stock":10000,"option":1000},"evidence":record["evidence"],
+               "budgets":{"stock":store.settings.stock_budget,"option":store.settings.option_budget},"evidence":record["evidence"],
                "required":"Human review of paper fills, costs, drawdown, strategy/version, real account and separate authorization",
                "live_adapter_implemented":False,"live_enabled":False}
     return artifact(store,"live-review-"+strategy[:16],request)

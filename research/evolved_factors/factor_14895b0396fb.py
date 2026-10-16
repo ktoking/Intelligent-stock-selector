@@ -1,0 +1,7 @@
+"""Generated factor candidate; live eligibility requires fresh validation."""
+from quant_agent.evolution import expression_score
+
+FACTOR_EXPRESSION = {'nodes': [{'a': None, 'b': None, 'field': 'residual_momentum', 'op': 'field', 'window': None, 'x': None}, {'a': None, 'b': None, 'field': None, 'op': 'rank', 'window': None, 'x': 0}, {'a': None, 'b': None, 'field': 'high', 'op': 'field', 'window': None, 'x': None}, {'a': None, 'b': None, 'field': 'close', 'op': 'field', 'window': None, 'x': None}, {'a': 2, 'b': 3, 'field': None, 'op': 'sub', 'window': None, 'x': None}, {'a': None, 'b': None, 'field': 'low', 'op': 'field', 'window': None, 'x': None}, {'a': 2, 'b': 5, 'field': None, 'op': 'sub', 'window': None, 'x': None}, {'a': 4, 'b': 6, 'field': None, 'op': 'div', 'window': None, 'x': None}, {'a': None, 'b': None, 'field': 'turnover', 'op': 'field', 'window': None, 'x': None}, {'a': 7, 'b': 8, 'field': None, 'op': 'mul', 'window': None, 'x': None}, {'a': None, 'b': None, 'field': None, 'op': 'mean', 'window': 20, 'x': 9}, {'a': None, 'b': None, 'field': None, 'op': 'mean', 'window': 20, 'x': 8}, {'a': 10, 'b': 11, 'field': None, 'op': 'div', 'window': None, 'x': None}, {'a': None, 'b': None, 'field': None, 'op': 'rank', 'window': None, 'x': 12}, {'a': 1, 'b': 13, 'field': None, 'op': 'sub', 'window': None, 'x': None}], 'root': 14}
+
+def score(fields, stock_mask=None):
+    return expression_score(FACTOR_EXPRESSION, fields, stock_mask)

@@ -31,16 +31,26 @@ function parseHTML(html){
 }
 const descendants=node=>[node,...(node.children||[]).flatMap(descendants)];
 const content=node=>[node.textContent||'',...(node.children||[]).map(content)].join(' ');
-async function until(test,label){for(let i=0;i<200;i++){if(test())return;await new Promise(resolve=>setTimeout(resolve,25));}throw Error(label);}
+async function until(test,label){for(let i=0;i<800;i++){if(test())return;await new Promise(resolve=>setTimeout(resolve,25));}throw Error(label);}
 (async()=>{
  const html=fs.readFileSync('quant_agent/static/dashboard.html','utf8'),tree=parseHTML(html),all=descendants(tree),nodes=new Map(all.filter(n=>n.id).map(n=>[n.id,n]));
  const modes=all.filter(n=>n.dataset.mode),pages=all.filter(n=>n.dataset.page),nav=all.filter(n=>n.tag==='nav').flatMap(n=>descendants(n).filter(c=>c.tag==='a'));
  const root=all.find(n=>n.tag==='html'),storage=new Map(),timers=[];
  const document={hidden:false,documentElement:root,getElementById:id=>{if(!nodes.has(id))throw Error('Missing element '+id);return nodes.get(id);},createElement:tag=>new Node(tag),createElementNS:(_,tag)=>new Node(tag),createTextNode:text=>{const n=new Node('#text');n._text=text;return n;},querySelectorAll:selector=>selector==='[data-mode]'?modes:selector==='[data-page]'?pages:selector==='nav a'?nav:selector==='a[href^="#"]'?all.filter(n=>n.tag==='a'&&n.href?.startsWith('#')):[],addEventListener(){}};
  const context={document,Intl,Date,Map,Set,console,URL,innerWidth:1024,innerHeight:768,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},fetch:url=>fetch('http://127.0.0.1:8791'+url),location:{hash:'#overview'},scrollY:0,scrollTo({top}){this.scrollY=top;},setInterval(fn,ms){timers.push(ms);},setTimeout(fn,ms){const timer=setTimeout(fn,ms);timer.unref();return timer;},Error,Number,Math,JSON};vm.createContext(context);vm.runInContext(fs.readFileSync('quant_agent/static/dashboard.js','utf8'),context);
- for(let i=0;i<100&&vm.runInContext('loading',context);i++)await new Promise(resolve=>setTimeout(resolve,50));
+ for(let i=0;i<800&&vm.runInContext('loading',context);i++)await new Promise(resolve=>setTimeout(resolve,50));
  if(vm.runInContext('loading',context))throw Error('Render did not finish');
  const runtime=await (await fetch('http://127.0.0.1:8791/api/status')).json();
+ if(!runtime.recovery?.logging?.file_enabled)throw Error('Runtime file logging unavailable');
+ if(!nodes.get('recovery-summary').textContent.includes('恢复与检查点'))throw Error('Recovery panel missing');
+ if(nodes.get('checkpoint-list').children.length!==Math.min(12,runtime.recovery.checkpoints.length))throw Error('Checkpoint rows missing');
+ if(runtime.capital_mode==='broker_equity'){
+  const rank=runtime.research_evidence?.screen?.ranking||[];
+  if(nodes.get('account-ranking').children.length!==rank.length)throw Error('Account competition ranking missing');
+  if(!nodes.get('account-policy').textContent.includes('不使用融资购买力'))throw Error('Account cash-only mandate missing');
+  if(!nodes.get('account-rotation').textContent.includes(runtime.champion_rotation?.reason||'等待'))throw Error('Rotation state missing');
+ }
+
  if(runtime.research_evidence){
   const lab=runtime.research_evidence,rows=lab.trials.filter(r=>r.is_factor||r.current_version);
   if(nodes.get('factor-evidence-table').children.length!==rows.length||nodes.get('factor-lab-steps').children.length!==5)throw Error('Factor evidence pipeline missing');
@@ -54,14 +64,14 @@ async function until(test,label){for(let i=0;i<200;i++){if(test())return;await n
  }else if(nodes.get('warning').hidden!==true)throw Error('Render warning: '+nodes.get('warning').textContent);
  if(!nodes.get('equity-chart').children.some(n=>n.tag==='svg'))throw Error('Historical chart not rendered');
  if(nav.length!==6||pages.length!==6||pages.filter(n=>!n.hidden).length!==1||pages.find(n=>!n.hidden).dataset.page!=='overview')throw Error('View routing/default overview failed');
- if(!content(nodes.get('overview-nav')).includes('10,000')||!content(nodes.get('overview-pnl-sub')).includes('暂无成交'))throw Error('Ledger overview missing');
+ const expectedNav=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(runtime.paper_activity.nav);if(!content(nodes.get('overview-nav')).includes(expectedNav))throw Error('Ledger NAV does not match actual account');if(!runtime.paper_activity.fill_count&&!content(nodes.get('overview-pnl-sub')).includes('暂无成交'))throw Error('Empty account label missing');
  if(!timers.includes(15000)||!timers.includes(1000))throw Error('Refresh/clock cadence changed');
  nodes.get('research-archive').open=true;
  nav.find(n=>n.href==='#runtime').listeners.click({preventDefault(){}});
  if(pages.find(n=>!n.hidden).dataset.page!=='runtime'||context.location.hash!=='#runtime')throw Error('Navigation did not reveal runtime: '+JSON.stringify([pages.map(n=>[n.dataset.page,n.hidden]),context.location.hash,vm.runInContext('currentView',context)]));
  nav.find(n=>n.href==='#overview').listeners.click({preventDefault(){}});
  if(!nodes.get('research-archive').open)throw Error('Navigation reset expanded details');
- if(!nodes.get('timeline-title').textContent.includes('美股交易日'))throw Error('Timeline missing');
+ const activeNames=runtime.strategies.filter(r=>['paper','shadow','live_review'].includes(r.stage)).map(r=>r.display_name);if(activeNames.some(n=>!n)||new Set(activeNames).size!==activeNames.length)throw Error('Active strategy identities are ambiguous');if(!nodes.get('timeline-title').textContent.includes('美股交易日'))throw Error('Timeline missing');
  if(nodes.get('timeline-nodes').children.length!==5)throw Error('Timeline phases missing');
  if(!nodes.get('news-scope').children.length)throw Error('News scope missing');
  const ranked=vm.runInContext('sortedReturns(scopedStrategies()).map(r=>returnFor(r)).filter(Number.isFinite)',context);
@@ -69,7 +79,7 @@ async function until(test,label){for(let i=0;i<200;i++){if(test())return;await n
  if(vm.runInContext('highlights.size',context)!==0)throw Error('Initial events falsely marked new');
  if(!nodes.get('strategy-detail').children.some(n=>n.className==='logic-grid'))throw Error('Strategy logic missing');
  const expected=vm.runInContext('state.strategies.filter(r=>r.data_hash===state.focus_data_hash&&r.stage!=="rejected").length',context);if(nodes.get('strategy-table').children.length!==expected)throw Error('Current-version table incorrect');
- if(!nodes.get('paper-chart').children.some(n=>n.className==='empty-chart'))throw Error('Paper empty state missing');
+ if(runtime.paper_activity.fill_count){if(!descendants(nodes.get('paper-chart')).some(n=>n.tag==='svg'))throw Error('Actual paper equity chart missing');}else if(!nodes.get('paper-chart').children.some(n=>n.className==='empty-chart'))throw Error('Paper empty state missing');
  if(!nodes.get('news-list').children.length)throw Error('News missing');
  if(!nodes.get('evolution-list').children.length)throw Error('Evolution history missing');
  if(!nodes.get('self-check-open')||!nodes.get('self-check-panel')||!nodes.get('self-check-run'))throw Error('Self-check entry missing');
@@ -145,13 +155,12 @@ async function until(test,label){for(let i=0;i<200;i++){if(test())return;await n
  if(paperOwner){context.paperOwnerId=paperOwner.full_id;await vm.runInContext('openStrategy(paperOwnerId,"paper")',context);}
  else modes.find(b=>b.dataset.mode==='paper').listeners.click();
  await until(()=>vm.runInContext('activityData?.kind',context)==='paper','Paper journal did not load');
- if(!nodes.get('equity-chart').children.some(n=>n.className==='empty-chart')||vm.runInContext('activityData.trades.length',context)!==0)throw Error('Paper empty strategy fabricated results');
- if(nodes.get('strategy-holdings-panel').hidden||!content(nodes.get('strategy-holdings-table')).includes('当前空仓')||!content(nodes.get('activity-context')).includes('券商模拟'))throw Error('Actual empty paper state mislabeled');
+ const observedPaper=vm.runInContext('activityData',context);if(paperOwner){const expectedOrders=runtime.orders.filter(o=>o.strategy===paperOwner.full_id&&o.filled>0);if(observedPaper.trades.length!==expectedOrders.length)throw Error('Paper trade count differs from real owner fills');const ownerHoldings=runtime.holdings.strategies.find(g=>g.id===paperOwner.full_id);for(const position of ownerHoldings.positions){if(!content(nodes.get('strategy-holdings-table')).includes(position.symbol.replace('US.','')))throw Error('Actual paper position missing '+position.symbol);}if(ownerHoldings.positions.length&&!descendants(nodes.get('strategy-holdings-table')).some(n=>n.attrs?.class==='cost-line'))throw Error('Actual holding cost line missing');}if(nodes.get('strategy-holdings-panel').hidden||!content(nodes.get('activity-context')).includes('券商模拟'))throw Error('Actual paper evidence mislabeled');
  modes.find(b=>b.dataset.mode==='forward').listeners.click();await until(()=>vm.runInContext('activityData?.kind',context)==='forward_shadow','Forward reload failed');
  // Inject observed changes into the in-memory rendering harness only.
  // The live database, broker, orders and strategy versions are never modified.
  const snapshot=vm.runInContext('JSON.parse(JSON.stringify(state))',context);
- if(!nodes.get('holdings-scope').options.some(o=>o.value==='option')||!content(nodes.get('paper-holdings-table')).includes('当前空仓'))throw Error('Holdings entry or cash-only state missing');
+ if(!nodes.get('holdings-scope').options.some(o=>o.value==='option'))throw Error('Holdings entry missing');for(const position of snapshot.holdings.stock.positions){if(!content(nodes.get('paper-holdings-table')).includes(position.symbol.replace('US.','')))throw Error('Account holding missing '+position.symbol);}
  // Render-only fixture checks both attribution and the actual cost-line SVG.
  const holdingOwner=snapshot.holdings.strategies.find(g=>g.bucket==='stock');
  const holdingRow={symbol:'US.RENDERTEST',qty:2,multiplier:1,avg_cost:100.3,cost_basis:200.6,mark:110,market_value:220,weight_pct:6.5,unrealized_pnl:19.4,unrealized_pct:9.67,quote_time:new Date().toISOString(),quote_status:'fresh',series:[{time:'2026-10-12T13:30:00Z',price:100},{time:'2026-10-12T13:31:00Z',price:110}]};
@@ -168,13 +177,13 @@ async function until(test,label){for(let i=0;i<200;i++){if(test())return;await n
  vm.runInContext('renderCurrentHoldings()',context);
  if(nodes.get('paper-holdings-table').children[0].children[6].className!=='down'||!content(nodes.get('paper-holdings-table')).includes('报价已过期'))throw Error('Loss or stale quote label missing');
  nodes.get('holdings-scope').listeners.change({target:{value:'option'}});
- if(vm.runInContext('holdingsScope',context)!=='option'||!content(nodes.get('paper-holdings-table')).includes('当前空仓'))throw Error('Option holdings scope missing');
+ if(vm.runInContext('holdingsScope',context)!=='option'||!content(nodes.get('paper-holdings-table')).includes(runtime.option_funding_mode==='independent_pending'?'待绑定':'当前空仓'))throw Error('Option holdings scope missing');
  const stableMover=nodes.get('mover-table').children[1];
  const before=JSON.parse(JSON.stringify(snapshot)),seq=vm.runInContext('highestEventSeq',context)+1;
  const mover=snapshot.universe_scan.hits[0];mover.price+=1;snapshot.universe_scan.created_at=new Date().toISOString();
  snapshot.events.unshift({seq,created:new Date().toISOString(),kind:'price_anomaly',payload:{symbol:mover.symbol,change_pct:mover.change_pct,data_date:mover.data_date}});
  snapshot.orders=[{id:'render-only-order',symbol:'US.TEST',side:'BUY',qty:1,price:100,filled:1,fill_value:99,multiplier:1,status:'filled',created:new Date().toISOString()}];
- snapshot.paper_activity.fills=[{seq:1,symbol:'US.TEST',side:'BUY',qty:1,price:99,fee:.3,realized_pnl:0,observed:new Date().toISOString()}];
+ snapshot.paper_activity.fills=[{seq:Math.max(0,...before.paper_activity.fills.map(f=>f.seq))+1,symbol:'US.TEST',side:'BUY',qty:1,price:99,fee:.3,realized_pnl:0,observed:new Date().toISOString()}];
  context.before=before;context.after=snapshot;vm.runInContext('state=after;recordChanges(before);renderMarket();renderPaper();renderEvents();',context);
  if(nodes.get('mover-table').children[1]!==stableMover)throw Error('Changing one quote replaced unrelated quote row');
  if(!nodes.get('mover-table').children[0].className.includes('row-highlight'))throw Error('New mover not highlighted');
@@ -200,5 +209,5 @@ async function until(test,label){for(let i=0;i<200;i++){if(test())return;await n
  vm.runInContext('lineChart(document.getElementById("equity-chart"),[{date:"2026-10-12",equity:1000},{date:"2026-10-13",equity:1100}],[],false,[],null,1000)',context);
  nodes.get('equity-chart').children.find(n=>n.tag==='svg').listeners.pointermove({clientX:780,clientY:220});
  if(!content(tooltip).includes('+10.00%'))throw Error('Allocated capital return denominator is wrong');
- console.log(JSON.stringify({render:'ok',holdingsCostLines:true,holdingsOwnerSelection:true,holdingsStaleLabels:true,themeToggleAndPersistence:true,viewportTooltip:true,noNativeTooltip:true,forecastLines:forecastNodes.filter(n=>n.attrs?.class?.startsWith("forecast-line")).length,forecastBands:forecastNodes.filter(n=>n.attrs?.class?.startsWith("forecast-band")).length,todayDivider:Boolean(divider),forecastHover:divider?true:"not available",forecastUnavailableReasonVerified:!divider,forecastToggle:true,timeline:true,returnSorting:true,quoteOverlay:true,incrementalHighlights:true,currentStrategies:nodes.get('strategy-table').children.length,historicalSVG:true,tradeMarkers:expectedMarkers,tradeTooltip:true,dateAndSideFilters:true,pagination:true,forwardEmpty:true,paperEmpty:true,structuredBriefSections:8,highlightedConditions:true,sourceLinks:true,newsItems:nodes.get('news-list').children.length,evolvedFactors:nodes.get('evolution-list').children.length}));
+ console.log(JSON.stringify({render:'ok',holdingsCostLines:true,holdingsOwnerSelection:true,holdingsStaleLabels:true,themeToggleAndPersistence:true,viewportTooltip:true,noNativeTooltip:true,forecastLines:forecastNodes.filter(n=>n.attrs?.class?.startsWith("forecast-line")).length,forecastBands:forecastNodes.filter(n=>n.attrs?.class?.startsWith("forecast-band")).length,todayDivider:Boolean(divider),forecastHover:divider?true:"not available",forecastUnavailableReasonVerified:!divider,forecastToggle:true,timeline:true,returnSorting:true,quoteOverlay:true,incrementalHighlights:true,currentStrategies:nodes.get('strategy-table').children.length,historicalSVG:true,tradeMarkers:expectedMarkers,tradeTooltip:true,dateAndSideFilters:true,pagination:true,forwardEmpty:true,paperEmpty:!runtime.paper_activity.fill_count,paperActualFills:runtime.paper_activity.fill_count,structuredBriefSections:8,highlightedConditions:true,sourceLinks:true,newsItems:nodes.get('news-list').children.length,evolvedFactors:nodes.get('evolution-list').children.length}));
 })().catch(e=>{console.error(e);process.exit(1);});

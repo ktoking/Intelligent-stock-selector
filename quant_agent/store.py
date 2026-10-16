@@ -19,6 +19,8 @@ class Store:
         self.home, self.settings = Path(home), settings
         self.home.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.path = self.home / "state.sqlite"
+        with sqlite3.connect(self.path,timeout=10) as db:
+            db.execute('PRAGMA journal_mode=WAL')
         with self.transaction() as db:
             db.executescript("""
                 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -57,6 +59,9 @@ class Store:
                     PRIMARY KEY(bucket,symbol,quote_time));
                 CREATE TABLE IF NOT EXISTS strategy_funding (id TEXT PRIMARY KEY,strategy TEXT NOT NULL,
                     bucket TEXT NOT NULL,amount REAL NOT NULL,observed TEXT NOT NULL,kind TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS checkpoints (id TEXT PRIMARY KEY,job TEXT NOT NULL,asof TEXT NOT NULL,
+                    version TEXT NOT NULL,status TEXT NOT NULL,attempts INTEGER NOT NULL,result TEXT,retry_after TEXT,state TEXT NOT NULL);
+                CREATE UNIQUE INDEX IF NOT EXISTS unique_broker_ack ON orders(broker_id) WHERE broker_id IS NOT NULL;
             """)
             if settings.parallel_paper:
                 db.execute('DROP INDEX IF EXISTS one_paper_executor')
@@ -78,6 +83,7 @@ class Store:
         db.row_factory = sqlite3.Row
         try:
             db.execute("PRAGMA foreign_keys=ON")
+            db.execute('PRAGMA synchronous=FULL')
             db.execute("BEGIN IMMEDIATE")
             yield db
             db.commit()
@@ -95,9 +101,18 @@ class Store:
             db.execute("INSERT INTO events(created,kind,payload) VALUES (?,?,?)", (utcnow(), kind, canonical(payload)))
 
     def meta(self, key, default=None):
-        with self.transaction() as db:
+        with self.read() as db:
             row = db.execute("SELECT value FROM meta WHERE key=?", (key,)).fetchone()
             return json.loads(row[0]) if row else default
+
+    @contextmanager
+    def read(self):
+        db=sqlite3.connect('file:'+str(self.path)+'?mode=ro',uri=True,timeout=10)
+        db.row_factory=sqlite3.Row
+        try:
+            db.execute('PRAGMA query_only=ON')
+            yield db
+        finally:db.close()
 
     def set_meta(self, key, value, db=None):
         if db is None:
@@ -106,10 +121,11 @@ class Store:
         else:
             db.execute("INSERT OR REPLACE INTO meta VALUES (?,?)", (key, canonical(value)))
 
-    def pause(self, reason):
+    def pause(self, reason, *, category='manual', recoverable=False, orders=None):
         with self.transaction() as db:
             self.set_meta("paused", True, db)
             self.set_meta("pause_reason", reason, db)
+            self.set_meta('pause_policy',{'category':category,'recoverable':recoverable,'orders':orders or [],'created_at':utcnow()},db)
             self.event("pause", {"reason": reason}, db)
 
     def propose(self, spec):
@@ -131,7 +147,7 @@ class Store:
         return key
 
     def strategies(self, stages=None):
-        with self.transaction() as db:
+        with self.read() as db:
             rows = [dict(r) for r in db.execute("SELECT * FROM strategies ORDER BY created,id")]
         for row in rows:
             row["spec"], row["evidence"] = json.loads(row["spec"]), json.loads(row["evidence"])
@@ -156,7 +172,7 @@ class Store:
             return db.execute("INSERT OR IGNORE INTO jobs VALUES (?,?)", (key, utcnow())).rowcount == 1
 
     def orders(self, active=False):
-        with self.transaction() as db:
+        with self.read() as db:
             return [dict(r) for r in db.execute("SELECT * FROM orders" +
                      (" WHERE status NOT IN ('filled','cancelled','rejected')" if active else "") + " ORDER BY created,id")]
 
@@ -175,6 +191,13 @@ class Store:
                 or multiplier != (100 if bucket == "option" else 1)):
             raise ValueError("Invalid quantity, price or contract multiplier")
         fee = qty * price * multiplier * self.settings.fee_reserve_bps / 10000
+        account_cap=None;broker_cash_cap=None;shared_cash=None
+        if side=='BUY' and self.settings.capital_mode=='broker_equity' and (bucket=='stock' or self.settings.option_funding_mode=='shared_ratio'):
+            from .capital import stock_cap,option_cap
+            account_cap=stock_cap(self) if bucket=='stock' else option_cap(self)
+            capital=self.meta('broker_capital') or {}
+            broker_cash_cap=capital.get(bucket+'_cash_cap',0.)
+            if self.settings.option_funding_mode=='shared_ratio':shared_cash=capital.get('cash',0.)
         with self.transaction() as db:
             existing = db.execute("SELECT * FROM orders WHERE id=?", (key,)).fetchone()
             if existing:
@@ -184,6 +207,14 @@ class Store:
             paused = json.loads(db.execute("SELECT value FROM meta WHERE key='paused'").fetchone()[0])
             if paused:
                 raise ValueError("Executor paused; reconcile before resuming")
+            if db.execute("SELECT 1 FROM orders WHERE status IN ('unknown','submitting')").fetchone():
+                raise ValueError('Unresolved order acknowledgement; reconcile before new reservations')
+            if bucket=='stock' and side=='BUY' and self.settings.capital_mode=='broker_equity':
+                rotation=db.execute("SELECT value FROM meta WHERE key='champion_rotation'").fetchone()
+                champion=db.execute("SELECT value FROM meta WHERE key='account_champion'").fetchone()
+                if (not champion or json.loads(champion[0])!=strategy or
+                        rotation and json.loads(rotation[0])['status'] not in ('completed','superseded')):
+                    raise ValueError('Only the promoted account champion may buy; rotation must finish first')
             record = db.execute("SELECT stage FROM strategies WHERE id=?", (strategy,)).fetchone()
             option_row=db.execute("SELECT value FROM meta WHERE key='option_paper_strategy'").fetchone()
             option_agent=json.loads(option_row[0]) if option_row else {}
@@ -199,7 +230,8 @@ class Store:
                 if side == 'BUY':
                     pending = sum((r['qty']-r['filled'])*r['price']*r['multiplier']+r['fee'] for r in own_active if r['side']=='BUY')
                     marked = sum(p['qty']*p['mark']*p['multiplier'] for p in own['positions'].values())
-                    if qty*price*multiplier+fee > min(own['cash']-pending,own['budget']-marked-pending)+1e-8:
+                    cap=account_cap if account_cap is not None else own['budget']
+                    if qty*price*multiplier+fee > min(own['cash']-pending,cap-marked-pending)+1e-8:
                         raise ValueError('Strategy allocation exhausted')
                 elif qty > own['positions'].get(symbol,{}).get('qty',0)-sum(r['qty']-r['filled'] for r in own_active if r['side']=='SELL' and r['symbol']==symbol):
                     raise ValueError('Strategy cannot sell another strategy position')
@@ -207,10 +239,16 @@ class Store:
                 reservations = sum((r["qty"]-r["filled"]) * r["price"] * r["multiplier"] + r["fee"] for r in active if r["side"] == "BUY")
                 marked = sum(p["qty"] * p["mark"] * p["multiplier"] for p in portfolio["positions"].values())
                 budget = self.settings.stock_budget if bucket == "stock" else self.settings.option_budget
+                if account_cap is not None:budget=account_cap
                 unsettled_row = db.execute("SELECT value FROM meta WHERE key='unsettled'").fetchone()
                 unsettled = json.loads(unsettled_row[0]) if unsettled_row else []
                 locked = sum(x["amount"] for x in unsettled if x["bucket"] == bucket and x["settles"] > utcnow())
                 available = min(portfolio["cash"] - reservations - locked, budget - marked - reservations)
+                if broker_cash_cap is not None:available=min(available,broker_cash_cap-reservations-locked)
+                if shared_cash is not None:
+                    all_pending=sum((r['qty']-r['filled'])*r['price']*r['multiplier']+r['fee'] for r in db.execute("SELECT * FROM orders WHERE side='BUY' AND status NOT IN ('filled','cancelled','rejected')"))
+                    all_locked=sum(x['amount'] for x in unsettled if x['settles']>utcnow())
+                    available=min(available,shared_cash-all_pending-all_locked)
                 if qty * price * multiplier + fee > available + 1e-8:
                     raise ValueError("Bucket cash/capital cap exceeded, including pending orders and fees")
             else:
@@ -289,6 +327,9 @@ class Store:
 
     def claim(self, key):
         with self.transaction() as db:
+            if json.loads(db.execute("SELECT value FROM meta WHERE key='paused'").fetchone()[0]):return False
+            if db.execute("SELECT 1 FROM orders WHERE status IN ('unknown','submitting') AND id!=?",(key,)).fetchone():
+                raise ValueError('Unresolved order acknowledgement; do not submit another intent')
             return db.execute("UPDATE orders SET status='submitting' WHERE id=? AND status='reserved'", (key,)).rowcount == 1
 
     def submitted(self, key, broker_id):
@@ -299,7 +340,11 @@ class Store:
     def unknown(self, key):
         with self.transaction() as db:
             db.execute("UPDATE orders SET status='unknown' WHERE id=? AND status='submitting'", (key,))
-        self.pause("Order submission outcome unknown; never retry blindly")
+            if not json.loads(db.execute("SELECT value FROM meta WHERE key='paused'").fetchone()[0]):
+                reason='Order submission outcome unknown; never retry blindly'
+                self.set_meta('paused',True,db);self.set_meta('pause_reason',reason,db)
+                self.set_meta('pause_policy',{'category':'order_acknowledgement','recoverable':True,'orders':[key],'created_at':utcnow()},db)
+                self.event('pause',{'reason':reason,'order':key},db)
 
     def fill(self, key, cumulative, average_price, status):
         """Book only the increment from cumulative broker fills; reservations survive partials."""
@@ -364,6 +409,9 @@ class Store:
             totals=dict(db.execute("SELECT COUNT(*) fill_count,COALESCE(SUM(f.fee),0) estimated_fees,COALESCE(SUM(f.realized_pnl),0) realized_pnl FROM fills f JOIN orders o ON o.id=f.order_id WHERE o.bucket='stock'").fetchone())
             # Keep chart size bounded while preserving first and last observations.
             rows=[dict(r) for r in db.execute('SELECT * FROM paper_nav ORDER BY observed')]
+        if self.settings.capital_mode=='broker_equity':
+            from .capital import adjusted_curve
+            rows=adjusted_curve(rows,self.meta('capital_flows',[]),self.meta('capital_initial_budget',self.settings.stock_budget))
         stride=max(1,len(rows)//1000)
         curve=rows[::stride]
         if rows and (not curve or curve[-1]!=rows[-1]):curve.append(rows[-1])
@@ -372,7 +420,7 @@ class Store:
         nav=p['cash']+sum(r['qty']*r['mark']*r['multiplier'] for r in p['positions'].values())
         unrealized=sum(r['qty']*r['mark']*r['multiplier']-r['basis'] for r in p['positions'].values())
         return {**totals,'nav':nav,'cash':p['cash'],'unrealized_pnl':unrealized,
-                'total_pnl':nav-self.settings.stock_budget,'return_pct':(nav/self.settings.stock_budget-1)*100,
+                'total_pnl':nav-self.settings.stock_budget,'return_pct':(rows[-1]['return_pct'] if rows and self.settings.capital_mode=='broker_equity' else (nav/self.settings.stock_budget-1)*100),
                 'fills':fills,'curve':curve,
                 'cost_basis':'Average cost including estimated fees; 30bps default, not broker settlement costs',
                 'time_basis':'observed is fill reconciliation time, not exact exchange execution time',
@@ -384,10 +432,20 @@ class Store:
         with self.transaction() as db:
             totals=dict(db.execute("SELECT COUNT(*) fill_count,COALESCE(SUM(f.fee),0) estimated_fees,COALESCE(SUM(f.realized_pnl),0) realized_pnl FROM fills f JOIN orders o ON o.id=f.order_id WHERE o.bucket='option'").fetchone())
             curve=[dict(r) for r in db.execute('SELECT * FROM option_paper_nav ORDER BY observed')]
+            flows=[dict(r) for r in db.execute("SELECT observed,amount FROM strategy_funding WHERE bucket='option' AND kind!='initial' ORDER BY observed,rowid")]
+            initial=db.execute("SELECT COALESCE(SUM(amount),0) FROM strategy_funding WHERE bucket='option' AND kind='initial'").fetchone()[0]
+        if self.settings.option_funding_mode=='shared_ratio':
+            from .capital import adjusted_curve
+            if not initial:
+                first=next((f for f in flows if f['amount']>0),None)
+                initial=first['amount'] if first else self.settings.option_budget
+                if first:flows.remove(first)
+            curve=adjusted_curve(curve,flows,initial)
         totals['realized_pnl']=p['realized_pnl']
         nav=p['cash']+sum(r['qty']*r['mark']*100 for r in p['positions'].values())
         unrealized=sum(r['qty']*r['mark']*100-r['basis'] for r in p['positions'].values())
         return {**totals,'nav':nav,'cash':p['cash'],'unrealized_pnl':unrealized,
-            'total_pnl':nav-self.settings.option_budget,'return_pct':(nav/self.settings.option_budget-1)*100,
+            'total_pnl':nav-self.settings.option_budget,'return_pct':curve[-1]['return_pct'] if curve and self.settings.option_funding_mode=='shared_ratio' else (nav/self.settings.option_budget-1)*100 if self.settings.option_budget else None,
+            'performance_initial_capital':initial or self.settings.option_budget,
             'positions':p['positions'],'curve':curve,'budget':self.settings.option_budget,
             'status':self.meta('option_paper_status'),'historical_option_backtest_verified':False}

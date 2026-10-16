@@ -32,6 +32,7 @@ def main(argv=None):
     p=commands.add_parser("scan");p.add_argument("--enrich",action="store_true")
     p=commands.add_parser("reference");p.add_argument("path",type=Path)
     commands.add_parser("status")
+    p=commands.add_parser("account-capital");p.add_argument("--total-capital",type=float,required=True);p.add_argument("--authorization",required=True)
     commands.add_parser("probe")
     p=commands.add_parser("tick");p.add_argument("--daily",action="store_true")
     p=commands.add_parser("serve");p.add_argument("--port",type=int,default=8791)
@@ -39,6 +40,8 @@ def main(argv=None):
     commands.add_parser("resume")
     p=commands.add_parser("live-review");p.add_argument("strategy")
     args=parser.parse_args(argv)
+    from .observability import configure
+    configure(args.home)
     if args.command=="init":
         settings=initialize(args.home)
         store=Store(args.home,settings)
@@ -99,10 +102,20 @@ def main(argv=None):
     elif args.command=="reference":
         from .reference import import_reference
         result=import_reference(store,args.path)
+    elif args.command=="account-capital":
+        from .capital import migrate_account_capital
+        from .champion import screen
+        from .panel_cache import load_panel
+        with executor_lock(store):
+            migrate_account_capital(store,FutuSim(settings),args.total_capital,args.authorization)
+            store.set_meta("promotion_policy",{"enabled":True,"mode":"account_champion",
+                "authorization":args.authorization,"minimum_return_improvement_pct":.5})
+            result=screen(store,load_panel(store.meta("current_data_dir",store.settings.data_dir)))
+
     elif args.command=="probe":
         remote=reconcile(store,FutuSim(settings))
         result={"account_tail":settings.stock_account[-4:],"positions":len(remote["positions"]),"orders":len(remote["orders"]),
-                "broker_balance":remote["cash"]["balance"],"allocated_stock_budget":10000,"allocated_option_budget":1000,"live_enabled":False}
+                "broker_balance":remote["cash"]["balance"],"allocated_stock_budget":settings.stock_budget,"allocated_option_budget":settings.option_budget,"live_enabled":False}
     elif args.command=="tick":
         with executor_lock(store):
             tick(store,FutuSim(settings),args.daily)

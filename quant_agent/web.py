@@ -23,6 +23,9 @@ def public_status(store):
         paper_owners=[r[0] for r in db.execute('SELECT DISTINCT strategy FROM orders')]
         paper_filled={r[0] for r in db.execute("SELECT DISTINCT o.strategy FROM orders o JOIN fills f ON f.order_id=o.id WHERE o.bucket='stock'")}
     paper_activity=store.paper_activity()
+    if store.settings.option_funding_mode=='independent_pending':
+        paper_activity['option']={**paper_activity['option'],'nav':None,'cash':None,'budget':None,
+            'return_pct':None,'total_pnl':None,'account_available':False}
     for e in events:
         e['payload']=json.loads(e['payload'])
         if e['kind'] in ('ai_discovery','ai_review','stage'):
@@ -30,19 +33,31 @@ def public_status(store):
     calendar=calendar_state()
     from .holdings import holdings_summary
     holdings=holdings_summary(store,calendar)
+    if store.settings.option_funding_mode=='independent_pending':
+        holdings['strategies']=[r for r in holdings['strategies'] if r['bucket']!='option']
+        holdings['option']={**holdings['option'],'available':False,'nav':None,'cash':None,'budget':None,
+            'unrealized_pnl':None,'exposure_pct':None,'cost_note':'独立美股期权账户尚未绑定，资产与持仓未知。'}
     asof=calendar['completed_session']
     records=snapshot['strategies']
+    from .presentation import strategy_labels
+    identities=strategy_labels(records)
+    for group in holdings.get('strategies',[]):
+        if group['id'] in identities:group.update(identities[group['id']])
     strategies=[]
     for r in records:
         evidence=r['evidence']; stats=evidence.get('stats',{})
         allocation=store.meta('paper_allocations',{}).get('stock',{}).get(r['id'])
         owner=store.strategy_portfolio(r['id']) if allocation is not None and store.settings.parallel_paper else None
-        strategies.append({'id':r['id'][:12],'full_id':r['id'],'name':r['spec'].get('factor_name',r['spec']['policy']['name']),'stage':r['stage'],
+        paper_return=((owner['performance_nav']/owner['initial_capital']-1)*100 if owner and owner['initial_capital']>0 else paper_activity['return_pct'])
+        if owner and store.settings.capital_mode=='broker_equity':
+            from .capital import strategy_performance
+            paper_return,_=strategy_performance(store,r['id'],owner)
+        strategies.append({'id':r['id'][:12],'full_id':r['id'],'name':r['spec'].get('factor_name',r['spec']['policy']['name']),'stage':r['stage'],**identities[r['id']],
             'origin':r['spec'].get('origin'),'hypothesis':r['spec'].get('hypothesis'),'policy':r['spec']['policy'],
             'factor_expression':r['spec'].get('factor_expression'),'falsification':r['spec'].get('falsification'),
             'factor_weights':r['spec'].get('factor_weights'),'logic':strategy_logic(r['spec']),
             'forward_return_pct':(shadow_latest[r['id']]['nav']/10000-1)*100 if r['id'] in shadow_latest else None,
-            'paper_return_pct':((owner['performance_nav']/owner['initial_capital']-1)*100 if owner and owner['initial_capital']>0 else paper_activity['return_pct']) if (owner or paper_owners==[r['id']]) and r['id'] in paper_filled else None,
+            'paper_return_pct':paper_return if (owner or paper_owners==[r['id']]) and r['id'] in paper_filled else None,
             'paper_allocation':allocation,'paper_authorization':evidence.get('paper_authorization'),
             'data_hash':r['spec'].get('research_data_sha256'),'created':r['created'],
             'stats':stats,'gates':evidence.get('gates',{}),'stress':evidence.get('stress',{}),'delayed':evidence.get('delayed',{}),
@@ -57,16 +72,18 @@ def public_status(store):
           {'key':'news','name':'资讯证据更新','trigger':'收盘一次；盘中每 30 分钟更新重点标的标题','command':'news'},
           {'key':'discovery','name':'Codex 假设与因子组合','trigger':'每个数据版本最多 30 个试验，累计记录保留','command':'discover --ai'},
           {'key':'backtest','name':'回测 · 压力测试 · 核账','trigger':'候选注册后，冻结规则并验证','command':'research'},
-          {'key':'review','name':'Codex 每日操作复盘','trigger':'研究结束后，每日一次；失败一小时后重试','command':'tick --daily'},
+          {'key':'review','name':'Codex 每日操作复盘','trigger':'研究结束后触发；失败步骤退避重试，已完成结果从检查点复用','command':'tick --daily'},
           {'key':'evolution','name':'新因子代码与独立验证','trigger':'每个新数据版本最多 1 个表达式；因果检查后回测','command':'evolve'}]
-    jobs.append({'key':'promotion','name':'优秀策略模拟晋升','trigger':'同区间比较；仅在休市替换空仓、无未完成委托且已交收的槽位','command':'自动比较与排队'})
+    jobs.append({'key':'promotion','name':'优秀策略模拟晋升','trigger':'同区间择优；账户模式自动撤单、退出旧持仓，交收后交接；旧槽位模式仅交接空仓资金','command':'自动比较与排队'})
     completed=store.meta('daily_completed:'+asof,False)
     for job in jobs:
         job['state']=store.meta('task:'+job['key']) or {'status':'recorded' if completed else 'pending','asof':asof}
         job['enabled']={'refresh':store.settings.auto_refresh,'discovery':store.settings.daily_research,'evolution':store.settings.evolution_enabled,'promotion':store.meta('promotion_policy',{}).get('enabled',False)}.get(job['key'],True)
-    evolutions=[]
+    evolutions=[];artifact_errors=[]
     for path in sorted((store.home/'artifacts').glob('evolution-*.json')):
-        value=json.loads(path.read_text())
+        try:value=json.loads(path.read_text())
+        except (OSError,ValueError) as exc:
+            artifact_errors.append({'file':path.name,'error_type':type(exc).__name__});continue
         if not value.get('strategy'):continue
         record=next((r for r in strategies if r['full_id']==value['strategy']),None)
         code_path=ROOT/'research/evolved_factors'/('factor_'+value['strategy'][:12]+'.py')
@@ -76,11 +93,22 @@ def public_status(store):
     from .dashboard import dashboard_summary
     dashboard=dashboard_summary(store,calendar,snapshot,strategies,paper_activity,jobs)
     from .research_evidence import research_summary
-    return {'dashboard':dashboard,'research_evidence':research_summary(store,asof),'forecast_tracking':store.meta('forecast_tracking'),
+    from .readiness import readiness_view
+    from . import recovery,checkpoints,observability
+    return {'recovery':{'components':recovery.summary(store),'checkpoints':checkpoints.summary(store),
+                       'pause_policy':store.meta('pause_policy'),'logging':observability.status(),
+                       'data_gate':store.meta('execution_data_blocked'),'option_data_gate':store.meta('option_data_blocked'),'artifact_errors':artifact_errors},
+        'dashboard':dashboard,'research_evidence':research_summary(store,asof),'forecast_tracking':store.meta('forecast_tracking'),
         'ai_provider':store.settings.ai_provider,'health':store.meta('health'),'last_tick':store.meta('last_tick'),
-        'execution_readiness':store.meta('execution_readiness'),
+        'execution_readiness':readiness_view(store,snapshot),
         'paper_execution_session':store.meta('paper_execution_session'),
         'paper_authorization':store.meta('paper_authorization'),'parallel_paper':store.settings.parallel_paper,
+        'capital_mode':store.settings.capital_mode,'stock_budget':store.settings.stock_budget,'option_budget':store.settings.option_budget,
+        'option_funding_mode':store.settings.option_funding_mode,'option_account_status':store.meta('option_account_status'),
+        'option_equity_fraction':store.settings.option_equity_fraction,
+        'option_data_status':store.meta('option_data_status'),
+        'broker_capital':store.meta('broker_capital'),'account_champion':store.meta('account_champion'),
+        'champion_rotation':store.meta('champion_rotation'),
         'ai_requested':{'model':store.settings.ai_model,'reasoning_effort':store.settings.ai_reasoning_effort},'ai_runtime':store.meta('ai_runtime'),
         'paused':snapshot['paused'],'pause_reason':snapshot['pause_reason'],'portfolios':snapshot['portfolios'],
         'order_counts':{s:sum(o['status']==s for o in snapshot['orders']) for s in set(o['status'] for o in snapshot['orders'])},
@@ -95,7 +123,9 @@ def public_status(store):
         'tasks':jobs,'daily_completed':completed,'daily_asof':asof,'review_markdown':review,
         'daily_brief':store.meta('daily_brief'),
         'max_trials':store.settings.max_trials,'min_shadow_sessions':store.settings.min_shadow_sessions,
-        'options_status':('期权前向模拟已授权：仅买入Call/Put及卖出平仓，预算$1,000；历史期权回测未验证。' if store.settings.option_paper_enabled else '期权历史链、模拟账户与行权交割待验证，执行关闭'),
+        'options_status':('共用美股模拟账户，期权上限为最新净资产10%；仅买入Call/Put与已有多头平仓，最多1张，历史期权回测未验证。' if store.settings.option_funding_mode=='shared_ratio' else
+            '美股期权独立账户待绑定；资金待核实，执行关闭。' if store.settings.option_funding_mode=='independent_pending' else
+            '期权前向模拟已授权：仅买入Call/Put及卖出平仓，预算$1,000；历史期权回测未验证。' if store.settings.option_paper_enabled else '期权历史链、模拟账户与行权交割待验证，执行关闭'),
         'limitations':['历史样本已查看；当前自选股有幸存者与选择偏差','现金股息未计入；历史结果不代表未来收益','预算由程序控制，券商模拟账户尚未物理隔离']}
 
 
@@ -122,6 +152,10 @@ def start_web(store,port=8791):
     from .self_check import SelfCheck
     diagnostics = SelfCheck(store)
     class Handler(BaseHTTPRequestHandler):
+        def handle(self):
+            try:super().handle()
+            except (BrokenPipeError,ConnectionResetError):pass  # Closed browser request.
+
         def do_POST(self):
             if self.path != '/api/self-check':
                 self.send_error(404);return

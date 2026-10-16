@@ -1,0 +1,393 @@
+{
+  "verified_at": "2026-10-15T02:47:29.369046+00:00",
+  "health": {
+    "execution_status": "ready",
+    "mode": "idle",
+    "status": "ok",
+    "time": "2026-10-15T02:47:27.133197+00:00"
+  },
+  "paused": false,
+  "readiness": {
+    "ready": true,
+    "observed_at": "2026-10-15T02:47:29.316685+00:00",
+    "data_asof": "2026-10-14",
+    "checks": {
+      "bound_simulated_account": true,
+      "stock_allocations": true,
+      "stock_owners": true,
+      "strategy_cash_reconciled": true,
+      "frozen_strategies": [
+        "5b3083fb7764",
+        "ac32278508e1",
+        "e40e1894eef6",
+        "39fa42ead888",
+        "d059cef220a4",
+        "b7aa4bd19b6e",
+        "11bb4d0f1410",
+        "14895b0396fb"
+      ],
+      "option_allocation": true,
+      "option_freeze": true
+    },
+    "blockers": [],
+    "order_endpoint_tested": true,
+    "live_enabled": false,
+    "broker_reconciled_at": "2026-10-15T02:44:37.214116+00:00",
+    "preflight_observed_at": "2026-10-14T13:26:01.186998+00:00"
+  },
+  "orders": {
+    "filled": 8
+  },
+  "portfolio": {
+    "stock": {
+      "cash": 7271.403695000001,
+      "positions": {
+        "US.CRM": {
+          "bucket": "stock",
+          "symbol": "US.CRM",
+          "qty": 3,
+          "basis": 717.8571299999999,
+          "mark": 235.95,
+          "multiplier": 1
+        },
+        "US.MSFT": {
+          "bucket": "stock",
+          "symbol": "US.MSFT",
+          "qty": 1,
+          "basis": 545.3160549999999,
+          "mark": 533.69,
+          "multiplier": 1
+        },
+        "US.PLTR": {
+          "bucket": "stock",
+          "symbol": "US.PLTR",
+          "qty": 4,
+          "basis": 830.9453799999999,
+          "mark": 200.97,
+          "multiplier": 1
+        },
+        "US.SONY": {
+          "bucket": "stock",
+          "symbol": "US.SONY",
+          "qty": 26,
+          "basis": 634.4777399999999,
+          "mark": 24.36,
+          "multiplier": 1
+        }
+      }
+    },
+    "option": {
+      "cash": 1000.0,
+      "positions": {}
+    }
+  },
+  "identities": [
+    {
+      "id": "5b3083fb7764",
+      "display_name": "残差动量 · 模拟 A",
+      "identity_note": "冻结 2026-10-12 · 223 只标的池 · 年化波动目标 20%",
+      "stage": "paper",
+      "paper_allocation": 3333.33
+    },
+    {
+      "id": "ac32278508e1",
+      "display_name": "残差动量 · 模拟 B",
+      "identity_note": "冻结 2026-10-12 · 226 只标的池 · 年化波动目标 20%",
+      "stage": "paper",
+      "paper_allocation": 3333.33
+    },
+    {
+      "id": "e40e1894eef6",
+      "display_name": "趋势缓冲 · 模拟 C",
+      "identity_note": "冻结 2026-10-12 · 226 只标的池 · 年化波动目标 15%",
+      "stage": "paper",
+      "paper_allocation": 3333.34
+    },
+    {
+      "id": "39fa42ead888",
+      "display_name": "趋势缓冲 · 观察 10/14 · 39fa",
+      "identity_note": "冻结 2026-10-13 · 232 只标的池 · 年化波动目标 15%",
+      "stage": "shadow",
+      "paper_allocation": null
+    },
+    {
+      "id": "d059cef220a4",
+      "display_name": "残差动量 · 观察 10/14 · d059",
+      "identity_note": "冻结 2026-10-13 · 232 只标的池 · 年化波动目标 20%",
+      "stage": "shadow",
+      "paper_allocation": null
+    },
+    {
+      "id": "b7aa4bd19b6e",
+      "display_name": "趋势缓冲 · 观察 10/15 · b7aa",
+      "identity_note": "冻结 2026-10-14 · 235 只标的池 · 年化波动目标 15%",
+      "stage": "shadow",
+      "paper_allocation": null
+    },
+    {
+      "id": "11bb4d0f1410",
+      "display_name": "残差动量 · 观察 10/15 · 11bb",
+      "identity_note": "冻结 2026-10-14 · 235 只标的池 · 年化波动目标 20%",
+      "stage": "shadow",
+      "paper_allocation": null
+    },
+    {
+      "id": "14895b0396fb",
+      "display_name": "残差收盘压力 · 观察 10/15 · 1489",
+      "identity_note": "冻结 2026-10-14 · 235 只标的池 · 年化波动目标 20%",
+      "stage": "shadow",
+      "paper_allocation": null
+    }
+  ],
+  "research": {
+    "asof": "2026-10-14",
+    "data_sha256": "8b89590af5071ccdfbaa3851e3c401ed3df2b9ddbcc191d86abee56967a4c378",
+    "pending": false,
+    "current_trials": 4,
+    "current_factors": 1,
+    "current_rejected": 1,
+    "queued": 1,
+    "steps": [
+      {
+        "key": "review",
+        "label": "每日复盘",
+        "status": "completed",
+        "finished_at": "2026-10-15T02:31:00.136916+00:00",
+        "last_asof": "2026-10-14",
+        "reason": null
+      },
+      {
+        "key": "discovery",
+        "label": "因子组合假设",
+        "status": "completed",
+        "finished_at": "2026-10-15T02:28:24.531649+00:00",
+        "last_asof": "2026-10-14",
+        "reason": null
+      },
+      {
+        "key": "evolution",
+        "label": "新表达式因子",
+        "status": "completed",
+        "finished_at": "2026-10-15T02:31:52.606629+00:00",
+        "last_asof": "2026-10-14",
+        "reason": null
+      },
+      {
+        "key": "backtest",
+        "label": "回测与独立核账",
+        "status": "completed",
+        "finished_at": "2026-10-15T02:28:30.002888+00:00",
+        "last_asof": "2026-10-14",
+        "reason": null
+      },
+      {
+        "key": "promotion",
+        "label": "晋升比较",
+        "status": "completed",
+        "finished_at": "2026-10-15T02:31:55.988740+00:00",
+        "last_asof": "2026-10-14",
+        "reason": null
+      }
+    ]
+  },
+  "self_check": {
+    "counts": {
+      "failed": 0,
+      "ok": 18,
+      "unconfigured": 0,
+      "unverified": 1,
+      "warning": 0
+    },
+    "finished_at": "2026-10-15T02:28:17.087091+00:00",
+    "items": [
+      {
+        "id": "runtime",
+        "status": "ok",
+        "evidence": {
+          "database_ok": true,
+          "heartbeat_age_seconds": 19.2,
+          "mode": "daily_research"
+        }
+      },
+      {
+        "id": "ai",
+        "status": "ok",
+        "evidence": {
+          "model": "gpt-6.1-sol",
+          "provider": "codex",
+          "reasoning_effort": "high",
+          "requested_model": "gpt-6.1-sol",
+          "requested_reasoning_effort": "high"
+        }
+      },
+      {
+        "id": "quote",
+        "status": "ok",
+        "evidence": {
+          "data_date": "2026-10-14",
+          "ret_code": 0,
+          "symbol": "US.QQQ",
+          "update_time": 1792031284781
+        }
+      },
+      {
+        "id": "watchlist",
+        "status": "ok",
+        "evidence": {
+          "entries": 228
+        }
+      },
+      {
+        "id": "ndx",
+        "status": "ok",
+        "evidence": {
+          "complete_universe_verified": false,
+          "entries": 1
+        }
+      },
+      {
+        "id": "spx",
+        "status": "ok",
+        "evidence": {
+          "complete_universe_verified": false,
+          "entries": 1
+        }
+      },
+      {
+        "id": "history_api",
+        "status": "ok",
+        "evidence": {
+          "bars": 8,
+          "requested_end": "2026-10-14"
+        }
+      },
+      {
+        "id": "paper",
+        "status": "ok",
+        "evidence": {
+          "account_verified": true,
+          "order_endpoint_tested": false,
+          "paper_enabled": true,
+          "read_endpoints_verified": 5
+        }
+      },
+      {
+        "id": "websocket",
+        "status": "ok",
+        "evidence": {
+          "auth_ok": true,
+          "streaming_freshness_verified": false,
+          "subscribe_ok": true
+        }
+      },
+      {
+        "id": "news",
+        "status": "ok",
+        "evidence": {
+          "items": 1,
+          "ret_code": 0
+        }
+      },
+      {
+        "id": "news_search",
+        "status": "ok",
+        "evidence": {
+          "code": 0,
+          "items": 1
+        }
+      },
+      {
+        "id": "wallstreetcn",
+        "status": "ok",
+        "evidence": {
+          "accepted": 50,
+          "error_type": null,
+          "raw": 50
+        }
+      },
+      {
+        "id": "eastmoney",
+        "status": "ok",
+        "evidence": {
+          "accepted": 50,
+          "error_type": null,
+          "raw": 50
+        }
+      },
+      {
+        "id": "history",
+        "status": "ok",
+        "evidence": {
+          "data_date": "2026-10-14",
+          "expected_completed_session": "2026-10-14",
+          "symbols": 235
+        }
+      },
+      {
+        "id": "execution",
+        "status": "ok",
+        "evidence": {
+          "blockers": [],
+          "checks": {
+            "bound_simulated_account": true,
+            "frozen_strategies": [
+              "5b3083fb7764",
+              "ac32278508e1",
+              "e40e1894eef6",
+              "39fa42ead888",
+              "d059cef220a4"
+            ],
+            "option_allocation": true,
+            "option_freeze": true,
+            "stock_allocations": true,
+            "stock_owners": true,
+            "strategy_cash_reconciled": true
+          },
+          "data_asof": "2026-10-14",
+          "live_enabled": false,
+          "observed_at": "2026-10-15T02:28:17.070730+00:00",
+          "order_endpoint_tested": true,
+          "ready": true
+        }
+      },
+      {
+        "id": "power",
+        "status": "ok",
+        "evidence": {
+          "active": true,
+          "guard_pid": 86201,
+          "scope": "服务生命周期内防闲置系统休眠；不阻止显示器休眠或手动休眠。",
+          "service_pid": 86200,
+          "supported": true
+        }
+      },
+      {
+        "id": "mcp",
+        "status": "unverified",
+        "evidence": {
+          "authenticated": false,
+          "http_status": 401,
+          "reachable": true
+        }
+      },
+      {
+        "id": "option_chain",
+        "status": "ok",
+        "evidence": {
+          "contracts": 316
+        }
+      },
+      {
+        "id": "option_capacity",
+        "status": "ok",
+        "evidence": {
+          "account_verified": true,
+          "contract_verified": true,
+          "order_endpoint_tested": false
+        }
+      }
+    ]
+  },
+  "next_open": "2026-10-15T13:30:00+00:00",
+  "tests_passed": 158
+}

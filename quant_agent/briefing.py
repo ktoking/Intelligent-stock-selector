@@ -171,6 +171,9 @@ def review_packet(store, quotes=None, panel=None):
     from research.daily_factor_lab.core import load_panel
     from .news import evidence_at
     packet=store.snapshot()
+    packet['capital_authorization']={'stock':store.settings.stock_budget,'option':store.settings.option_budget,
+        'mode':store.settings.capital_mode,'option_funding_mode':store.settings.option_funding_mode,
+        'note':'账本本金；执行额度另受最新券商净资产、现金及未交收资金约束，无融资。'}
     packet['orders']=[{k:v for k,v in o.items() if k!='broker_id'} for o in packet['orders'][-100:]]
     packet['quotes']={s:{k:q.get(k) for k in ('data_date','last_price','prev_close_price')} for s,q in (quotes or {}).items()}
     packet['news']=evidence_at(store)
@@ -178,14 +181,28 @@ def review_packet(store, quotes=None, panel=None):
     packet['data']=panel.metadata
     packet['universe_scan']=store.meta('universe_scan');packet['strategy_references']=store.meta('strategy_references',[])
     records=packet['strategies']
-    selected={r['id']:r for r in records[-12:]+[r for r in records if r['stage'] in ('paper','shadow','live_review')]}
+    selected={r['id']:r for r in records[-8:]+[r for r in records if r['stage']=='shadow'][-6:]
+              +[r for r in records if r['stage'] in ('paper','live_review')]}
     packet['strategy_archive']={'total':len(records),'summaries':len(selected),'omitted':len(records)-len(selected),
-        'note':'较早试验的完整证据保留在本地策略档案，摘要始终包含运行版本。'}
+        'note':'摘要包含全部模拟/实盘待审版本、最近6个Shadow及最近8个试验；其余完整证据保留在本地策略档案。'}
     packet['strategies']=[{'id':r['id'][:12],'spec':r['spec'],'stage':r['stage'],
         'evidence':{k:r['evidence'].get(k) for k in ('stats','gates','stress','delayed','benchmark','reason','shadow_sessions','shadow_nav','shadow_dd_pct')}} for r in selected.values()]
+    metrics=('return_pct','max_drawdown_pct','orders','trading_days','cost_dollars','sharpe_zero_rf')
+    for record in packet['strategies']:
+        evidence=record['evidence']
+        for key in ('stats','stress','delayed'):
+            if isinstance(evidence.get(key),dict):
+                evidence[key]={window:{k:v for k,v in values.items() if k in metrics}
+                    for window,values in evidence[key].items()
+                    if isinstance(values,dict) and (key=='stats' or window!='train')}
     packet['paper_activity']=store.paper_activity();packet['paper_activity']['curve']=packet['paper_activity']['curve'][-30:]
     if 'option' in packet['paper_activity']:
         packet['paper_activity']['option']['curve']=packet['paper_activity']['option']['curve'][-30:]
+    # Fill rows retain the historical pooled calculation. Owner-attributed
+    # account totals are authoritative after strategies trade the same symbol.
+    for fill in packet['paper_activity'].get('fills',[]):
+        fill['pooled_realized_pnl']=fill.pop('realized_pnl',0)
+    packet['paper_activity']['realized_pnl_basis']='总计按策略归属平均成本核算；逐笔 pooled_realized_pnl 为历史账户池成本口径，两者不应直接相加比较。'
     packet['protocol_gates']={'cost_bps':25,'stress_bps':50,'baseline_signal_lag_sessions':1,'stress_signal_lag_sessions':2,
                               'additional_delay_sessions':1,'max_drawdown_pct':15,'min_test_sessions':52,'min_test_orders':10,'benchmark':'QQQ'}
     context=store.meta('brief_context') or {'version':REVIEW_VERSION,'technical_scan':screen_us(store,panel),
@@ -202,6 +219,16 @@ def review_packet(store, quotes=None, panel=None):
         'health':store.meta('health'), 'last_tick':{k:v for k,v in (store.meta('last_tick') or {}).items() if k!='quotes'},
         'option_status':store.meta('option_paper_status'),
         'recent_errors':[{k:v for k,v in r.items() if k!='frames'} for r in _recent_execution_errors(store)]}
+    if len(canonical(packet))>140000:
+        for record in packet['strategies']:
+            record['spec']=deepcopy(record['spec'])
+            record['spec_sha256']=digest(record['spec'])
+            for field in ('hypothesis','falsification'):
+                if isinstance(record['spec'].get(field),str):record['spec'][field]=record['spec'][field][:800]
+            if isinstance(record['evidence'].get('stats'),dict):record['evidence']['stats'].pop('train',None)
+        packet['paper_activity']['curve']=packet['paper_activity']['curve'][-5:]
+        if 'option' in packet['paper_activity']:packet['paper_activity']['option']['curve']=packet['paper_activity']['option']['curve'][-5:]
+        packet['strategy_archive']['additional_compaction']='仅缩短假设文字并省略训练指标/盘中估值曲线；验证/回顾/成本/延迟指标与执行证据保留，完整档案不变。'
     return packet
 
 
@@ -238,22 +265,27 @@ def persist_brief(store,response,packet,asof):
     coverage=deepcopy(packet['brief_context'].get('technical_scan',{}))
     registry={r['id']:r for r in packet['brief_context'].get('evidence',[])}
     coverage['candidates']=[registry.get(r.get('evidence_id'),r) for r in coverage.get('candidates',[])]
-    value={'version':REVIEW_VERSION,'asof':asof,'generated_at':utcnow(),'model':response['model'],
+    value={'version':REVIEW_VERSION,'asof':asof,'generated_at':response.get('completed_at',utcnow()),'model':response['model'],
+           'capital_authorization':packet.get('capital_authorization'),
            'reasoning_effort':response.get('reasoning_effort'),'brief':response['result']['brief'],
            'factor_ideas':response['result']['factor_ideas'],'evidence':packet['brief_context'].get('evidence',[]),
            'coverage':coverage,'markets':packet['brief_context'].get('markets',[]),
            'data_gaps':packet['brief_context'].get('gaps',[]),'paper_activity':{k:v for k,v in packet['paper_activity'].items() if k not in ('curve','fills')}}
-    store.set_meta('daily_brief',value)
+    from .files import atomic_write
     directory=store.home/'reports';directory.mkdir(exist_ok=True,mode=0o700)
-    path=directory/(asof+'.brief.json');temporary=path.with_suffix('.tmp');temporary.write_text(canonical(value));temporary.chmod(0o600);temporary.replace(path)
-    path=directory/(asof+'.md');path.write_text(render_brief_markdown(value));path.chmod(0o600)
+    atomic_write(directory/(asof+'.brief.json'),canonical(value))
+    atomic_write(directory/(asof+'.md'),render_brief_markdown(value))
+    store.set_meta('daily_brief',value)
     return value
 
 
 def render_brief_markdown(value):
     """Render the saved analysis without regenerating it or changing its date."""
+    capital=value.get('capital_authorization')
+    budget=(f"股票账本本金 ${capital['stock']:,.0f} / 期权账本本金 ${capital['option']:,.0f}；执行额度另受最新净资产与现金约束。"
+        if capital else '账本本金以对应版本授权记录为准。')
     b=value['brief'];lines=['# 每日投资与 AI 产业私人助理简报 '+value['asof'],'','**'+b['headline']+'**','',
-        '生成：'+value['generated_at']+'；行情各市场交易日期分别列示。股票 $10,000 / 期权 $1,000；实盘关闭。','']
+        '生成：'+value['generated_at']+'；行情各市场交易日期分别列示。'+budget+'实盘关闭。','']
     labels={'judgment':'判断','impact':'影响方向','risk':'风险点','strength':'强度与持续性',
             'catalyst':'催化','trigger':'触发条件','invalid':'失效条件'}
     evidence={r['id']:r for r in value['evidence']}

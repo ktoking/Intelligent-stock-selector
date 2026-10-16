@@ -205,6 +205,8 @@ def check_jobs(store):
         if not isinstance(data,list) or not data:raise ValueError('No option contracts')
         return result('ok','真实期权链业务响应通过；不代表合约报价足够新鲜。',contracts=len(data))
     def option_capacity():
+        if settings.option_funding_mode=='independent_pending':
+            return result('unverified','独立美股期权账户尚未绑定；不使用股票账户代替验证。',account_verified=False,order_endpoint_tested=False)
         broker=FutuSim(settings);broker.verify()
         probe=store.meta('option_capability',{})
         code=probe.get('probe_contract')

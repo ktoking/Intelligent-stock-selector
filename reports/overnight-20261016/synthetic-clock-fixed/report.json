@@ -1,0 +1,1 @@
+{"mode":"MOCK synthetic bars and brokerage; 900000/100000 authorization. Funding created before virtual opening. Not production replay.","passed":false,"production_orders_sent":0,"results":[{"case":"normal","error":"NAV without attributable capital","result":"FAIL"}]}

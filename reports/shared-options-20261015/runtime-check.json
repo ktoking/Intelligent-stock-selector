@@ -1,0 +1,70 @@
+{
+  "health": {
+    "execution_status": "rotating",
+    "mode": "idle",
+    "status": "ok",
+    "time": "2026-10-15T09:35:41.858542+00:00"
+  },
+  "paused": false,
+  "stock_budget": 900000.0,
+  "option_budget": 100000.0,
+  "option_funding_mode": "shared_ratio",
+  "option_account_status": {
+    "account_id_verified": true,
+    "authorized": true,
+    "balance_verified": true,
+    "detail": "与股票共用已核实的美股模拟账户；期权上限为最新净资产10%，独立核账，不使用融资。",
+    "equity_fraction": 0.1,
+    "market": "US",
+    "observed_at": "2026-10-15T09:32:37.990121+00:00",
+    "status": "shared_verified"
+  },
+  "broker_capital": {
+    "cash": 997271.645,
+    "observed_at": "2026-10-15T09:32:41.680617+00:00",
+    "option_cash_cap": 100000.24130500003,
+    "option_equity_cap": 99993.6435,
+    "option_equity_fraction": 0.1,
+    "option_reserve": 99993.6435,
+    "source": "Futunn sim-trade cash-info; no margin buying power",
+    "stock_cash_cap": 897271.645,
+    "stock_equity_cap": 899936.435,
+    "total_asset": 999936.435
+  },
+  "execution_readiness": {
+    "ready": false,
+    "observed_at": "2026-10-15T09:36:09.172906+00:00",
+    "data_asof": "2026-10-14",
+    "checks": {
+      "bound_simulated_account": true,
+      "stock_allocations": true,
+      "stock_owners": true,
+      "account_champion": null,
+      "rotation_status": "queued",
+      "strategy_cash_reconciled": true,
+      "frozen_strategies": [
+        "5b3083fb7764",
+        "ac32278508e1",
+        "e40e1894eef6",
+        "39fa42ead888",
+        "d059cef220a4",
+        "b7aa4bd19b6e",
+        "11bb4d0f1410",
+        "14895b0396fb"
+      ],
+      "option_allocation": true,
+      "option_freeze": true
+    },
+    "blockers": [
+      "账户换仓：等待正常交易时段；不使用盘前报价清仓"
+    ],
+    "order_endpoint_tested": true,
+    "live_enabled": false,
+    "broker_reconciled_at": "2026-10-15T09:32:47.615102+00:00",
+    "preflight_observed_at": "2026-10-14T13:26:01.186998+00:00"
+  },
+  "order_counts": {
+    "filled": 8
+  },
+  "options_status": "共用美股模拟账户，期权上限为最新净资产10%；仅买入Call/Put与已有多头平仓，最多1张，历史期权回测未验证。"
+}

@@ -317,7 +317,8 @@ def test_daily_review_retries_failed_cached_ai_without_overwriting_evidence(stor
     monkeypatch.setattr(runner,"ask",available)
     runner.daily_jobs(store,{})
     assert not calls  # Retry backoff remains in force.
-    store.set_meta("daily_retry_after:2026-10-09",None)
+    from quant_agent.checkpoints import retry_failed
+    retry_failed(store)
     runner.daily_jobs(store,{})
     assert len(calls)==1 and store.meta("daily_completed:2026-10-09")
     assert json.loads(failed.read_text())["ai"] is None
@@ -539,7 +540,8 @@ def test_evolution_failure_retries_before_daily_completion(store,monkeypatch):
     runner.daily_jobs(store,{})
     assert not store.meta('daily_completed:2026-10-09')
     assert store.meta('task:evolution')['status']=='failed'
-    store.set_meta('daily_retry_after:2026-10-09',None)
+    from quant_agent.checkpoints import retry_failed
+    retry_failed(store)
     key=store.propose({'policy':{'name':'new'},'research_data_sha256':'daily-test'})
     monkeypatch.setattr(evolution,'evolve',lambda *a:{'strategy':key,'name':'new','hypothesis':'test'})
     monkeypatch.setattr(runner,'evaluate',lambda s:[])

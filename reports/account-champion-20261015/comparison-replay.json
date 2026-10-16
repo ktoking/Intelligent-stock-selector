@@ -1,0 +1,1126 @@
+{
+  "created_at": "2026-10-15T08:13:17.370618+00:00",
+  "asof": "2026-10-14",
+  "data_sha256": "8b89590af5071ccdfbaa3851e3c401ed3df2b9ddbcc191d86abee56967a4c378",
+  "windows": {
+    "retrospective_test": [
+      "2026-05-05",
+      "2026-10-14"
+    ],
+    "train": [
+      "2024-07-19",
+      "2025-11-19"
+    ],
+    "validation": [
+      "2025-11-20",
+      "2026-05-04"
+    ]
+  },
+  "policy": {
+    "authorization": "isolated replay only",
+    "enabled": true,
+    "mode": "account_champion"
+  },
+  "ranking": [
+    {
+      "strategy": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+      "stage": "paper",
+      "spec_sha256": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 22.94517844158628,
+          "max_drawdown_pct": 5.857375799750841,
+          "annualized_vol_pct": 17.78965317826707,
+          "sharpe_zero_rf": 2.679455651048546,
+          "orders": 108,
+          "cost_dollars": 236.2718635543725,
+          "avg_exposure_pct": 52.032246536553636,
+          "trading_days": 113
+        },
+        "train": {
+          "return_pct": 55.849995074066136,
+          "max_drawdown_pct": 9.141161476269499,
+          "annualized_vol_pct": 14.132040816948585,
+          "sharpe_zero_rf": 2.419559211267967,
+          "orders": 272,
+          "cost_dollars": 617.6742990193925,
+          "avg_exposure_pct": 45.51338671834235,
+          "trading_days": 337
+        },
+        "validation": {
+          "return_pct": 5.949533360832682,
+          "max_drawdown_pct": 8.652207618611286,
+          "annualized_vol_pct": 15.846348818316006,
+          "sharpe_zero_rf": 0.8993347137864944,
+          "orders": 117,
+          "cost_dollars": 293.351064022735,
+          "avg_exposure_pct": 46.61191450579256,
+          "trading_days": 112
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 2.86782683576563,
+          "max_drawdown_pct": 9.350722265265322,
+          "annualized_vol_pct": 16.06017267809391,
+          "sharpe_zero_rf": 0.475792639193897,
+          "orders": 118,
+          "cost_dollars": 588.309933866435,
+          "avg_exposure_pct": 47.26528970475597,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 20.40038307114045,
+          "max_drawdown_pct": 6.018989515729823,
+          "annualized_vol_pct": 17.87367263191858,
+          "sharpe_zero_rf": 2.406277825274714,
+          "orders": 106,
+          "cost_dollars": 466.11774476996,
+          "avg_exposure_pct": 52.59584666448289,
+          "trading_days": 113
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 4.10525129672259,
+          "max_drawdown_pct": 10.46690621713613,
+          "annualized_vol_pct": 15.522399222617079,
+          "sharpe_zero_rf": 0.6604260116381891,
+          "orders": 141,
+          "cost_dollars": 344.5668075907425,
+          "avg_exposure_pct": 49.91539706907213,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 16.740723814349657,
+          "max_drawdown_pct": 4.780671253366863,
+          "annualized_vol_pct": 16.689626451962443,
+          "sharpe_zero_rf": 2.151836207571731,
+          "orders": 136,
+          "cost_dollars": 298.492652599035,
+          "avg_exposure_pct": 53.16890757337405,
+          "trading_days": 113
+        }
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 108,
+          "sessions": 113,
+          "cost_dollars": 236.2718635543725,
+          "final_equity": 12294.517844158629,
+          "final_cash": 3055.097844158628,
+          "return_pct": 22.94517844158628,
+          "max_drawdown_pct": 5.857375799750841
+        },
+        "train": {
+          "orders": 272,
+          "sessions": 337,
+          "cost_dollars": 617.6742990193925,
+          "final_equity": 15584.999507406614,
+          "final_cash": 11435.905935925613,
+          "return_pct": 55.849995074066136,
+          "max_drawdown_pct": 9.141161476269499
+        },
+        "validation": {
+          "orders": 117,
+          "sessions": 112,
+          "cost_dollars": 293.35106402273505,
+          "final_equity": 10594.953336083268,
+          "final_cash": 7417.582186269269,
+          "return_pct": 5.949533360832682,
+          "max_drawdown_pct": 8.652207618611286
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true
+      },
+      "eligible": true,
+      "return_pct": 22.94517844158628,
+      "score": 0.6876318302897597
+    },
+    {
+      "strategy": "11bb4d0f14108b87939a2e77d82939bc0017d25c8d70bd50564443ce6802bff1",
+      "stage": "shadow",
+      "spec_sha256": "11bb4d0f14108b87939a2e77d82939bc0017d25c8d70bd50564443ce6802bff1",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 19.85501401001968,
+          "max_drawdown_pct": 7.0612429389172675,
+          "annualized_vol_pct": 18.682491905931357,
+          "sharpe_zero_rf": 2.2551908629582114,
+          "orders": 114,
+          "cost_dollars": 228.6120700550375,
+          "avg_exposure_pct": 45.763747129415,
+          "trading_days": 113
+        },
+        "train": {
+          "return_pct": 56.71686244487199,
+          "max_drawdown_pct": 7.910074009180468,
+          "annualized_vol_pct": 13.812390016179265,
+          "sharpe_zero_rf": 2.5025116074449754,
+          "orders": 278,
+          "cost_dollars": 655.2194937568075,
+          "avg_exposure_pct": 45.173309985026194,
+          "trading_days": 337
+        },
+        "validation": {
+          "return_pct": 5.84578666562432,
+          "max_drawdown_pct": 8.102919995977597,
+          "annualized_vol_pct": 16.401980713134137,
+          "sharpe_zero_rf": 0.8609525449917014,
+          "orders": 122,
+          "cost_dollars": 304.606021200575,
+          "avg_exposure_pct": 47.60510761587075,
+          "trading_days": 112
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 2.486454068778876,
+          "max_drawdown_pct": 8.989544758649027,
+          "annualized_vol_pct": 16.71861997017885,
+          "sharpe_zero_rf": 0.41358972257061394,
+          "orders": 122,
+          "cost_dollars": 610.247498222115,
+          "avg_exposure_pct": 48.35913836729257,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 17.556203724997577,
+          "max_drawdown_pct": 7.760589575282739,
+          "annualized_vol_pct": 18.752868292807126,
+          "sharpe_zero_rf": 2.0167708789669754,
+          "orders": 113,
+          "cost_dollars": 449.973935923245,
+          "avg_exposure_pct": 46.12713059387675,
+          "trading_days": 113
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 6.119051098459649,
+          "max_drawdown_pct": 7.959319355764838,
+          "annualized_vol_pct": 14.706451540331347,
+          "sharpe_zero_rf": 0.9818917899715954,
+          "orders": 144,
+          "cost_dollars": 343.08886379704,
+          "avg_exposure_pct": 50.74555611891175,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 17.30653521579313,
+          "max_drawdown_pct": 7.431783211941234,
+          "annualized_vol_pct": 17.29714747289538,
+          "sharpe_zero_rf": 2.1444696232721636,
+          "orders": 137,
+          "cost_dollars": 277.5247097896825,
+          "avg_exposure_pct": 47.666807177534935,
+          "trading_days": 113
+        }
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 114,
+          "sessions": 113,
+          "cost_dollars": 228.6120700550375,
+          "final_equity": 11985.501401001968,
+          "final_cash": 8092.401401001967,
+          "return_pct": 19.85501401001968,
+          "max_drawdown_pct": 7.0612429389172675
+        },
+        "train": {
+          "orders": 278,
+          "sessions": 337,
+          "cost_dollars": 655.2194937568075,
+          "final_equity": 15671.686244487199,
+          "final_cash": 11522.592673006198,
+          "return_pct": 56.71686244487199,
+          "max_drawdown_pct": 7.910074009180468
+        },
+        "validation": {
+          "orders": 122,
+          "sessions": 112,
+          "cost_dollars": 304.60602120057507,
+          "final_equity": 10584.578666562431,
+          "final_cash": 7719.025805949431,
+          "return_pct": 5.84578666562432,
+          "max_drawdown_pct": 8.102919995977597
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true
+      },
+      "eligible": true,
+      "return_pct": 19.85501401001968,
+      "score": 0.7214419824614151
+    },
+    {
+      "strategy": "ac32278508e1a403e91e2d92a239e9e256747aee06f9bfe3c4d5de2539d574b4",
+      "stage": "paper",
+      "spec_sha256": "ac32278508e1a403e91e2d92a239e9e256747aee06f9bfe3c4d5de2539d574b4",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 18.8151303847663,
+          "max_drawdown_pct": 7.369718677001147,
+          "annualized_vol_pct": 17.483000081575064,
+          "sharpe_zero_rf": 2.2868233149678727,
+          "orders": 112,
+          "cost_dollars": 234.1126182603725,
+          "avg_exposure_pct": 47.69275125231151,
+          "trading_days": 113
+        },
+        "train": {
+          "return_pct": 56.74537107383455,
+          "max_drawdown_pct": 7.8677565338771345,
+          "annualized_vol_pct": 13.930822898107442,
+          "sharpe_zero_rf": 2.483272963745882,
+          "orders": 282,
+          "cost_dollars": 660.917140973545,
+          "avg_exposure_pct": 45.09265764081387,
+          "trading_days": 337
+        },
+        "validation": {
+          "return_pct": 7.129007298042245,
+          "max_drawdown_pct": 7.971674656210482,
+          "annualized_vol_pct": 16.427685155952755,
+          "sharpe_zero_rf": 1.025002681297619,
+          "orders": 120,
+          "cost_dollars": 299.89751558578,
+          "avg_exposure_pct": 47.78566853346941,
+          "trading_days": 112
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 3.8167597573447454,
+          "max_drawdown_pct": 8.830695229880037,
+          "annualized_vol_pct": 16.751502113480843,
+          "sharpe_zero_rf": 0.5863764275118345,
+          "orders": 120,
+          "cost_dollars": 600.830486992525,
+          "avg_exposure_pct": 48.54482736405514,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 16.53931156726045,
+          "max_drawdown_pct": 7.967867242972437,
+          "annualized_vol_pct": 17.807045918065402,
+          "sharpe_zero_rf": 2.0058501328765637,
+          "orders": 111,
+          "cost_dollars": 460.18284418196,
+          "avg_exposure_pct": 47.927115384540045,
+          "trading_days": 113
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 6.831330422265491,
+          "max_drawdown_pct": 8.162479589157579,
+          "annualized_vol_pct": 14.834237610748499,
+          "sharpe_zero_rf": 1.0762005615026817,
+          "orders": 143,
+          "cost_dollars": 340.0298708344525,
+          "avg_exposure_pct": 51.15646301969152,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 17.118847764684908,
+          "max_drawdown_pct": 7.37152779112058,
+          "annualized_vol_pct": 16.784587885767767,
+          "sharpe_zero_rf": 2.183619292241444,
+          "orders": 136,
+          "cost_dollars": 277.7375105845125,
+          "avg_exposure_pct": 48.0579353187219,
+          "trading_days": 113
+        }
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 112,
+          "sessions": 113,
+          "cost_dollars": 234.11261826037253,
+          "final_equity": 11881.51303847663,
+          "final_cash": 7080.64303847663,
+          "return_pct": 18.8151303847663,
+          "max_drawdown_pct": 7.369718677001147
+        },
+        "train": {
+          "orders": 282,
+          "sessions": 337,
+          "cost_dollars": 660.9171409735449,
+          "final_equity": 15674.537107383454,
+          "final_cash": 11525.443535902454,
+          "return_pct": 56.74537107383455,
+          "max_drawdown_pct": 7.8677565338771345
+        },
+        "validation": {
+          "orders": 120,
+          "sessions": 112,
+          "cost_dollars": 299.89751558578007,
+          "final_equity": 10712.900729804223,
+          "final_cash": 7535.529579990224,
+          "return_pct": 7.129007298042245,
+          "max_drawdown_pct": 7.971674656210482
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true
+      },
+      "eligible": true,
+      "return_pct": 18.8151303847663,
+      "score": 0.8942923043765038
+    },
+    {
+      "strategy": "d059cef220a4761a7eadaf3a670f1e5417b768a91dd61413e3a240b6857c1940",
+      "stage": "shadow",
+      "spec_sha256": "d059cef220a4761a7eadaf3a670f1e5417b768a91dd61413e3a240b6857c1940",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 18.534117675426053,
+          "max_drawdown_pct": 7.38984026591848,
+          "annualized_vol_pct": 17.665838066367947,
+          "sharpe_zero_rf": 2.2349996901074367,
+          "orders": 114,
+          "cost_dollars": 238.849529793395,
+          "avg_exposure_pct": 47.752340998754086,
+          "trading_days": 113
+        },
+        "train": {
+          "return_pct": 57.34750154535697,
+          "max_drawdown_pct": 7.812601825650245,
+          "annualized_vol_pct": 13.745875051317945,
+          "sharpe_zero_rf": 2.535828420044123,
+          "orders": 274,
+          "cost_dollars": 647.096002709305,
+          "avg_exposure_pct": 45.264769243605855,
+          "trading_days": 337
+        },
+        "validation": {
+          "return_pct": 7.129007298042245,
+          "max_drawdown_pct": 7.971674656210482,
+          "annualized_vol_pct": 16.427685155952755,
+          "sharpe_zero_rf": 1.025002681297619,
+          "orders": 120,
+          "cost_dollars": 299.89751558578,
+          "avg_exposure_pct": 47.78566853346941,
+          "trading_days": 112
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 3.8167597573447454,
+          "max_drawdown_pct": 8.830695229880037,
+          "annualized_vol_pct": 16.751502113480843,
+          "sharpe_zero_rf": 0.5863764275118345,
+          "orders": 120,
+          "cost_dollars": 600.830486992525,
+          "avg_exposure_pct": 48.54482736405514,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 16.287368242589938,
+          "max_drawdown_pct": 7.985984018585879,
+          "annualized_vol_pct": 17.959839073316047,
+          "sharpe_zero_rf": 1.9633671353567976,
+          "orders": 113,
+          "cost_dollars": 469.692817248005,
+          "avg_exposure_pct": 47.9382950949399,
+          "trading_days": 113
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 6.831330422265491,
+          "max_drawdown_pct": 8.162479589157579,
+          "annualized_vol_pct": 14.834237610748499,
+          "sharpe_zero_rf": 1.0762005615026817,
+          "orders": 143,
+          "cost_dollars": 340.0298708344525,
+          "avg_exposure_pct": 51.15646301969152,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 16.13147047492236,
+          "max_drawdown_pct": 7.463809653088671,
+          "annualized_vol_pct": 17.07003315327076,
+          "sharpe_zero_rf": 2.0391358192057205,
+          "orders": 139,
+          "cost_dollars": 282.359696495765,
+          "avg_exposure_pct": 48.02368171372901,
+          "trading_days": 113
+        }
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 114,
+          "sessions": 113,
+          "cost_dollars": 238.849529793395,
+          "final_equity": 11853.411767542606,
+          "final_cash": 7052.541767542607,
+          "return_pct": 18.534117675426053,
+          "max_drawdown_pct": 7.38984026591848
+        },
+        "train": {
+          "orders": 274,
+          "sessions": 337,
+          "cost_dollars": 647.096002709305,
+          "final_equity": 15734.750154535697,
+          "final_cash": 11585.656583054697,
+          "return_pct": 57.34750154535697,
+          "max_drawdown_pct": 7.812601825650245
+        },
+        "validation": {
+          "orders": 120,
+          "sessions": 112,
+          "cost_dollars": 299.89751558578007,
+          "final_equity": 10712.900729804223,
+          "final_cash": 7535.529579990224,
+          "return_pct": 7.129007298042245,
+          "max_drawdown_pct": 7.971674656210482
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true
+      },
+      "eligible": true,
+      "return_pct": 18.534117675426053,
+      "score": 0.8942923043765038
+    },
+    {
+      "strategy": "14895b0396fbb89502569680fde0e9b050593dfa0b273d6b4d9eafb940d369e8",
+      "stage": "shadow",
+      "spec_sha256": "14895b0396fbb89502569680fde0e9b050593dfa0b273d6b4d9eafb940d369e8",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 14.012566812081605,
+          "max_drawdown_pct": 5.84255790060867,
+          "annualized_vol_pct": 16.65566896637588,
+          "sharpe_zero_rf": 1.8392171433649032,
+          "orders": 121,
+          "cost_dollars": 279.003381195835,
+          "avg_exposure_pct": 43.71923649654657,
+          "trading_days": 113
+        },
+        "train": {
+          "return_pct": 77.99753106458869,
+          "max_drawdown_pct": 8.765800684979741,
+          "annualized_vol_pct": 14.267038172312763,
+          "sharpe_zero_rf": 3.095362643878925,
+          "orders": 324,
+          "cost_dollars": 877.0892988331375,
+          "avg_exposure_pct": 45.904372737021134,
+          "trading_days": 337
+        },
+        "validation": {
+          "return_pct": 9.41200308825072,
+          "max_drawdown_pct": 6.243696997021719,
+          "annualized_vol_pct": 17.586252683147567,
+          "sharpe_zero_rf": 1.238882435136096,
+          "orders": 113,
+          "cost_dollars": 256.0895013079275,
+          "avg_exposure_pct": 54.71147877874042,
+          "trading_days": 112
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 6.872928681889379,
+          "max_drawdown_pct": 6.650220211669822,
+          "annualized_vol_pct": 17.801477307202955,
+          "sharpe_zero_rf": 0.929090307341326,
+          "orders": 113,
+          "cost_dollars": 510.66152466505997,
+          "avg_exposure_pct": 55.299641066008206,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 11.194797087642305,
+          "max_drawdown_pct": 5.7924442500784545,
+          "annualized_vol_pct": 16.573876538827186,
+          "sharpe_zero_rf": 1.5104827298923948,
+          "orders": 120,
+          "cost_dollars": 555.05752637377,
+          "avg_exposure_pct": 43.9895744539023,
+          "trading_days": 113
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 15.305293983633316,
+          "max_drawdown_pct": 5.291705286565929,
+          "annualized_vol_pct": 17.252053469942858,
+          "sharpe_zero_rf": 1.9443001083769487,
+          "orders": 149,
+          "cost_dollars": 315.92857506667,
+          "avg_exposure_pct": 44.67481137896106,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 8.642409957456865,
+          "max_drawdown_pct": 9.259101768719768,
+          "annualized_vol_pct": 16.526295075188624,
+          "sharpe_zero_rf": 1.2007195155625388,
+          "orders": 160,
+          "cost_dollars": 343.8264079073075,
+          "avg_exposure_pct": 47.91624433704183,
+          "trading_days": 113
+        }
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 121,
+          "sessions": 113,
+          "cost_dollars": 279.003381195835,
+          "final_equity": 11401.25668120816,
+          "final_cash": 8918.67668120816,
+          "return_pct": 14.012566812081605,
+          "max_drawdown_pct": 5.84255790060867
+        },
+        "train": {
+          "orders": 324,
+          "sessions": 337,
+          "cost_dollars": 877.0892988331381,
+          "final_equity": 17799.75310645887,
+          "final_cash": 12211.001202017871,
+          "return_pct": 77.99753106458869,
+          "max_drawdown_pct": 8.765800684979741
+        },
+        "validation": {
+          "orders": 113,
+          "sessions": 112,
+          "cost_dollars": 256.0895013079275,
+          "final_equity": 10941.200308825071,
+          "final_cash": 6965.094807909071,
+          "return_pct": 9.41200308825072,
+          "max_drawdown_pct": 6.243696997021719
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true
+      },
+      "eligible": true,
+      "return_pct": 14.012566812081605,
+      "score": 1.507440718654397
+    },
+    {
+      "strategy": "e40e1894eef694aab1861c631840c053d1b72440a5842adf21b935f11e3f9f89",
+      "stage": "paper",
+      "spec_sha256": "e40e1894eef694aab1861c631840c053d1b72440a5842adf21b935f11e3f9f89",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 12.027094958595995,
+          "max_drawdown_pct": 6.425737832529965,
+          "annualized_vol_pct": 14.104527519098099,
+          "sharpe_zero_rf": 1.8661731901972871,
+          "orders": 111,
+          "cost_dollars": 193.419602566405,
+          "avg_exposure_pct": 39.509320880517734,
+          "trading_days": 113
+        },
+        "train": {
+          "return_pct": 41.381652249464175,
+          "max_drawdown_pct": 7.6012246642963355,
+          "annualized_vol_pct": 11.292917570666864,
+          "sharpe_zero_rf": 2.3503446792691487,
+          "orders": 271,
+          "cost_dollars": 544.052998654575,
+          "avg_exposure_pct": 38.98954479854274,
+          "trading_days": 337
+        },
+        "validation": {
+          "return_pct": 3.9866882257979075,
+          "max_drawdown_pct": 6.71163605453099,
+          "annualized_vol_pct": 12.409606625334051,
+          "sharpe_zero_rf": 0.7705075384823287,
+          "orders": 108,
+          "cost_dollars": 217.5647281922125,
+          "avg_exposure_pct": 37.30820213790814,
+          "trading_days": 112
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 1.7625777745321702,
+          "max_drawdown_pct": 7.228394319651765,
+          "annualized_vol_pct": 12.551017327498231,
+          "sharpe_zero_rf": 0.3755583379676611,
+          "orders": 108,
+          "cost_dollars": 434.68526594779,
+          "avg_exposure_pct": 37.653341363049506,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 10.212751352974614,
+          "max_drawdown_pct": 7.082988347901731,
+          "annualized_vol_pct": 13.976401756658241,
+          "sharpe_zero_rf": 1.6212229363955764,
+          "orders": 109,
+          "cost_dollars": 378.972313381545,
+          "avg_exposure_pct": 39.22718584194001,
+          "trading_days": 113
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 4.245923544536323,
+          "max_drawdown_pct": 6.871241497505665,
+          "annualized_vol_pct": 11.422390641934903,
+          "sharpe_zero_rf": 0.8759213386255013,
+          "orders": 121,
+          "cost_dollars": 237.4566648323675,
+          "avg_exposure_pct": 39.4458019166017,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 9.564165830930804,
+          "max_drawdown_pct": 6.633725190392326,
+          "annualized_vol_pct": 13.000888813441055,
+          "sharpe_zero_rf": 1.63156001232717,
+          "orders": 130,
+          "cost_dollars": 220.07850654692498,
+          "avg_exposure_pct": 39.03915632213553,
+          "trading_days": 113
+        }
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 111,
+          "sessions": 113,
+          "cost_dollars": 193.41960256640496,
+          "final_equity": 11202.709495859599,
+          "final_cash": 7820.789495859599,
+          "return_pct": 12.027094958595995,
+          "max_drawdown_pct": 6.425737832529965
+        },
+        "train": {
+          "orders": 271,
+          "sessions": 337,
+          "cost_dollars": 544.0529986545749,
+          "final_equity": 14138.165224946417,
+          "final_cash": 11111.541653465416,
+          "return_pct": 41.381652249464175,
+          "max_drawdown_pct": 7.6012246642963355
+        },
+        "validation": {
+          "orders": 108,
+          "sessions": 112,
+          "cost_dollars": 217.56472819221244,
+          "final_equity": 10398.66882257979,
+          "final_cash": 7960.52353659279,
+          "return_pct": 3.9866882257979075,
+          "max_drawdown_pct": 6.71163605453099
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true
+      },
+      "eligible": true,
+      "return_pct": 12.027094958595995,
+      "score": 0.5939964851202734
+    },
+    {
+      "strategy": "b7aa4bd19b6e4f43af54eb3679198898af187c82c9fb82d31dae57842be5ec28",
+      "stage": "shadow",
+      "spec_sha256": "b7aa4bd19b6e4f43af54eb3679198898af187c82c9fb82d31dae57842be5ec28",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 11.752105592241978,
+          "max_drawdown_pct": 5.940133751724163,
+          "annualized_vol_pct": 14.08231076969991,
+          "sharpe_zero_rf": 1.8297028693645272,
+          "orders": 112,
+          "cost_dollars": 179.4761449708025,
+          "avg_exposure_pct": 34.88469259836347,
+          "trading_days": 113
+        },
+        "train": {
+          "return_pct": 41.73772795879693,
+          "max_drawdown_pct": 9.870597717567687,
+          "annualized_vol_pct": 12.909561679965567,
+          "sharpe_zero_rf": 2.085632650093881,
+          "orders": 284,
+          "cost_dollars": 557.9631951692975,
+          "avg_exposure_pct": 37.8438233564073,
+          "trading_days": 337
+        },
+        "validation": {
+          "return_pct": 2.860083149863213,
+          "max_drawdown_pct": 7.43410093138489,
+          "annualized_vol_pct": 12.061687923857976,
+          "sharpe_zero_rf": 0.586007207580586,
+          "orders": 105,
+          "cost_dollars": 203.5022124086825,
+          "avg_exposure_pct": 35.96434309524243,
+          "trading_days": 112
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 0.8351165850480902,
+          "max_drawdown_pct": 7.949274486769376,
+          "annualized_vol_pct": 12.19215947348716,
+          "sharpe_zero_rf": 0.21405569060359492,
+          "orders": 105,
+          "cost_dollars": 406.74300761119,
+          "avg_exposure_pct": 36.2478483183559,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 9.762662253633403,
+          "max_drawdown_pct": 6.98723792972511,
+          "annualized_vol_pct": 14.038343727921612,
+          "sharpe_zero_rf": 1.5494190395534824,
+          "orders": 110,
+          "cost_dollars": 353.11139605066,
+          "avg_exposure_pct": 35.07987007671269,
+          "trading_days": 113
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 4.529600597319594,
+          "max_drawdown_pct": 6.607306606166807,
+          "annualized_vol_pct": 11.798854956828443,
+          "sharpe_zero_rf": 0.9035449748755587,
+          "orders": 127,
+          "cost_dollars": 237.2094519690425,
+          "avg_exposure_pct": 35.31629128280896,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 11.750211947877954,
+          "max_drawdown_pct": 7.239853923165429,
+          "annualized_vol_pct": 14.347996457924692,
+          "sharpe_zero_rf": 1.7980899957228538,
+          "orders": 132,
+          "cost_dollars": 209.1788723292025,
+          "avg_exposure_pct": 32.53418581785863,
+          "trading_days": 113
+        }
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 112,
+          "sessions": 113,
+          "cost_dollars": 179.47614497080247,
+          "final_equity": 11175.210559224197,
+          "final_cash": 9057.430559224196,
+          "return_pct": 11.752105592241978,
+          "max_drawdown_pct": 5.940133751724163
+        },
+        "train": {
+          "orders": 284,
+          "sessions": 337,
+          "cost_dollars": 557.9631951692977,
+          "final_equity": 14173.772795879693,
+          "final_cash": 11264.312795879692,
+          "return_pct": 41.73772795879693,
+          "max_drawdown_pct": 9.870597717567687
+        },
+        "validation": {
+          "orders": 105,
+          "sessions": 112,
+          "cost_dollars": 203.50221240868245,
+          "final_equity": 10286.008314986322,
+          "final_cash": 8054.504223986322,
+          "return_pct": 2.860083149863213,
+          "max_drawdown_pct": 7.43410093138489
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true
+      },
+      "eligible": true,
+      "return_pct": 11.752105592241978,
+      "score": 0.38472482096505667
+    },
+    {
+      "strategy": "39fa42ead8884530d7600e813fd5cbb310df03fca39a8efb11a1530ef3793d2e",
+      "stage": "shadow",
+      "spec_sha256": "39fa42ead8884530d7600e813fd5cbb310df03fca39a8efb11a1530ef3793d2e",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 9.504912624351336,
+          "max_drawdown_pct": 7.323441786825713,
+          "annualized_vol_pct": 14.147840230089951,
+          "sharpe_zero_rf": 1.501429319049319,
+          "orders": 108,
+          "cost_dollars": 181.6495524998675,
+          "avg_exposure_pct": 37.14404192628937,
+          "trading_days": 113
+        },
+        "train": {
+          "return_pct": 42.18593258337402,
+          "max_drawdown_pct": 8.952675077145544,
+          "annualized_vol_pct": 12.887282622132926,
+          "sharpe_zero_rf": 2.107358357825725,
+          "orders": 279,
+          "cost_dollars": 549.8899145655924,
+          "avg_exposure_pct": 38.084881941845225,
+          "trading_days": 337
+        },
+        "validation": {
+          "return_pct": 3.1417004225216205,
+          "max_drawdown_pct": 7.64411713717047,
+          "annualized_vol_pct": 12.17112052362534,
+          "sharpe_zero_rf": 0.6323698096672625,
+          "orders": 105,
+          "cost_dollars": 203.7210816648425,
+          "avg_exposure_pct": 35.93636784481306,
+          "trading_days": 112
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 1.102445165144883,
+          "max_drawdown_pct": 8.164285190329545,
+          "annualized_vol_pct": 12.301839435888592,
+          "sharpe_zero_rf": 0.2616534280964309,
+          "orders": 106,
+          "cost_dollars": 409.88074612351,
+          "avg_exposure_pct": 36.171817752235185,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 7.8147255193952825,
+          "max_drawdown_pct": 8.28314143638391,
+          "annualized_vol_pct": 14.017772405178706,
+          "sharpe_zero_rf": 1.2664185959701852,
+          "orders": 106,
+          "cost_dollars": 355.46661324847,
+          "avg_exposure_pct": 36.81759221039147,
+          "trading_days": 113
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 5.060969968128193,
+          "max_drawdown_pct": 6.236596157284124,
+          "annualized_vol_pct": 11.822754567823353,
+          "sharpe_zero_rf": 0.9984837496936286,
+          "orders": 131,
+          "cost_dollars": 242.5072555571825,
+          "avg_exposure_pct": 35.16794572622605,
+          "trading_days": 112
+        },
+        "retrospective_test": {
+          "return_pct": 8.716030218983061,
+          "max_drawdown_pct": 7.962956962165013,
+          "annualized_vol_pct": 13.634317039536617,
+          "sharpe_zero_rf": 1.4345859465645716,
+          "orders": 129,
+          "cost_dollars": 207.474071781695,
+          "avg_exposure_pct": 34.302211426514454,
+          "trading_days": 113
+        }
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 108,
+          "sessions": 113,
+          "cost_dollars": 181.64955249986747,
+          "final_equity": 10950.491262435135,
+          "final_cash": 9115.691262435135,
+          "return_pct": 9.504912624351336,
+          "max_drawdown_pct": 7.323441786825713
+        },
+        "train": {
+          "orders": 279,
+          "sessions": 337,
+          "cost_dollars": 549.8899145655927,
+          "final_equity": 14218.593258337401,
+          "final_cash": 11369.7932583374,
+          "return_pct": 42.18593258337402,
+          "max_drawdown_pct": 8.952675077145544
+        },
+        "validation": {
+          "orders": 105,
+          "sessions": 112,
+          "cost_dollars": 203.72108166484244,
+          "final_equity": 10314.170042252163,
+          "final_cash": 7966.7376522661625,
+          "return_pct": 3.1417004225216205,
+          "max_drawdown_pct": 7.64411713717047
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true
+      },
+      "eligible": true,
+      "return_pct": 9.504912624351336,
+      "score": 0.4109958502918161
+    }
+  ],
+  "champion": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+  "comparisons": [
+    {
+      "candidate": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+      "incumbent": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+      "eligible": true,
+      "candidate_score": 0.6876318302897597,
+      "incumbent_score": 0,
+      "improvement": 0.6876318302897597,
+      "candidate_stats": {
+        "retrospective_test": {
+          "return_pct": 22.94517844158628,
+          "max_drawdown_pct": 5.857375799750841,
+          "annualized_vol_pct": 17.78965317826707,
+          "sharpe_zero_rf": 2.679455651048546,
+          "orders": 108,
+          "cost_dollars": 236.2718635543725,
+          "avg_exposure_pct": 52.032246536553636,
+          "trading_days": 113
+        },
+        "train": {
+          "return_pct": 55.849995074066136,
+          "max_drawdown_pct": 9.141161476269499,
+          "annualized_vol_pct": 14.132040816948585,
+          "sharpe_zero_rf": 2.419559211267967,
+          "orders": 272,
+          "cost_dollars": 617.6742990193925,
+          "avg_exposure_pct": 45.51338671834235,
+          "trading_days": 337
+        },
+        "validation": {
+          "return_pct": 5.949533360832682,
+          "max_drawdown_pct": 8.652207618611286,
+          "annualized_vol_pct": 15.846348818316006,
+          "sharpe_zero_rf": 0.8993347137864944,
+          "orders": 117,
+          "cost_dollars": 293.351064022735,
+          "avg_exposure_pct": 46.61191450579256,
+          "trading_days": 112
+        }
+      },
+      "candidate_spec_sha256": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+      "data_sha256": "8b89590af5071ccdfbaa3851e3c401ed3df2b9ddbcc191d86abee56967a4c378",
+      "windows": {
+        "retrospective_test": [
+          "2026-05-05",
+          "2026-10-14"
+        ],
+        "train": [
+          "2024-07-19",
+          "2025-11-19"
+        ],
+        "validation": [
+          "2025-11-20",
+          "2026-05-04"
+        ]
+      },
+      "status": "ready",
+      "reason": "统一历史区间收益择优；撤单、退出旧持仓、交收后交接",
+      "created_at": "2026-10-15T08:13:17.371759+00:00"
+    }
+  ],
+  "items": [
+    {
+      "candidate": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+      "incumbent": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+      "eligible": true,
+      "candidate_score": 0.6876318302897597,
+      "incumbent_score": 0,
+      "improvement": 0.6876318302897597,
+      "candidate_stats": {
+        "retrospective_test": {
+          "return_pct": 22.94517844158628,
+          "max_drawdown_pct": 5.857375799750841,
+          "annualized_vol_pct": 17.78965317826707,
+          "sharpe_zero_rf": 2.679455651048546,
+          "orders": 108,
+          "cost_dollars": 236.2718635543725,
+          "avg_exposure_pct": 52.032246536553636,
+          "trading_days": 113
+        },
+        "train": {
+          "return_pct": 55.849995074066136,
+          "max_drawdown_pct": 9.141161476269499,
+          "annualized_vol_pct": 14.132040816948585,
+          "sharpe_zero_rf": 2.419559211267967,
+          "orders": 272,
+          "cost_dollars": 617.6742990193925,
+          "avg_exposure_pct": 45.51338671834235,
+          "trading_days": 337
+        },
+        "validation": {
+          "return_pct": 5.949533360832682,
+          "max_drawdown_pct": 8.652207618611286,
+          "annualized_vol_pct": 15.846348818316006,
+          "sharpe_zero_rf": 0.8993347137864944,
+          "orders": 117,
+          "cost_dollars": 293.351064022735,
+          "avg_exposure_pct": 46.61191450579256,
+          "trading_days": 112
+        }
+      },
+      "candidate_spec_sha256": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+      "data_sha256": "8b89590af5071ccdfbaa3851e3c401ed3df2b9ddbcc191d86abee56967a4c378",
+      "windows": {
+        "retrospective_test": [
+          "2026-05-05",
+          "2026-10-14"
+        ],
+        "train": [
+          "2024-07-19",
+          "2025-11-19"
+        ],
+        "validation": [
+          "2025-11-20",
+          "2026-05-04"
+        ]
+      },
+      "status": "ready",
+      "reason": "统一历史区间收益择优；撤单、退出旧持仓、交收后交接",
+      "created_at": "2026-10-15T08:13:17.371759+00:00"
+    }
+  ],
+  "limitation": "统一历史区间、成本和风险门槛选优；不是未来收益保证。账户模拟与Shadow收益独立展示。"
+}

@@ -7,6 +7,38 @@ import pandas as pd
 from .exchange_clock import us_calendar
 
 
+def strategy_labels(records):
+    """Readable identities only; frozen strategy names and IDs stay intact."""
+    names={'trend_buffer15':'趋势缓冲','momentum_blend20':'多周期动量',
+        'residual_momentum20':'残差动量','trend_reduce20':'趋势减仓',
+        'residual_close_pressure20':'残差收盘压力','residual_impact_discount':'残差冲击折价',
+        'residual_gap_stability':'残差缺口稳定','residual_pressure_discount':'残差压力折价'}
+    by_id={r['id']:r for r in records}
+    roots=[r for r in records if r['stage'] in ('paper','live_review','retired') and r['evidence'].get('paper_authorization') and
+        not r['evidence']['paper_authorization'].get('predecessor')]
+    roots.sort(key=lambda r:(r['evidence']['paper_authorization'].get('observed_at',r['created']),r['created'],r['id']))
+    slots={r['id']:chr(65+i) if i<26 else str(i+1) for i,r in enumerate(roots)}
+    result={}
+    for record in records:
+        spec,e=record['spec'],record['evidence'];name=spec.get('factor_name',spec['policy']['name'])
+        root=record;seen=set()
+        while root['evidence'].get('paper_authorization',{}).get('predecessor') in by_id and root['id'] not in seen:
+            seen.add(root['id']);root=by_id[root['evidence']['paper_authorization']['predecessor']]
+        stamp=pd.Timestamp(record['created']);stamp=stamp.tz_localize('UTC') if stamp.tzinfo is None else stamp
+        version=stamp.tz_convert('Asia/Shanghai').strftime('%m/%d')+' · '+record['id'][:4]
+        role=('模拟 '+slots[root['id']]+(' · 归档' if record['stage']=='retired' else '') if root['id'] in slots else
+            ('观察 ' if record['stage']=='shadow' else '研究 ')+version)
+        if e.get('paper_authorization',{}).get('account_champion'):
+            role='账户优胜策略'+(' · 归档' if record['stage']=='retired' else '')
+        universe=len(e.get('symbols',spec.get('research_symbols',[])))
+        vol=spec['policy'].get('annual_vol_target')
+        note=('冻结 '+e['seed_asof']+' · ' if e.get('seed_asof') else '')+(str(universe)+' 只标的池' if universe else '研究池待核验')
+        if isinstance(vol,(int,float)):note+=' · 年化波动目标 '+format(vol*100,'.0f')+'%'
+        result[record['id']]={'display_name':names.get(name,name.replace('_',' '))+' · '+role,
+            'identity_label':role,'identity_note':note,'frozen_universe_count':universe}
+    return result
+
+
 def focus_quote_view(store, calendar):
     """Expose fresh stored prices for display, never as execution inputs."""
     if not calendar['session']:

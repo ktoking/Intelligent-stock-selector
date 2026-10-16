@@ -142,7 +142,8 @@ def holdings_summary(store,calendar):
             spec=json.loads(r['spec']);name=spec.get('factor_name',spec['policy']['name'])
             groups.append(_view(store,db,portfolio,'stock',calendar,r['id'],name)|{'stage':r['stage']})
         row=db.execute("SELECT value FROM meta WHERE key='option_paper_strategy'").fetchone();agent=json.loads(row[0]) if row else {}
-        for identity in alloc.get('option',{}):
+        for identity,cap in alloc.get('option',{}).items():
+            if cap<=0:continue
             portfolio=store.strategy_portfolio(identity,'option',db)
             groups.append(_view(store,db,portfolio,'option',calendar,identity,agent.get('spec',{}).get('name','期权模拟策略'))|{'stage':'paper'})
         books={}

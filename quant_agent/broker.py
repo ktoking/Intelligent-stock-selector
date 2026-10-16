@@ -32,6 +32,10 @@ class QuoteUnavailable(BrokerError):
     """A quote gate blocks this observation, without invalidating the ledger."""
 
 
+class AccountIntegrityError(BrokerError):
+    """Verified account/order/position facts conflict with the durable ledger."""
+
+
 class ReadUnavailable(BrokerError):
     """Read transport failed; the next tick must reconcile before executing."""
 
@@ -48,6 +52,25 @@ class FutuSim:
         self.option_codes = set()
 
     def request(self, method, path, query=None, body=None):
+        from .observability import emit,error_evidence,safe_route
+        request_id=secrets.token_hex(8);started=time.monotonic()
+        fields={'request_id':request_id,'method':method,'route':safe_route(path),
+                'mutation':method=='POST' and path.startswith('/api/v1.0/sim-trade/')}
+        if fields['mutation'] and isinstance(body,dict) and re.fullmatch(r'qa:[a-f0-9]{32}',str(body.get('text',''))):
+            fields['intent_id']=body['text'][3:]
+        emit('http_started',**fields)
+        self._response_status=None
+        try:
+            value=self._request(method,path,query,body)
+        except Exception as exc:
+            exc.request_id=request_id
+            if not hasattr(exc,'http_status') and self._response_status is not None:exc.http_status=self._response_status
+            emit('http_failed',**{**fields,**error_evidence(exc),'elapsed_ms':round((time.monotonic()-started)*1000)})
+            raise
+        emit('http_completed',**fields,http_status=self._response_status,ret_code=value.get('ret_code'),elapsed_ms=round((time.monotonic()-started)*1000))
+        return value
+
+    def _request(self, method, path, query=None, body=None):
         # Exact route allowlist also blocks path traversal and all real-account routes.
         account = re.escape(self.settings.stock_account)
         read_paths = [r"/api/v1\.0/sim-trade/accounts", r"/api/v1\.0/quote/user-security", rf"/api/v1\.0/sim-trade/{account}/(?:cash-info|positions|orders|history-orders)",
@@ -82,24 +105,50 @@ class FutuSim:
             # No automatic retries for mutations. Caller persists ambiguous outcomes.
             try:
                 with urllib.request.urlopen(req, timeout=20) as response:
+                    self._response_status=getattr(response,'status',None)
                     result = json.load(response)
             except (urllib.error.URLError, HTTPException, TimeoutError, ConnectionError,json.JSONDecodeError) as exc:
+                status=getattr(exc,'code',None)
+                from .observability import safe_route
+                route=safe_route(path)
+                details={'http_status':status,'request_method':method,'request_route':route,
+                    'read_failure_kind':('authentication' if status in (401,403) else
+                        'transient_http' if status in (408,429) or status is not None and status>=500 else
+                        'http_request' if status is not None else 'transport')}
                 if not is_trade:
-                    status=getattr(exc,'code',None)
-                    if status is None or status in (408,429) or status>=500:
-                        raise ReadUnavailable('Futunn read transport unavailable: '+type(exc).__name__) from None
+                    # Every failed read blocks this tick before execution. A 4xx
+                    # remains explicitly diagnosed, rather than permanently
+                    # pausing an otherwise reconciled ledger or claiming it transient.
+                    error=ReadUnavailable('Futunn read unavailable: '+type(exc).__name__)
+                    for key,value in details.items():setattr(error,key,value)
+                    raise error from None
+                # Preserve mutation exception semantics: an acknowledgement may
+                # be lost, so the caller must reconcile, never blindly retry.
+                for key,value in details.items():setattr(exc,key,value)
                 raise
         if not isinstance(result,dict) or 'ret_code' not in result:
             error=BrokerError if is_trade else ReadUnavailable
             raise error('Futunn response envelope invalid')
+        if result.get("ret_code")==0 and not is_trade and "data" not in result:
+            raise ReadUnavailable("Futunn read payload missing")
         if result.get("ret_code") != 0:
             retry=re.search(r"retry after (\d+)s",str(result.get("ret_msg","")),re.I)
-            error=ReadUnavailable if not is_trade and result.get('ret_code')==-11 else BrokerError
-            raise error(f"Futunn ret_code={result.get('ret_code')}; request unsuccessful",result.get('ret_code'),int(retry.group(1)) if retry else None)
+            error=ReadUnavailable if not is_trade else BrokerError
+            exc=error(f"Futunn ret_code={result.get('ret_code')}; request unsuccessful",result.get('ret_code'),int(retry.group(1)) if retry else None)
+            if not is_trade:
+                from .observability import safe_route
+                exc.request_method=method;exc.request_route=safe_route(path)
+                exc.read_failure_kind='rate_limit' if exc.ret_code==-11 else 'business_rejection'
+            raise exc
         return result
 
     def accounts(self):
-        return self.request("GET","/api/v1.0/sim-trade/accounts")["data"]["accounts"]
+        result=self.request("GET","/api/v1.0/sim-trade/accounts")
+        try:
+            rows=result['data']['accounts']
+            if not isinstance(rows,list) or any(not isinstance(r,dict) or not all(k in r for k in ('account_id','market_id','account_title')) for r in rows):raise ValueError()
+        except (KeyError,TypeError,ValueError):raise ReadUnavailable('Simulated account-list response schema invalid') from None
+        return rows
 
     def verify(self):
         matches = [a for a in self.accounts() if str(a["account_id"]) == self.settings.stock_account]
@@ -111,9 +160,20 @@ class FutuSim:
 
     def state(self):
         root = "/api/v1.0/sim-trade/"+self.settings.stock_account
-        cash = self.request("GET", root+"/cash-info")["data"]
-        positions = self.request("GET",root+"/positions",{"market":self.settings.stock_market})["data"]["positions"]
-        orders = self.request("GET",root+"/orders",{"market":self.settings.stock_market})["data"]["orders"]
+        try:
+            cash = self.request("GET", root+"/cash-info")["data"]
+            positions = self.request("GET",root+"/positions",{"market":self.settings.stock_market})["data"]["positions"]
+            orders = self.request("GET",root+"/orders",{"market":self.settings.stock_market})["data"]["orders"]
+            import math
+            if not isinstance(cash,dict) or not all(math.isfinite(float(cash[k])) for k in ('balance','total_asset')):raise ValueError()
+            if not isinstance(positions,list) or not isinstance(orders,list):raise ValueError()
+            for row in positions:
+                if not isinstance(row,dict) or not all(k in row for k in ('symbol','qty')):raise ValueError()
+                if not isinstance(row['symbol'],str) or not math.isfinite(float(row['qty'])):raise ValueError()
+            for row in orders:
+                if not isinstance(row,dict) or not all(k in row for k in ('order_id','symbol','qty','side','status')):raise ValueError()
+                if not isinstance(row['symbol'],str) or not all(math.isfinite(float(row[k])) for k in ('qty','side','status')):raise ValueError()
+        except (KeyError,TypeError,ValueError):raise ReadUnavailable('Simulated account-state response schema invalid') from None
         return {"cash":cash,"positions":positions,"orders":orders}
 
     def history(self, begin_us):
@@ -124,14 +184,18 @@ class FutuSim:
             if next_key is not None:
                 q["next_key"] = next_key
             result = self.request("GET","/api/v1.0/sim-trade/"+self.settings.stock_account+"/history-orders",q)
-            rows.extend(result["data"]["orders"])
+            try:
+                batch=result['data']['orders']
+                if not isinstance(batch,list) or any(not isinstance(r,dict) or not all(k in r for k in ('order_id','symbol','qty','side','status')) for r in batch):raise ValueError()
+            except (KeyError,TypeError,ValueError):raise ReadUnavailable('Simulated history response schema invalid') from None
+            rows.extend(batch)
             pagination = result.get("pagination",{})
             if not pagination.get("has_more"):
                 return rows
             if pagination.get("next_key") in (None,next_key):
-                raise BrokerError("History pagination incomplete")
+                raise ReadUnavailable("History pagination incomplete")
             next_key = pagination["next_key"]
-        raise BrokerError("History pagination exceeded bounded limit")
+        raise ReadUnavailable("History pagination exceeded bounded limit")
 
     def snapshots(self, symbols):
         result=self.request("POST","/api/v1.0/quote/snapshot",body={"code_list":list(symbols)})
