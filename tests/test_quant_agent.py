@@ -392,7 +392,7 @@ def test_forward_dashboard_has_no_synthetic_equity_and_no_private_order_ids(stor
     snapshot=public_status(store)
     assert snapshot['strategies'][0]['shadow_sessions']==0
     assert snapshot['live_enabled'] is False
-    assert {j['key'] for j in snapshot['tasks']}=={'refresh','scan','news','discovery','backtest','review','evolution','promotion'}
+    assert {j['key'] for j in snapshot['tasks']}=={'refresh','scan','news','discovery','backtest','review','evolution','factor_validation','promotion','premarket'}
 
 
 def test_index_pages_require_complete_unique_membership():

@@ -143,9 +143,11 @@ def test_read_http_failure_has_safe_diagnostics_and_blocks_only_current_tick(tmp
     assert info['http_status']==status and info['read_failure_kind']==kind
     assert info['request_route']=='/api/v1.0/sim-trade/{account}/cash-info'
     assert 'PRIVATE' not in canonical(info) and 'private-account' not in canonical(info)
-    with pytest.raises(HTTPError) as caught:
+    from quant_agent.broker import OrderRejected
+    with pytest.raises(OrderRejected if status in (400,401,403,429) else HTTPError) as caught:
         b.request('POST','/api/v1.0/sim-trade/private-account/orders',body={})
     assert not isinstance(caught.value,ReadUnavailable)
+    assert bool(getattr(caught.value,'submission_rejected',False))==(status in (400,401,403,429))
     info=runner.error_evidence(caught.value)
     assert info['http_status']==status and info['request_method']=='POST'
     assert 'PRIVATE' not in canonical(info)

@@ -42,7 +42,9 @@ def run_step(store,job,asof,version,action):
                     store.set_meta('task:'+job,json.loads(old['state']),db)
                     return json.loads(old['result'])
                 if old.get('retry_after') and old['retry_after']>stamp():
-                    raise StepDeferred('Research step waiting for persisted retry: '+job)
+                    exc=StepDeferred('Research step waiting for persisted retry: '+job)
+                    exc.checkpoint_state=json.loads(old['state'])
+                    raise exc
                 attempt=old.get('attempts',0)+1
                 state={'status':'running','asof':asof,'data_dir':store.meta('current_data_dir',store.settings.data_dir),'started_at':stamp(),'attempt':attempt,'checkpoint':key,
                        'input_version':version,

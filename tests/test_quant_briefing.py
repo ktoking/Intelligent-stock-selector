@@ -61,7 +61,7 @@ def test_brief_persists_structured_and_markdown_without_orders(tmp_path):
 
 def test_daily_job_rejects_invalid_brief_and_records_retry_instead_of_persisting_it(tmp_path,monkeypatch):
     from tests.test_quant_agent import daily_fixture
-    s=Store(tmp_path,initialize(tmp_path));runner=daily_fixture(s,monkeypatch)
+    s=Store(tmp_path,initialize(tmp_path,evolution_enabled=False));runner=daily_fixture(s,monkeypatch)
     r=response();r['provider']='codex';r['result']['brief']['us_scan']['catalyst']=[candidate('US.INVENTED')]
     monkeypatch.setattr(runner,'ask',lambda *a,**kw:r)
     runner.daily_jobs(s,{})

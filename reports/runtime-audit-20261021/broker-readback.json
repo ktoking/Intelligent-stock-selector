@@ -1,0 +1,87 @@
+{
+  "verified_simulated_account": true,
+  "cash": {
+    "balance": "989654.224",
+    "total_asset": "989654.224"
+  },
+  "position_rows": [
+    {
+      "symbol": "CRM",
+      "qty": "0"
+    },
+    {
+      "symbol": "PLTR",
+      "qty": "0"
+    },
+    {
+      "symbol": "SONY",
+      "qty": "0"
+    },
+    {
+      "symbol": "MSFT",
+      "qty": "0"
+    },
+    {
+      "symbol": "XOM",
+      "qty": "0"
+    }
+  ],
+  "positive_positions": 0,
+  "orders": [
+    {
+      "symbol": "CRM",
+      "qty": "487",
+      "side": 2,
+      "status": 4,
+      "dealt_qty": null,
+      "dealt_avg_price": null,
+      "create_time": "1792503117000000",
+      "update_time": "1792503129000000",
+      "local_order_id": "d5bd4c4cd93166d9a85dc4a134ed00f1"
+    },
+    {
+      "symbol": "SONY",
+      "qty": "8516",
+      "side": 2,
+      "status": 4,
+      "dealt_qty": null,
+      "dealt_avg_price": null,
+      "create_time": "1792503058000000",
+      "update_time": "1792503069000000",
+      "local_order_id": "000085521855217de765fa7c18626722"
+    },
+    {
+      "symbol": "PLTR",
+      "qty": "623",
+      "side": 2,
+      "status": 4,
+      "dealt_qty": null,
+      "dealt_avg_price": null,
+      "create_time": "1792503058000000",
+      "update_time": "1792503069000000",
+      "local_order_id": "612b4ebdb74f1f8611d5100bd3f60bb7"
+    },
+    {
+      "symbol": "XOM",
+      "qty": "1066",
+      "side": 2,
+      "status": 4,
+      "dealt_qty": null,
+      "dealt_avg_price": null,
+      "create_time": "1792503059000000",
+      "update_time": "1792503063000000",
+      "local_order_id": "cf92f6a74348ae68d80ea6c12102520d"
+    },
+    {
+      "symbol": "MSFT",
+      "qty": "337",
+      "side": 2,
+      "status": 4,
+      "dealt_qty": null,
+      "dealt_avg_price": null,
+      "create_time": "1792503058000000",
+      "update_time": "1792503060000000",
+      "local_order_id": "7e61bcd80e7434006abfa517fa2c1f64"
+    }
+  ]
+}

@@ -50,6 +50,18 @@ class AIUnavailable(RuntimeError):
     pass
 
 
+def codex_failure_code(stderr):
+    text=stderr.lower()
+    categories=[
+        ('authentication',('unauthorized','authentication failed','not logged in','token refresh','refresh token','invalid_grant','invalid api key')),
+        ('rate_limit',('rate limit','429','usage limit','insufficient_quota','quota exceeded','usage_limit')),
+        ('context_limit',('context_length_exceeded','context window','too many tokens','request too large')),
+        ('schema',('invalid schema','invalid_json_schema','unsupported schema')),
+        ('model_unavailable',('model is not supported','model not found','model_not_found')),
+        ('network',('connection refused','connection reset','network is unreachable','failed to connect','dns error','certificate verify'))]
+    return next((code for code,markers in categories if any(s in text for s in markers)),'cli_exit')
+
+
 def ask(provider, packet, timeout=240, model_name='gpt-6.1-sol', reasoning_effort='high', output_schema=None,system_instruction=None):
     from .observability import emit,error_evidence
     import time
@@ -113,10 +125,11 @@ def _ask(provider, packet, timeout=240, model_name='gpt-6.1-sol', reasoning_effo
             if result.returncode or not output.exists():
                 # Classify known failures; never retain arbitrary stderr which
                 # may contain the full prompt or local authentication context.
-                stderr=result.stderr.lower()
-                code=('authentication' if any(s in stderr for s in ('unauthorized','authentication failed','not logged in')) else
-                      'rate_limit' if 'rate limit' in stderr or '429' in stderr else 'cli_exit')
-                exc=AIUnavailable('Codex analysis unavailable: '+code);exc.exit_code=result.returncode;exc.diagnostic_code=code;raise exc
+                code=codex_failure_code(result.stderr)
+                exc=AIUnavailable('Codex analysis unavailable: '+code)
+                exc.exit_code=result.returncode;exc.diagnostic_code=code
+                exc.stderr_sha256=digest(result.stderr)  # Correlate failures without storing credentials or prompts.
+                raise exc
             raw = output.read_text()
         import re
         actual_model=re.search(r'^model: (.+)$',result.stderr,re.M)

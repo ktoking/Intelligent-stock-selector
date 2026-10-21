@@ -32,6 +32,7 @@ def main(argv=None):
     p=commands.add_parser("scan");p.add_argument("--enrich",action="store_true")
     p=commands.add_parser("reference");p.add_argument("path",type=Path)
     commands.add_parser("status")
+    commands.add_parser('minute-research')
     p=commands.add_parser("account-capital");p.add_argument("--total-capital",type=float,required=True);p.add_argument("--authorization",required=True)
     commands.add_parser("probe")
     p=commands.add_parser("tick");p.add_argument("--daily",action="store_true")
@@ -63,6 +64,9 @@ def main(argv=None):
     settings=Settings.load(args.home);store=Store(args.home,settings)
     if args.command=="status":
         result=public_status(store)
+    elif args.command=='minute-research':
+        from .intraday import research
+        result=research(store)
     elif args.command=="discover":
         result={"strategies":propose(store,args.policies,args.ai)}
     elif args.command=="research":

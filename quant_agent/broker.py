@@ -44,12 +44,17 @@ class SignalUnavailable(BrokerError):
     """Completed daily data are stale; block orders until the cache catches up."""
 
 
+class OrderRejected(SignalUnavailable):
+    """A definite rejection releases its intent; it is not a lost acknowledgement."""
+
+
 class FutuSim:
     def __init__(self, settings, transport=None):
         self.settings, self.transport = settings, transport
         self.verified = False
         self.key = None
         self.option_codes = set()
+        self.on_definite_rejection = None
 
     def request(self, method, path, query=None, body=None):
         from .observability import emit,error_evidence,safe_route
@@ -76,7 +81,8 @@ class FutuSim:
         read_paths = [r"/api/v1\.0/sim-trade/accounts", r"/api/v1\.0/quote/user-security", rf"/api/v1\.0/sim-trade/{account}/(?:cash-info|positions|orders|history-orders)",
                       r"/api/v1\.0/quote/US\.[A-Za-z0-9.-]+/(?:history-kline|option-chain|option-expiration)",
                       rf"/api/v1\.0/sim-trade/{account}/max-buy-sell",
-                      r"/api/v1\.0/quote/(?:plate-list|plate-stock|find-news|valuation/index-stocks)"]
+                      r"/api/v1\.0/quote/(?:plate-list|plate-stock|find-news|valuation/index-stocks)",
+                      r"/api/v1\.0/quote/economic-calendar/hot"]
         write_paths = [r"/api/v1\.0/quote/snapshot"]
         if self.settings.stock_account:
             write_paths += [rf"/api/v1\.0/sim-trade/{account}/orders", rf"/api/v1\.0/sim-trade/{account}/orders/[A-Za-z0-9_-]+/cancel"]
@@ -122,6 +128,11 @@ class FutuSim:
                     error=ReadUnavailable('Futunn read unavailable: '+type(exc).__name__)
                     for key,value in details.items():setattr(error,key,value)
                     raise error from None
+                if status in (400,401,403,404,405,422,429):
+                    error=OrderRejected('Simulated order HTTP rejection: '+str(status))
+                    error.submission_rejected=True
+                    for key,value in details.items():setattr(error,key,value)
+                    raise error from None
                 # Preserve mutation exception semantics: an acknowledgement may
                 # be lost, so the caller must reconcile, never blindly retry.
                 for key,value in details.items():setattr(exc,key,value)
@@ -133,8 +144,9 @@ class FutuSim:
             raise ReadUnavailable("Futunn read payload missing")
         if result.get("ret_code") != 0:
             retry=re.search(r"retry after (\d+)s",str(result.get("ret_msg","")),re.I)
-            error=ReadUnavailable if not is_trade else BrokerError
+            error=ReadUnavailable if not is_trade else OrderRejected
             exc=error(f"Futunn ret_code={result.get('ret_code')}; request unsuccessful",result.get('ret_code'),int(retry.group(1)) if retry else None)
+            if is_trade:exc.submission_rejected=True
             if not is_trade:
                 from .observability import safe_route
                 exc.request_method=method;exc.request_route=safe_route(path)
@@ -204,14 +216,34 @@ class FutuSim:
         return rows
 
     def submit(self, order):
+        self._order_post_started=False
+        try:return self._submit(order)
+        except Exception as exc:
+            if not self._order_post_started:exc.submission_not_sent=True
+            if (getattr(exc,'submission_not_sent',False) or getattr(exc,'submission_rejected',False)) and self.on_definite_rejection:
+                self.on_definite_rejection(order['id'],exc)
+            raise
+
+    def _submit(self, order):
         is_option=order['bucket']=='option'
+        kind=order.get('order_type',1)
+        if kind not in (1,3) or kind==3 and (is_option or not self.settings.stock_market_fallback or not session_now()):
+            raise BrokerError('Market orders require authorized simulated stocks in regular session')
         if is_option and (not self.settings.option_paper_enabled or order['symbol'] not in self.option_codes or order['multiplier']!=100):
             raise BrokerError('Option contract has not passed simulated capacity verification')
         if order["bucket"] not in ("stock","option") or not re.fullmatch(r"US\.[A-Za-z0-9][A-Za-z0-9.-]*",order["symbol"]) or order["side"] not in ("BUY","SELL"):
             raise BrokerError("Only verified US stock simulated limit orders enabled; options need separate verification")
-        body = {"market":self.settings.stock_market,"symbol":order["symbol"][3:],"order_type":1,
+        if kind==3 and order['side']=='BUY':
+            capacity=self.request('GET','/api/v1.0/sim-trade/'+self.settings.stock_account+'/max-buy-sell',
+                {'market':self.settings.stock_market,'symbol':order['symbol'][3:],'order_type':3})['data']
+            try:cash_qty=float(capacity['max_cash_buy_qty_round_lot'])
+            except (KeyError,TypeError,ValueError):raise ReadUnavailable('Market cash capacity unavailable') from None
+            if not __import__('math').isfinite(cash_qty) or cash_qty<order['qty']:raise OrderRejected('Market order exceeds cash-only broker capacity')
+        body = {"market":self.settings.stock_market,"symbol":order["symbol"][3:],"order_type":kind,
                 "order_side":1 if order["side"] == "BUY" else 2,"qty":str(order["qty"]),
-                "price":format(order["price"], ".2f"),"text":"qa:"+order["id"]}
+                "text":"qa:"+order["id"]}
+        if kind==1:body['price']=format(order['price'],'.2f')
+        self._order_post_started=True
         data = self.request("POST","/api/v1.0/sim-trade/"+self.settings.stock_account+"/orders",body=body)["data"]
         if not data.get("order_id"):
             raise BrokerError("Missing order acknowledgement")

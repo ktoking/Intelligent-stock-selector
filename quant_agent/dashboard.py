@@ -80,7 +80,7 @@ def dashboard_summary(store, calendar, snapshot, strategies, paper, tasks):
         attention.append({'id':'missed_entry','tone':'watch','title':execution['session']+' · '+str(len(missed))+' 个策略存在未执行订单',
             'detail':'入场窗口结束；查看各策略的报价阻断原因。服务在线不代表已下单或成交。','target':'runtime'})
     for task in tasks:
-        if task['state'].get('status') in ('failed','blocked') and task['state'].get('asof')==calendar['completed_session']:
+        if task['state'].get('status') in ('failed','blocked','waiting') and task['state'].get('asof')==calendar['completed_session']:
             attention.append({'id':'task:'+task['key'],'tone':'watch','title':task['name']+'待重试','detail':task['state'].get('reason') or '查看任务记录和失败原因。','target':'runtime'})
     return {'session':session,'today_pnl':pnl,'today_return_pct':pnl/base*100 if pnl is not None else None,
             'valuation_note':'尚无成交，当前为初始资金状态。' if no_fills else '当日最新账本估值；包含未实现损益。' if valued else '等待本交易日的新估值。',

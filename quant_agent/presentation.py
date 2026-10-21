@@ -73,7 +73,8 @@ def session_timeline(calendar):
     # weekend/holiday show the next session, not the last completed Friday.
     session = pd.Timestamp(day if cal.is_session(day) else calendar['next_session'])
     opening, closing = cal.session_open(session), cal.session_close(session)
-    milestones = [('preflight', '开盘预检', opening-pd.Timedelta(minutes=5)),
+    milestones = [('premarket', '盘前市场与催化', opening-pd.Timedelta(minutes=10)),
+                  ('preflight', '开盘预检', opening-pd.Timedelta(minutes=5)),
                   ('open', '开盘 · 生成计划', opening),
                   ('monitor', '持续监控', opening+pd.Timedelta(minutes=5)),
                   ('close', '收盘封存', closing),
@@ -125,6 +126,12 @@ def expression_formula(expression):
 
 
 def strategy_logic(spec):
+    if spec.get('execution_timeframe')=='5m':
+        return {'summary':'完整5分钟K线产生信号，15分钟确认；正常交易时段持续评估，非开盘五分钟窗口。',
+            'steps':[{'label':'信号','text':'开盘区间突破 / VWAP回踩 / EMA趋势三类独立候选，仅用已收盘K线。'},
+                {'label':'执行','text':'每60秒检查新完成K线；有效双边报价下提交模拟限价单，最多2只、各20%仓位。'},
+                {'label':'退出','text':'5分钟趋势转弱、-1.5%/+3%或收盘前退出；卖出资金T+1；不重复买同一标的。'},
+                {'label':'验证','text':'独立分钟回测、50bps成本、额外一根延迟、独立核账与同区间比较；没有合格候选不晋升。'}]}
     defaults = {'factor': 'momentum_risk', 'trend': 'slow', 'schedule': 'twice', 'positions': 5,
                 'weight_cap': .3, 'annual_vol_target': .2, 'rank_buffer': 10, 'regime': 'gate',
                 'trail': .15, 'turnover_band': .025, 'cooldown': 2}

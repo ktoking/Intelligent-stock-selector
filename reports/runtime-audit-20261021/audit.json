@@ -1,0 +1,240 @@
+{
+  "session": "2026-10-20",
+  "timezone": "America/New_York session; display Asia/Shanghai",
+  "rotation": {
+    "id": "a31bfb7939621571d0f1c8a7486d6a85b47867d2a557174ea3553dffb7438ad8",
+    "created_at": "2026-10-20T03:46:38.505716+00:00",
+    "target": "96d6fe867e716cec453c19c6a7d265f23093102b2f1322d3dc8f96a2006bae15",
+    "outgoing": [
+      "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327"
+    ],
+    "status": "settling",
+    "screen_artifact": "/Users/kaiyi.wang/.local/share/stock-agent/quant-agent/artifacts/minute-promotion-a6bfa7c112acf3124e4e.json"
+  },
+  "sales": [
+    {
+      "id": "612b4ebdb74f1f8611d5100bd3f60bb7",
+      "symbol": "US.PLTR",
+      "qty": 623,
+      "order_type": 1,
+      "created": "2026-10-20T13:30:56.746948+00:00",
+      "status": "filled",
+      "price": 192.26,
+      "observed": "2026-10-20T13:31:56.170351+00:00",
+      "realized_pnl": -6123.77469999998,
+      "fee": 359.33394,
+      "rotation_order": true
+    },
+    {
+      "id": "7e61bcd80e7434006abfa517fa2c1f64",
+      "symbol": "US.MSFT",
+      "qty": 337,
+      "order_type": 1,
+      "created": "2026-10-20T13:30:58.151795+00:00",
+      "status": "filled",
+      "price": 533.08,
+      "observed": "2026-10-20T13:31:56.175465+00:00",
+      "realized_pnl": -4000.273695000011,
+      "fee": 538.94388,
+      "rotation_order": true
+    },
+    {
+      "id": "000085521855217de765fa7c18626722",
+      "symbol": "US.SONY",
+      "qty": 8516,
+      "order_type": 1,
+      "created": "2026-10-20T13:30:58.570941+00:00",
+      "status": "filled",
+      "price": 25.0,
+      "observed": "2026-10-20T13:31:56.181660+00:00",
+      "realized_pnl": -2196.629440000019,
+      "fee": 638.7,
+      "rotation_order": true
+    },
+    {
+      "id": "cf92f6a74348ae68d80ea6c12102520d",
+      "symbol": "US.XOM",
+      "qty": 1066,
+      "order_type": 1,
+      "created": "2026-10-20T13:30:58.945219+00:00",
+      "status": "filled",
+      "price": 179.94,
+      "observed": "2026-10-20T13:31:56.185421+00:00",
+      "realized_pnl": 2217.0774600000295,
+      "fee": 575.44812,
+      "rotation_order": true
+    },
+    {
+      "id": "d5bd4c4cd93166d9a85dc4a134ed00f1",
+      "symbol": "US.CRM",
+      "qty": 487,
+      "order_type": 1,
+      "created": "2026-10-20T13:31:57.291539+00:00",
+      "status": "filled",
+      "price": 240.86,
+      "observed": "2026-10-20T13:32:56.599727+00:00",
+      "realized_pnl": -5156.862169999993,
+      "fee": 351.89646,
+      "rotation_order": true
+    }
+  ],
+  "session_cash_reads": {
+    "count": 388,
+    "first": "2026-10-20T13:30:54.987722+00:00",
+    "last": "2026-10-20T19:59:13.270879+00:00",
+    "max_gap_seconds": 120.73217
+  },
+  "http_failures": [
+    {
+      "time": "2026-10-20T13:31:11.530996+00:00",
+      "event": "http_failed",
+      "route": "/api/v1.0/quote/find-news",
+      "http_status": 429,
+      "ret_code": null,
+      "error_type": "ReadUnavailable",
+      "request_id": "3d5e77760b7d2d76"
+    },
+    {
+      "time": "2026-10-20T14:02:03.475111+00:00",
+      "event": "http_failed",
+      "route": "/api/v1.0/quote/find-news",
+      "http_status": 429,
+      "ret_code": null,
+      "error_type": "ReadUnavailable",
+      "request_id": "d88b8b9150144c57"
+    },
+    {
+      "time": "2026-10-20T16:01:04.836261+00:00",
+      "event": "http_failed",
+      "route": "/api/v1.0/sim-trade/{account}/cash-info",
+      "http_status": 200,
+      "ret_code": -5,
+      "error_type": "ReadUnavailable",
+      "request_id": "0b834e309d543c1c"
+    },
+    {
+      "time": "2026-10-20T17:03:12.176661+00:00",
+      "event": "http_failed",
+      "route": "/api/v1.0/quote/find-news",
+      "http_status": 429,
+      "ret_code": null,
+      "error_type": "ReadUnavailable",
+      "request_id": "9b90ab6e0d43a1b0"
+    },
+    {
+      "time": "2026-10-20T18:03:13.011886+00:00",
+      "event": "http_failed",
+      "route": "/api/v1.0/quote/find-news",
+      "http_status": 429,
+      "ret_code": null,
+      "error_type": "ReadUnavailable",
+      "request_id": "ed482e6711b18a90"
+    },
+    {
+      "time": "2026-10-20T18:33:23.221049+00:00",
+      "event": "http_failed",
+      "route": "/api/v1.0/quote/find-news",
+      "http_status": 429,
+      "ret_code": null,
+      "error_type": "ReadUnavailable",
+      "request_id": "9f53cf53db72e8d1"
+    },
+    {
+      "time": "2026-10-20T19:04:13.439431+00:00",
+      "event": "http_failed",
+      "route": "/api/v1.0/quote/find-news",
+      "http_status": 429,
+      "ret_code": null,
+      "error_type": "ReadUnavailable",
+      "request_id": "b4a04136e9317f11"
+    },
+    {
+      "time": "2026-10-20T19:04:13.955357+00:00",
+      "event": "http_failed",
+      "route": "/api/v1.0/quote/find-news",
+      "http_status": 429,
+      "ret_code": null,
+      "error_type": "ReadUnavailable",
+      "request_id": "b7aee238562660fa"
+    },
+    {
+      "time": "2026-10-20T19:04:14.709691+00:00",
+      "event": "http_failed",
+      "route": "/api/v1.0/quote/find-news",
+      "http_status": 429,
+      "ret_code": null,
+      "error_type": "ReadUnavailable",
+      "request_id": "5b607cefa28ff324"
+    }
+  ],
+  "event_counts": {
+    "champion_rotation_status": 4,
+    "component_recovered": 20,
+    "fill": 5,
+    "minute_observation_failed": 9,
+    "minute_observed": 77,
+    "news_refreshed": 13,
+    "option_execution_status": 4,
+    "price_anomaly": 149,
+    "reserved": 5,
+    "shadow_window_missed": 10,
+    "strategy_quote_deferred": 50,
+    "supervisor_deferred": 1,
+    "universe_scanned": 65
+  },
+  "session_service_restart_logs": 0,
+  "original_review_failure_checkpoints": 325,
+  "root_cause": "Review checkpoint version included changing health/observation timestamps; changing input bypassed persisted backoff.",
+  "historical_cli_failure_detail": "Only cli_exit/exit_code=1 was stored; exact upstream cause not established. Current login and real requests succeed.",
+  "fixes": [
+    "Freeze review evidence by dataset and engine; stable checkpoint retry",
+    "Cache completed minute research during model retries",
+    "Preserve StepDeferred deadline and show waiting rather than new failure",
+    "Schedule retries using current tasks, not superseded checkpoints",
+    "Preserve settlement reason and show Beijing deadline",
+    "Count nonzero broker positions; retain raw row count separately",
+    "Classify known CLI failures and store stderr fingerprint only"
+  ],
+  "remaining_limitations": [
+    "Account target is continuous-paper ORB experiment, not proved superior to the daily incumbent on a common window",
+    "Old daily execution revisions AZZ/DELL remain fenced",
+    "Intraday minute observations stop at 19:55 UTC; final 20:00 bar is covered by post-close historical collection"
+  ],
+  "test_gate": "271 passed; settlement display regression also passed",
+  "after_repair": {
+    "observed_at": "2026-10-21T02:26:01.633463+00:00",
+    "research_pending": false,
+    "daily_completed": true,
+    "paused": false,
+    "health": {
+      "execution_status": "rotating",
+      "mode": "startup_reconcile",
+      "status": "ok",
+      "time": "2026-10-21T02:25:47.248295+00:00"
+    },
+    "actual_position_count": 0,
+    "raw_broker_position_rows": 5,
+    "rotation_status": "settling",
+    "rotation_reason": "旧持仓已退出，等待T+1交收至 2026-10-21 21:30 北京时间；新策略尚未取得买入权限",
+    "tasks": {
+      "refresh": "completed",
+      "scan": "completed",
+      "news": "completed",
+      "discovery": "completed",
+      "backtest": "completed",
+      "review": "completed",
+      "evolution": "completed",
+      "factor_validation": "completed",
+      "promotion": "completed",
+      "minute_download": "completed",
+      "minute_backtest": "completed",
+      "minute_factor_proposal": "completed",
+      "minute_factor_validation": "completed"
+    },
+    "ai_runtime": {
+      "model": "gpt-6.1-sol",
+      "observed_at": "2026-10-21T02:24:34.803661+00:00",
+      "reasoning_effort": "high"
+    }
+  }
+}

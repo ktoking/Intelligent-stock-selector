@@ -67,6 +67,8 @@ class Store:
                 db.execute('DROP INDEX IF EXISTS one_paper_executor')
             else:
                 db.execute("CREATE UNIQUE INDEX IF NOT EXISTS one_paper_executor ON strategies((1)) WHERE stage IN ('paper','live_review')")
+            if 'order_type' not in {r[1] for r in db.execute('PRAGMA table_info(orders)')}:
+                db.execute('ALTER TABLE orders ADD COLUMN order_type INTEGER NOT NULL DEFAULT 1')
             for bucket, budget in (("stock", settings.stock_budget), ("option", settings.option_budget)):
                 db.execute("INSERT OR IGNORE INTO balances VALUES (?,?)", (bucket, budget))
             db.execute("INSERT OR IGNORE INTO meta VALUES ('paused','false')")
@@ -123,6 +125,12 @@ class Store:
 
     def pause(self, reason, *, category='manual', recoverable=False, orders=None):
         with self.transaction() as db:
+            paused=json.loads(db.execute("SELECT value FROM meta WHERE key='paused'").fetchone()[0])
+            if category=='risk' and paused:
+                # Preserve the original stop cause and never convert a manual
+                # or integrity pause into an automatically recoverable one.
+                self.set_meta('latest_risk_breach',{'reason':reason,'observed_at':utcnow()},db)
+                return
             self.set_meta("paused", True, db)
             self.set_meta("pause_reason", reason, db)
             self.set_meta('pause_policy',{'category':category,'recoverable':recoverable,'orders':orders or [],'created_at':utcnow()},db)
@@ -183,8 +191,10 @@ class Store:
         return {"cash": db.execute("SELECT cash FROM balances WHERE bucket=?", (bucket,)).fetchone()[0],
                 "positions": {r["symbol"]: dict(r) for r in db.execute("SELECT * FROM positions WHERE bucket=? AND qty>0", (bucket,))}}
 
-    def reserve(self, key, strategy, bucket, symbol, side, qty, price, session, multiplier=1):
+    def reserve(self, key, strategy, bucket, symbol, side, qty, price, session, multiplier=1,order_type=1):
         import math
+        if order_type not in (1,3) or (order_type==3 and (bucket!='stock' or not self.settings.stock_market_fallback)):
+            raise ValueError('Market fallback is authorized only for simulated stocks')
         if bucket not in ("stock", "option") or side not in ("BUY", "SELL"):
             raise ValueError("Cash-only long positions")
         if (type(qty) is not int or qty <= 0 or not math.isfinite(price) or price <= 0
@@ -201,6 +211,7 @@ class Store:
         with self.transaction() as db:
             existing = db.execute("SELECT * FROM orders WHERE id=?", (key,)).fetchone()
             if existing:
+                if existing['order_type']!=order_type:raise ValueError('Idempotency key reused for another order type')
                 if (existing["strategy"], existing["bucket"], existing["symbol"], existing["side"], existing["qty"], existing["price"], existing["session"]) != (strategy,bucket,symbol,side,qty,price,session):
                     raise ValueError("Idempotency key reused for another intent")
                 return False
@@ -215,6 +226,10 @@ class Store:
                 if (not champion or json.loads(champion[0])!=strategy or
                         rotation and json.loads(rotation[0])['status'] not in ('completed','superseded')):
                     raise ValueError('Only the promoted account champion may buy; rotation must finish first')
+            if bucket=='stock' and side=='BUY':
+                from .account_selection import strict,buy_authorized
+                if strict(self) and not buy_authorized(self,strategy):
+                    raise ValueError('Strict unified account admission required')
             record = db.execute("SELECT stage FROM strategies WHERE id=?", (strategy,)).fetchone()
             option_row=db.execute("SELECT value FROM meta WHERE key='option_paper_strategy'").fetchone()
             option_agent=json.loads(option_row[0]) if option_row else {}
@@ -256,8 +271,14 @@ class Store:
                 reserved = sum(r["qty"]-r["filled"] for r in active if r["side"] == "SELL" and r["symbol"] == symbol)
                 if qty > held - reserved:
                     raise ValueError("Uncovered sell/duplicate sell reservation")
-            db.execute("INSERT INTO orders(id,strategy,bucket,symbol,side,qty,price,multiplier,fee,status,created,session) VALUES (?,?,?,?,?,?,?,?,?,'reserved',?,?)",
-                       (key,strategy,bucket,symbol,side,qty,price,multiplier,fee,utcnow(),session))
+            db.execute("INSERT INTO orders(id,strategy,bucket,symbol,side,qty,price,multiplier,fee,status,created,session,order_type) VALUES (?,?,?,?,?,?,?,?,?,'reserved',?,?,?)",
+                       (key,strategy,bucket,symbol,side,qty,price,multiplier,fee,utcnow(),session,order_type))
+            try:
+                from .premarket import opening_context
+                context=opening_context(self,session)
+                if context:self.set_meta('opening_context_order:'+key,context,db)
+            except Exception as exc:
+                self.event('premarket_context_unavailable',{'order':key,'error_type':type(exc).__name__},db)
             self.event("reserved", {"id": key, "symbol": symbol, "side": side, "qty": qty}, db)
         return True
 
@@ -330,6 +351,10 @@ class Store:
             if json.loads(db.execute("SELECT value FROM meta WHERE key='paused'").fetchone()[0]):return False
             if db.execute("SELECT 1 FROM orders WHERE status IN ('unknown','submitting') AND id!=?",(key,)).fetchone():
                 raise ValueError('Unresolved order acknowledgement; do not submit another intent')
+            order=db.execute('SELECT strategy,bucket,side FROM orders WHERE id=?',(key,)).fetchone()
+            if order and order['bucket']=='stock' and order['side']=='BUY':
+                from .account_selection import strict,buy_authorized
+                if strict(self) and not buy_authorized(self,order['strategy']):return False
             return db.execute("UPDATE orders SET status='submitting' WHERE id=? AND status='reserved'", (key,)).rowcount == 1
 
     def submitted(self, key, broker_id):
@@ -339,6 +364,8 @@ class Store:
 
     def unknown(self, key):
         with self.transaction() as db:
+            row=db.execute('SELECT status FROM orders WHERE id=?',(key,)).fetchone()
+            if row and row['status'] not in ('submitting','unknown'):return
             db.execute("UPDATE orders SET status='unknown' WHERE id=? AND status='submitting'", (key,))
             if not json.loads(db.execute("SELECT value FROM meta WHERE key='paused'").fetchone()[0]):
                 reason='Order submission outcome unknown; never retry blindly'
@@ -358,7 +385,7 @@ class Store:
             if status == "filled" and cumulative != row["qty"]:
                 raise ValueError("Incomplete filled order")
             if cumulative and (not math.isfinite(average_price) or average_price <= 0 or
-                               (row["side"] == "BUY" and average_price > row["price"] + 1e-8)):
+                               (row["side"] == "BUY" and row['order_type']==1 and average_price > row["price"] + 1e-8)):
                 raise ValueError("Invalid fill or buy limit violated")
             value = cumulative * average_price * row["multiplier"] if cumulative else 0
             delta, amount = cumulative-row["filled"], value-row["fill_value"]
@@ -397,6 +424,15 @@ class Store:
             if row["status"] in ("filled","cancelled","rejected") and status != row["status"]:
                 raise ValueError("Terminal order changed")
             db.execute("UPDATE orders SET status=?,filled=?,fill_value=? WHERE id=?", (status,cumulative,value,key))
+
+    def submission_failed(self,key,exc):
+        if getattr(exc,'submission_not_sent',False) or getattr(exc,'submission_rejected',False):
+            with self.read() as db:
+                row=db.execute('SELECT status FROM orders WHERE id=?',(key,)).fetchone()
+                if row and row['status']=='rejected':return
+            self.fill(key,0,0,'rejected')
+            self.event('order_definitively_not_accepted',{'id':key,'error_type':type(exc).__name__})
+        else:self.unknown(key)
 
     def snapshot(self):
         return {"created":utcnow(),"paused":self.meta("paused"),"pause_reason":self.meta("pause_reason"),

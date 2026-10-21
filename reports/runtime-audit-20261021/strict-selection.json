@@ -1,0 +1,494 @@
+{
+  "asof": "2026-10-20",
+  "selection_mode": "strict_common_v1",
+  "selector_sha256": "37cc056837fc21718bf06f5b5c4adb1e25da50c89c1e9789a4af47aa3adaa605",
+  "selection_proof": "ae118a55921fb8a75c9d101e34a923f9eb588b9b9b3470af5d2a020dc2be81f0",
+  "cost_bps": 30,
+  "windows": {
+    "retrospective_test": [
+      "2026-05-08",
+      "2026-10-20"
+    ],
+    "train": [
+      "2024-07-19",
+      "2025-11-21"
+    ],
+    "validation": [
+      "2025-11-24",
+      "2026-05-07"
+    ]
+  },
+  "champion": "1acbc4b45b3e0e4ac5bc28033d9d649c3f6b940aee06ae3949f7e1d67a878b96",
+  "confirmation": {
+    "asof": "2026-10-20",
+    "required": 3,
+    "sessions": 0,
+    "leader": "1acbc4b45b3e0e4ac5bc28033d9d649c3f6b940aee06ae3949f7e1d67a878b96",
+    "incumbent": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+    "status": "initial_admission",
+    "lineage": "b7df2650a6f44250746da55ff93b58cdf3037b4eb7d77d7c93bd277b112d8e95"
+  },
+  "ranking": [
+    {
+      "strategy": "1acbc4b45b3e0e4ac5bc28033d9d649c3f6b940aee06ae3949f7e1d67a878b96",
+      "timeframe": "1d",
+      "stage": "shadow",
+      "spec_sha256": "1acbc4b45b3e0e4ac5bc28033d9d649c3f6b940aee06ae3949f7e1d67a878b96",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 15.835582921594504,
+          "max_drawdown_pct": 8.99969016856591,
+          "annualized_vol_pct": 18.679337174091728,
+          "sharpe_zero_rf": 1.8322278082651469,
+          "orders": 118,
+          "cost_dollars": 290.407703734554,
+          "avg_exposure_pct": 44.88945863185707,
+          "trading_days": 114
+        },
+        "train": {
+          "return_pct": 52.11935906423402,
+          "max_drawdown_pct": 7.979818085910351,
+          "annualized_vol_pct": 14.560060352983871,
+          "sharpe_zero_rf": 2.2151343601568505,
+          "orders": 290,
+          "cost_dollars": 786.486814136598,
+          "avg_exposure_pct": 44.486316391719164,
+          "trading_days": 339
+        },
+        "validation": {
+          "return_pct": 13.298977379148557,
+          "max_drawdown_pct": 8.460348737931856,
+          "annualized_vol_pct": 16.322517985926822,
+          "sharpe_zero_rf": 1.7875480864207705,
+          "orders": 122,
+          "cost_dollars": 371.31315102815097,
+          "avg_exposure_pct": 48.82940896973879,
+          "trading_days": 113
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 9.902293374683001,
+          "max_drawdown_pct": 9.13862432068484,
+          "annualized_vol_pct": 16.429698306404603,
+          "sharpe_zero_rf": 1.3633944000739269,
+          "orders": 124,
+          "cost_dollars": 618.6311903917,
+          "avg_exposure_pct": 48.93056115628495,
+          "trading_days": 113
+        },
+        "retrospective_test": {
+          "return_pct": 14.75974447889239,
+          "max_drawdown_pct": 9.092549033602015,
+          "annualized_vol_pct": 18.60408818184287,
+          "sharpe_zero_rf": 1.7278853557903058,
+          "orders": 115,
+          "cost_dollars": 481.46238537076,
+          "avg_exposure_pct": 44.93662088199516,
+          "trading_days": 114
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 12.211440305860455,
+          "max_drawdown_pct": 8.672367420531302,
+          "annualized_vol_pct": 15.356669472880153,
+          "sharpe_zero_rf": 1.7498632029710524,
+          "orders": 149,
+          "cost_dollars": 437.709609868959,
+          "avg_exposure_pct": 51.04691904921403,
+          "trading_days": 113
+        },
+        "retrospective_test": {
+          "return_pct": 11.94674354018359,
+          "max_drawdown_pct": 9.898897763076231,
+          "annualized_vol_pct": 17.829753179890712,
+          "sharpe_zero_rf": 1.4875430653610058,
+          "orders": 157,
+          "cost_dollars": 369.252852432633,
+          "avg_exposure_pct": 48.51260900653484,
+          "trading_days": 114
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true,
+        "independent_ledger": true
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 118,
+          "sessions": 114,
+          "cost_dollars": 290.40770373455405,
+          "final_equity": 11583.55829215945,
+          "final_cash": 10614.53829215945,
+          "return_pct": 15.835582921594504,
+          "max_drawdown_pct": 8.99969016856591
+        },
+        "train": {
+          "orders": 290,
+          "sessions": 339,
+          "cost_dollars": 786.486814136598,
+          "final_equity": 15211.935906423401,
+          "final_cash": 12613.3408952774,
+          "return_pct": 52.11935906423402,
+          "max_drawdown_pct": 7.979818085910351
+        },
+        "validation": {
+          "orders": 122,
+          "sessions": 113,
+          "cost_dollars": 371.3131510281511,
+          "final_equity": 11329.897737914856,
+          "final_cash": 8381.295747128857,
+          "return_pct": 13.298977379148557,
+          "max_drawdown_pct": 8.460348737931856
+        }
+      },
+      "eligible": true,
+      "return_pct": 15.835582921594504,
+      "score": 1.4777150246348683
+    },
+    {
+      "strategy": "c4c98909a6c7d19ef53ca256cabe756ca809f8acc4d2b3a07e38d3ba5628a534",
+      "timeframe": "1d",
+      "stage": "shadow",
+      "spec_sha256": "c4c98909a6c7d19ef53ca256cabe756ca809f8acc4d2b3a07e38d3ba5628a534",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 7.633973516751147,
+          "max_drawdown_pct": 8.88428566798536,
+          "annualized_vol_pct": 13.697004810974853,
+          "sharpe_zero_rf": 1.2550971601912764,
+          "orders": 101,
+          "cost_dollars": 208.717145849883,
+          "avg_exposure_pct": 34.40983607976779,
+          "trading_days": 114
+        },
+        "train": {
+          "return_pct": 37.78585190243271,
+          "max_drawdown_pct": 8.61304441356846,
+          "annualized_vol_pct": 12.729310839930047,
+          "sharpe_zero_rf": 1.9360315659229013,
+          "orders": 288,
+          "cost_dollars": 696.206242391739,
+          "avg_exposure_pct": 38.93903051397037,
+          "trading_days": 339
+        },
+        "validation": {
+          "return_pct": 4.181544870538456,
+          "max_drawdown_pct": 7.180866356869819,
+          "annualized_vol_pct": 11.860996374859877,
+          "sharpe_zero_rf": 0.8292488760496719,
+          "orders": 107,
+          "cost_dollars": 258.634906501158,
+          "avg_exposure_pct": 38.11729487898926,
+          "trading_days": 113
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 2.4976368955968775,
+          "max_drawdown_pct": 7.601398147322669,
+          "annualized_vol_pct": 11.934344917146102,
+          "sharpe_zero_rf": 0.5203056456260845,
+          "orders": 106,
+          "cost_dollars": 427.242944740305,
+          "avg_exposure_pct": 38.26031666932906,
+          "trading_days": 113
+        },
+        "retrospective_test": {
+          "return_pct": 6.044433738851374,
+          "max_drawdown_pct": 9.654406399209602,
+          "annualized_vol_pct": 13.629299921426675,
+          "sharpe_zero_rf": 1.0192364407068337,
+          "orders": 101,
+          "cost_dollars": 346.08704085886,
+          "avg_exposure_pct": 34.545062573603616,
+          "trading_days": 114
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 7.305785576471857,
+          "max_drawdown_pct": 6.8969793907091015,
+          "annualized_vol_pct": 11.231044089793825,
+          "sharpe_zero_rf": 1.4562684386217644,
+          "orders": 127,
+          "cost_dollars": 292.525918305816,
+          "avg_exposure_pct": 37.31694692605216,
+          "trading_days": 113
+        },
+        "retrospective_test": {
+          "return_pct": 8.217694718494851,
+          "max_drawdown_pct": 10.36227523574792,
+          "annualized_vol_pct": 14.491898030255484,
+          "sharpe_zero_rf": 1.2762867311853998,
+          "orders": 134,
+          "cost_dollars": 275.80720684452,
+          "avg_exposure_pct": 35.18507913490453,
+          "trading_days": 114
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true,
+        "independent_ledger": true
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 101,
+          "sessions": 114,
+          "cost_dollars": 208.717145849883,
+          "final_equity": 10763.397351675114,
+          "final_cash": 8491.757351675114,
+          "return_pct": 7.633973516751147,
+          "max_drawdown_pct": 8.88428566798536
+        },
+        "train": {
+          "orders": 288,
+          "sessions": 339,
+          "cost_dollars": 696.2062423917388,
+          "final_equity": 13778.585190243271,
+          "final_cash": 11644.050179097272,
+          "return_pct": 37.78585190243271,
+          "max_drawdown_pct": 8.61304441356846
+        },
+        "validation": {
+          "orders": 107,
+          "sessions": 113,
+          "cost_dollars": 258.634906501158,
+          "final_equity": 10418.154487053846,
+          "final_cash": 8046.429292770846,
+          "return_pct": 4.181544870538456,
+          "max_drawdown_pct": 7.180866356869819
+        }
+      },
+      "eligible": true,
+      "return_pct": 7.633973516751147,
+      "score": 0.47066753893413266
+    },
+    {
+      "strategy": "0a54824ddc8fdb8da16134f6de341e9847ca6c8472cc4ca66495155ba64a69af",
+      "timeframe": "1d",
+      "stage": "shadow",
+      "spec_sha256": "0a54824ddc8fdb8da16134f6de341e9847ca6c8472cc4ca66495155ba64a69af",
+      "stats": {
+        "retrospective_test": {
+          "return_pct": 6.856262631472099,
+          "max_drawdown_pct": 6.789514883027293,
+          "annualized_vol_pct": 15.854126441220364,
+          "sharpe_zero_rf": 1.0033257344809638,
+          "orders": 154,
+          "cost_dollars": 403.13819717679,
+          "avg_exposure_pct": 54.461213108522486,
+          "trading_days": 114
+        },
+        "train": {
+          "return_pct": 84.06058009308113,
+          "max_drawdown_pct": 8.39767663250729,
+          "annualized_vol_pct": 15.53365070713614,
+          "sharpe_zero_rf": 2.9991319244653503,
+          "orders": 353,
+          "cost_dollars": 1147.950686741886,
+          "avg_exposure_pct": 48.70975424661667,
+          "trading_days": 339
+        },
+        "validation": {
+          "return_pct": 13.67553717790142,
+          "max_drawdown_pct": 5.7319354428209675,
+          "annualized_vol_pct": 16.466091635096387,
+          "sharpe_zero_rf": 1.8188405222691448,
+          "orders": 114,
+          "cost_dollars": 329.044340103855,
+          "avg_exposure_pct": 50.46807786074371,
+          "trading_days": 113
+        }
+      },
+      "stress": {
+        "validation": {
+          "return_pct": 11.524481167607448,
+          "max_drawdown_pct": 6.084746276372721,
+          "annualized_vol_pct": 16.600554451752558,
+          "sharpe_zero_rf": 1.5485424781466888,
+          "orders": 114,
+          "cost_dollars": 547.160032463255,
+          "avg_exposure_pct": 50.99507823522988,
+          "trading_days": 113
+        },
+        "retrospective_test": {
+          "return_pct": 5.184700883674265,
+          "max_drawdown_pct": 7.948356166972925,
+          "annualized_vol_pct": 15.91359080122802,
+          "sharpe_zero_rf": 0.7809877349700064,
+          "orders": 156,
+          "cost_dollars": 672.90370383657,
+          "avg_exposure_pct": 55.14738241812207,
+          "trading_days": 114
+        }
+      },
+      "delayed": {
+        "validation": {
+          "return_pct": 12.385751147411206,
+          "max_drawdown_pct": 8.708812775511966,
+          "annualized_vol_pct": 15.68732087342784,
+          "sharpe_zero_rf": 1.7386398375551668,
+          "orders": 158,
+          "cost_dollars": 475.110381276876,
+          "avg_exposure_pct": 49.45208137521539,
+          "trading_days": 113
+        },
+        "retrospective_test": {
+          "return_pct": 4.033334728547189,
+          "max_drawdown_pct": 10.1366471658486,
+          "annualized_vol_pct": 16.41551921491732,
+          "sharpe_zero_rf": 0.6139100483993382,
+          "orders": 176,
+          "cost_dollars": 419.346925706283,
+          "avg_exposure_pct": 52.70476209449618,
+          "trading_days": 114
+        }
+      },
+      "gates": {
+        "test_sample": true,
+        "test_activity": true,
+        "drawdown": true,
+        "validation_and_test_profit": true,
+        "high_cost_profit": true,
+        "delayed_profit": true,
+        "qqq_excess": true,
+        "independent_ledger": true
+      },
+      "independent_ledger": {
+        "retrospective_test": {
+          "orders": 154,
+          "sessions": 114,
+          "cost_dollars": 403.13819717678984,
+          "final_equity": 10685.62626314721,
+          "final_cash": 8073.786263147208,
+          "return_pct": 6.856262631472099,
+          "max_drawdown_pct": 6.789514883027293
+        },
+        "train": {
+          "orders": 353,
+          "sessions": 339,
+          "cost_dollars": 1147.9506867418866,
+          "final_equity": 18406.05800930811,
+          "final_cash": 12156.673062322112,
+          "return_pct": 84.06058009308113,
+          "max_drawdown_pct": 8.39767663250729
+        },
+        "validation": {
+          "orders": 114,
+          "sessions": 113,
+          "cost_dollars": 329.04434010385506,
+          "final_equity": 11367.553717790142,
+          "final_cash": 8202.605588261144,
+          "return_pct": 13.67553717790142,
+          "max_drawdown_pct": 5.7319354428209675
+        }
+      },
+      "eligible": true,
+      "return_pct": 6.856262631472099,
+      "score": 1.0098310040694756
+    }
+  ],
+  "excluded": [
+    {
+      "strategy": "5b3083fb77645cdb6873d09e1e8aad5bcd27211442efb669a7bdd456118d0327",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "39fa42ead8884530d7600e813fd5cbb310df03fca39a8efb11a1530ef3793d2e",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "d059cef220a4761a7eadaf3a670f1e5417b768a91dd61413e3a240b6857c1940",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "b7aa4bd19b6e4f43af54eb3679198898af187c82c9fb82d31dae57842be5ec28",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "11bb4d0f14108b87939a2e77d82939bc0017d25c8d70bd50564443ce6802bff1",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "14895b0396fbb89502569680fde0e9b050593dfa0b273d6b4d9eafb940d369e8",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "9cc1095fc3399aff4c64a66c61dc0d4cc3e1c6d83760680569f4ce201915a1b8",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "fa2e13867667807ce0ffacd83be4786a33fc5660561c497f4675e75c23bc5b2c",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "c75ef8ba2279804d43b55776c8ef1098e0169ddc2a5b0e9c886aecf82ea12e0a",
+      "timeframe": "5m",
+      "reason": "原始历史门槛未通过，实验只保留研究/Shadow"
+    },
+    {
+      "strategy": "f508b0c3d367a6a747a28ac425df873be694d5434dbbc79d238ddbdafaa593fc",
+      "timeframe": "5m",
+      "reason": "原始历史门槛未通过，实验只保留研究/Shadow"
+    },
+    {
+      "strategy": "96d6fe867e716cec453c19c6a7d265f23093102b2f1322d3dc8f96a2006bae15",
+      "timeframe": "5m",
+      "reason": "原始历史门槛未通过，实验只保留研究/Shadow"
+    },
+    {
+      "strategy": "c8297d6a9a39fd7566c94a9a218311f59cbcbc546c28aec7b6f5122ab9d0b2f2",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "9c26dfdd89c8d633379ad170e12edad8332059d3d8397efc0682997ab145f6cf",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "b4f44737d77f4090c81270114f9e0026cda2ce50b12868052f40dcc7f503294e",
+      "timeframe": "1d",
+      "reason": "冻结日线前缀与当前行情不一致，需数据审查或新研究版本"
+    },
+    {
+      "strategy": "d24ad770ec02f78e462bc8ed78eb68734eb2909c8bdaa91473647d11204164ed",
+      "timeframe": "5m",
+      "reason": "原始历史门槛未通过，实验只保留研究/Shadow"
+    }
+  ],
+  "limitation": "统一日期与单边成本、各自冻结标的和规则的历史再比较；分钟原价/日线复权需同价核验。不是新增样本外验证或未来收益保证。",
+  "order_count": 22,
+  "working_orders": 0,
+  "paused": false,
+  "stock_budget": 900000.0,
+  "option_budget": 100000.0,
+  "rotation": {
+    "id": "b60240894e884230ef7490e8081e7be6081d2186fdf1652f5f4109514b98ae3d",
+    "status": "queued",
+    "target": "1acbc4b45b3e0e4ac5bc28033d9d649c3f6b940aee06ae3949f7e1d67a878b96",
+    "selection_proof": "ae118a55921fb8a75c9d101e34a923f9eb588b9b9b3470af5d2a020dc2be81f0"
+  }
+}

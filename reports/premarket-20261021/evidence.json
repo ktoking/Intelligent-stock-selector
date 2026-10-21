@@ -1,0 +1,60 @@
+{
+  "checked_at": "2026-10-21T03:06:09.675285+00:00",
+  "mode": "read_only_preview",
+  "session": "2026-10-21",
+  "snapshot_rows": 10,
+  "headlines": 15,
+  "economic_calendar": {
+    "route": "/api/v1.0/quote/economic-calendar/hot",
+    "business_response_verified": true,
+    "ret_code": 0,
+    "rows": 0,
+    "scope": "hot calendar only; empty does not mean no events"
+  },
+  "ai": {
+    "status": "completed",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+    "observed_at": "2026-10-21T02:56:53.298084+00:00",
+    "input_asof": "2026-10-21T02:56:06.392688+00:00"
+  },
+  "formal_job_completed_by_preview": false,
+  "schedule_2120": {
+    "session": "2026-10-21",
+    "phase": "brief",
+    "opening": "2026-10-21T13:30:00+00:00"
+  },
+  "scheduled_phases": {
+    "initial_beijing": "2026-10-21 21:20",
+    "refresh_beijing": "2026-10-21 21:28"
+  },
+  "execution": {
+    "order_count": 22,
+    "active_orders": 0,
+    "stock_positions": 0,
+    "paused": false,
+    "budgets": [
+      900000.0,
+      100000.0
+    ],
+    "strict_selection_proof_valid": true
+  },
+  "validation": {
+    "regression_tests_passed": 304,
+    "dom_render": "PASS including premarket panel and timeline",
+    "visual_review": "NOT_RUN: native browser automation timed out",
+    "final_checkpoint_tests_passed": 38
+  },
+  "gaps": [
+    "当日热门日历返回空；无法据此确认没有宏观事件",
+    "部分资讯主题读取失败",
+    "尚未核实当前盘前时段的新鲜参考报价；保留各时段缓存标签"
+  ],
+  "limitations": [
+    "QQQ/SPY是ETF代理，不是股指期货。",
+    "快照未提供分时段独立更新时间，时段价格仅作观察，不作为下单报价。",
+    "财报来自动态标的与主题标题，尚非完整财报日历或财报全文。",
+    "经济日历为富途热门日历；空结果不能证明当天没有其他事件。",
+    "盘前资讯辅助观察与后续因子研究；当前策略按冻结、已验证规则执行。"
+  ]
+}

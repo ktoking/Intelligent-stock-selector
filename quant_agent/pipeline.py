@@ -25,6 +25,9 @@ from .dataset import frozen_view
 
 
 def engine_hash(spec=None):
+    if spec and spec.get('execution_timeframe')=='5m':
+        from .intraday import engine_hash as minute_hash
+        return minute_hash()
     files = [Path(engine.__file__),Path(__file__).with_name("features.py"),Path(__file__).parents[1]/"research/daily_factor_lab/core.py"]
     if spec and spec.get('factor_expression'):files.append(Path(__file__).with_name('evolution.py'))
     return sha256(b"".join(p.read_bytes() for p in files)).hexdigest()
@@ -107,6 +110,7 @@ def _evaluate(store):
     # A process can stop between validated and shadow. Resume the validated
     # protocol, never rerun it with changed thresholds or credit past sessions.
     for record in store.strategies(['validated']):
+        if record['spec'].get('execution_timeframe')=='5m':continue
         evidence=record['evidence'];spec=record['spec']
         if (not evidence.get('passed') or len(evidence.get('independent_ledger',{}))!=3
                 or spec.get('research_data_sha256')!=source_panel.metadata['input_sha256']):continue
@@ -122,6 +126,7 @@ def _evaluate(store):
         store.transition(record['id'],'validated','shadow',frozen)
         store.event('validated_checkpoint_recovered',{'strategy':record['id']})
     for record in store.strategies(["proposed","backtested"]):
+        if record['spec'].get('execution_timeframe')=='5m':continue
         key, spec = record["id"],record["spec"]
         panel=frozen_view(source_panel,{'evidence':{'symbols':spec.get('research_symbols',source_panel.symbols)}})
         if spec["engine_sha256"] != engine_hash(spec):

@@ -98,7 +98,7 @@ def refresh(source, output, asof, symbols=None, fetch=signed_get, sleep=time.sle
             except Exception as exc:
                 error_type = type(exc).__name__
                 if attempt < 3:
-                    sleep(min(2**attempt * 2, 8))
+                    sleep(max(16,getattr(exc,'retry_after',None) or 0) if getattr(exc,'ret_code',None)==-11 else min(2**attempt*2,8))
         if batch is None:
             failures.append({"symbol":symbol, "reason":error_type})
             checkpoint_progress()
@@ -113,14 +113,14 @@ def refresh(source, output, asof, symbols=None, fetch=signed_get, sleep=time.sle
         checkpoint_progress()
         if number % 20 == 0:
             print(f"history refresh {number}/{len(selected)}, failed={len(failures)}",flush=True)
-        sleep(.8)
+        sleep(2.)
     types = json.loads((source/"security_types.json").read_text())
-    write_json(output/"universe.json", {**universe, "symbols":selected,
-               "fetched_at_utc":datetime.now(timezone.utc).isoformat()})
-    write_json(output/"security_types.json", {s:types[s] for s in selected})
+    atomic_write(output/"universe.json",json.dumps({**universe, "symbols":selected,
+               "fetched_at_utc":datetime.now(timezone.utc).isoformat()}))
+    atomic_write(output/"security_types.json",json.dumps({s:types[s] for s in selected}))
     report={"status":"complete" if not failures else "incomplete", "asof":asof,
             "source_cache":str(source.resolve()), "success":successes, "failures":failures}
-    write_json(output/"refresh_report.json",report)
+    atomic_write(output/"refresh_report.json",json.dumps(report))
     if failures:
         raise RuntimeError(f"Incomplete refresh: {len(failures)} failures; old cache preserved")
     if "US.QQQ" in selected:

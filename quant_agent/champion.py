@@ -33,14 +33,28 @@ def pending(store):
 
 def valid_record(record):
     e=record['evidence']
+    if e.get('paper_experiment'):
+        return (record['spec'].get('execution_timeframe')=='5m' and e.get('experiment_authorization')=='2026-10-20'
+            and len(e.get('independent_ledger',{}))==3 and all(e['independent_ledger'].values())
+            and e.get('gates',{}).get('test_sample') and e.get('gates',{}).get('test_activity')
+            and engine_hash(record['spec'])==record['spec']['engine_sha256'])
     return (e.get('passed') and set(e.get('gates',{}))==REQUIRED and all(e['gates'].values())
         and len(e.get('independent_ledger',{}))==3 and engine_hash(record['spec'])==record['spec']['engine_sha256'])
 
 
 def screen(store,panel):
     """Replay every contender on identical dates/prices; never compare live P&L to a backtest."""
+    from .account_selection import strict,screen as unified_screen
+    if strict(store):return unified_screen(store,panel)
     policy=store.meta('promotion_policy',{})
-    records=store.strategies(['paper','shadow'])
+    all_records=store.strategies(['paper','shadow'])
+    if store.meta('intraday_enabled',False):
+        return {'status':'minute_comparison_required','reason':'已切换分钟研究；账户候选由分钟检验与同区间比较提供。'}
+    minute_ids={r['id'] for r in all_records if r['spec'].get('execution_timeframe')=='5m'}
+    rotation=pending(store)
+    if store.meta('account_champion') in minute_ids or rotation and rotation['target'] in minute_ids:
+        return {'status':'minute_comparison_required','reason':'分钟策略使用分钟数据及同区间比较；不送入日线回放器。'}
+    records=[r for r in all_records if r['id'] not in minute_ids]
     fresh=[r for r in records if r['spec'].get('research_data_sha256')==panel.metadata['input_sha256'] and valid_record(r)]
     if fresh:
         protocol=json.loads(Path(fresh[-1]['evidence']['protocol']).read_text());windows=protocol['windows']
@@ -114,18 +128,27 @@ def screen(store,panel):
 
 def queue_rotation(store,screen_result,artifact_path):
     """Persist the winner; a later screen cannot hot-swap an unfinished rotation."""
+    from .account_selection import strict,authorized_screen
+    if strict(store) and not authorized_screen(store,screen_result):
+        # Legacy minute research may propose experiments, but has no account authority.
+        return None
     target=screen_result['champion'] or CASH;records={r['id']:r for r in store.strategies()}
     if target!=CASH and not valid_record(records[target]):raise ValueError('Unvalidated champion')
+    if target!=CASH and records[target]['evidence'].get('paper_experiment') and not store.settings.continuous_paper:
+        raise ValueError('Experimental paper promotion is not authorized')
     owners=[r['id'] for r in store.strategies(['paper'])]
     rotation={'id':digest([target,owners,screen_result['data_sha256']]),'target':target,
         'outgoing':[i for i in owners if i!=target],'owners':owners,'status':'queued','created_at':utcnow(),
         'target_spec_sha256':digest(records[target]['spec']) if target!=CASH else None,'data_sha256':screen_result['data_sha256'],
-        'screen_artifact':artifact_path,'reason':'等待正常开盘后撤单及退出被淘汰策略持仓','order_ids':[]}
+        'selection_proof':screen_result.get('selection_proof'),'screen_artifact':artifact_path,'reason':'等待正常开盘后撤单及退出被淘汰策略持仓','order_ids':[]}
     store.set_meta('champion_rotation',rotation);store.event('champion_rotation_queued',rotation)
     return rotation
 
 
-def _save(store,r,status,reason):
+def _save(store,r,status,reason,selection_proof=None):
+    from .account_selection import strict
+    if strict(store) and r.get('selection_proof') and status=='superseded' and selection_proof!=r['selection_proof']:
+        return False  # Legacy single-timeframe research cannot cancel a unified decision.
     changed=(r['status'],r.get('reason'))!=(status,reason)
     r.update(status=status,reason=reason,updated_at=utcnow());store.set_meta('champion_rotation',r)
     if changed:store.event('champion_rotation_status',{'id':r['id'],'target':r['target'],'status':status,'reason':reason})
@@ -145,11 +168,28 @@ def _cancel(store,broker,row):
 def rotation_tick(store,broker,quotes,session):
     r=pending(store)
     if not r:return False
+    from .account_selection import strict,rotation_authorized
+    if strict(store) and not rotation_authorized(store,r):
+        working=[o for o in store.orders(active=True) if o['bucket']=='stock']
+        if working:
+            for order in working:_cancel(store,broker,order)
+            _save(store,r,'blocked','旧接任已撤销，等待既有委托撤销及核对完成；不提交新订单')
+            return True
+        store.set_meta('superseded_rotation:'+r['id'],r)
+        _save(store,r,'superseded','严格统一择优已启用：旧接任未通过统一比较，成交及交收记录保留',selection_proof=r.get('selection_proof'))
+        return True
     if store.meta('paused'):_save(store,r,'blocked','执行暂停，等待核账');return True
     records={a['id']:a for a in store.strategies()};target=records.get(r['target'])
     if r['target']!=CASH and (not target or not valid_record(target) or digest(target['spec'])!=r['target_spec_sha256']):
         _save(store,r,'blocked','候选冻结版本或验证失效；暂停交接并保留记录');return True
-    if not session:_save(store,r,r['status'],'等待正常交易时段；不使用盘前报价清仓');return True
+    if not session:
+        if r['status']=='settling':
+            future=[a['settles'] for a in store.meta('unsettled',[]) if a['bucket']=='stock' and a['settles']>utcnow()]
+            deadline=pd.Timestamp(max(future)).tz_convert('Asia/Shanghai').strftime('%Y-%m-%d %H:%M 北京时间') if future else None
+            reason=('旧持仓已退出，等待T+1交收至 '+deadline+'；新策略尚未取得买入权限' if future else
+                '旧持仓已退出，等待正常交易时段完成交收核对与资金交接')
+        else:reason='等待正常交易时段；不使用盘前报价清仓'
+        _save(store,r,r['status'],reason);return True
     # Cancel all old normal plans, including the retained winner's stale small-budget plan.
     active=store.orders(active=True)
     if any(o['status'] in ('unknown','submitting') for o in active):
@@ -166,30 +206,43 @@ def rotation_tick(store,broker,quotes,session):
             if working:
                 for order in working:
                     if order['status']!='reserved':continue
-                    try:executable_quote(quotes.get(symbol,{}),store.settings)
+                    try:
+                        if order.get('order_type',1)!=3:executable_quote(quotes.get(symbol,{}),store.settings)
                     except QuoteUnavailable:continue
                     if store.claim(order['id']):
                         try:store.submitted(order['id'],broker.submit(order))
-                        except Exception:
-                            store.unknown(order['id']);raise
+                        except Exception as exc:
+                            store.submission_failed(order['id'],exc);raise
                 continue
             attempts=sum(o['strategy']==owner and o['symbol']==symbol and o['id'] in r['order_ids'] for o in store.orders())
-            if attempts>=5:_save(store,r,'blocked','清仓达到5次尝试，需检查报价和成交；禁止新策略买入');continue
-            try:bid,_=executable_quote(quotes.get(symbol,{}),store.settings)
+            retry_key='rotation_retry:'+r['id']+':'+owner+':'+symbol
+            retry=store.meta(retry_key,{'floor':0})
+            if attempts>=retry['floor']+5:
+                if not store.settings.continuous_paper:
+                    _save(store,r,'blocked','清仓达到5次尝试，需检查报价和成交；禁止新策略买入');continue
+                if not retry.get('after'):
+                    retry={**retry,'after':(pd.Timestamp(utcnow())+pd.Timedelta(minutes=5)).isoformat()}
+                    store.set_meta(retry_key,retry)
+                if pd.Timestamp(utcnow())<pd.Timestamp(retry['after']):
+                    _save(store,r,'liquidating',symbol+' 已完成本轮尝试，5分钟后自动重试；先核对既有委托');continue
+                store.set_meta(retry_key,{'floor':attempts})
+                store.event('rotation_retry_reopened',{'symbol':symbol,'confirmed_attempts':attempts})
+            try:
+                from .simulation_policy import stock_price
+                price,kind=stock_price(store,symbol,quotes.get(symbol,{}),'SELL',p.get('mark'),quote_fn=executable_quote)
             except QuoteUnavailable as exc:
                 _save(store,r,'liquidating',symbol+' 清仓等待有效报价：'+str(exc));continue
             key=digest([r['id'],owner,symbol,attempts])[:32]
-            price=math.floor(bid*100)/100
             # Persist intent membership before reserve/submit so restart can recover it.
             if key not in r['order_ids']:
                 r['order_ids'].append(key);store.set_meta('champion_rotation',r)
             store.set_meta('rotation_order:'+key,r['id'])
-            store.reserve(key,owner,'stock',symbol,'SELL',p['qty'],price,session)
+            store.reserve(key,owner,'stock',symbol,'SELL',p['qty'],price,session,order_type=kind)
             if store.claim(key):
                 order=next(o for o in store.orders() if o['id']==key)
                 try:store.submitted(key,broker.submit(order))
-                except Exception:
-                    store.unknown(key);raise
+                except Exception as exc:
+                    store.submission_failed(key,exc);raise
         return True
     if any(o['bucket']=='stock' for o in store.orders(active=True)):
         _save(store,r,'liquidating','退出委托等待最终回执');return True
@@ -201,6 +254,8 @@ def rotation_tick(store,broker,quotes,session):
 
 
 def _complete(store,r,target):
+    from .account_selection import strict,rotation_authorized
+    if strict(store) and not rotation_authorized(store,r):raise ValueError('Strict account admission proof invalid')
     destination=target['id'] if target else TREASURY
     stamp=utcnow();alloc=store.meta('paper_allocations',{});initial=store.meta('strategy_initial_capital',{})
     policy=store.meta('promotion_policy');old_queue=store.meta('promotion_queue',[])

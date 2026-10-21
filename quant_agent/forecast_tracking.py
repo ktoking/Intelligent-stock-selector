@@ -115,6 +115,7 @@ def _update_tracking(store, calendar):
     cal = us_calendar()
     input_cache = {}
     for record in store.strategies():
+        if record['spec'].get('execution_timeframe')=='5m':continue
         ident = digest({'strategy': record['id'], 'origin': calendar['completed_session'], 'model': MODEL})
         path = store.home/'artifacts'/('forecast-record-'+ident+'.json')
         if path.exists():

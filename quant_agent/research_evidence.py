@@ -6,8 +6,29 @@ from .promotion import score
 from .presentation import expression_formula
 
 
+def daily_cycle_version(store):
+    """Daily checkpoints do not depend on the minute dataset or engine."""
+    from .config import digest
+    from .pipeline import engine_hash
+    return digest(['coexisting-daily-research-v1',str(store.meta('current_data_dir',store.settings.data_dir)),
+        store.settings.daily_research,store.settings.evolution_enabled,engine_hash(),
+        engine_hash({'factor_expression':True})])
+
+
 def research_pending(store,asof):
     enabled=store.settings.daily_research or store.settings.evolution_enabled
+    from .account_selection import strict,version as selector_version
+    if enabled and strict(store):
+        screen=store.meta('promotion_screen',{})
+        if screen.get('asof')!=asof or screen.get('selection_mode')!='strict_common_v1' or screen.get('policy')!=store.meta('promotion_policy') or screen.get('selector_sha256')!=selector_version():return True
+    if enabled and store.meta('intraday_enabled',False) and store.meta('daily_research_cycle:'+asof)!=daily_cycle_version(store):
+        return True
+    if enabled and store.settings.evolution_enabled and store.meta('intraday_enabled',False):
+        from .intraday import engine_hash
+        from .config import digest
+        report=store.meta('intraday_research') or {}
+        version=digest([report.get('data_sha256'),engine_hash(),'minute-factor-v1'])
+        if report.get('asof')!=asof or store.meta('minute_factor_cycle:'+asof)!=version:return True
     return enabled and store.meta('research_cycle_completed:'+asof)!=store.meta('current_data_dir',store.settings.data_dir)
 
 
@@ -63,14 +84,26 @@ def research_summary(store,asof):
             'initial_capital':initial.get(record['id']),'retirement':e.get('retirement')})
     steps=[]
     cycle_matches=store.meta('research_cycle_completed:'+asof)==str(directory)
-    for key,label in [('review','每日复盘'),('discovery','因子组合假设'),('evolution','新表达式因子'),('backtest','回测与独立核账'),('promotion','晋升比较')]:
+    stages=[('review','每日复盘'),('discovery','因子组合假设'),('evolution','新表达式因子'),('backtest','回测与独立核账'),('promotion','晋升比较')]
+    if store.meta('intraday_enabled',False):stages=[
+        ('discovery','日线组合假设'),('backtest','日线回测与核账'),('evolution','Codex新日线因子'),
+        ('factor_validation','日线因子独立验证'),('minute_download','分钟数据'),('minute_backtest','分钟回测与核账'),
+        ('minute_research','分钟候选筛选'),('review','双周期每日复盘'),('minute_factor_proposal','Codex新分钟因子'),
+        ('minute_factor_validation','分钟因子独立验证'),('minute_promotion','分钟研究候选'),('promotion','日K/分钟K统一账户择优')]
+    for key,label in stages:
         job=store.meta('task:'+key) or {}
         current=job.get('asof')==asof and (job['data_dir']==str(directory) if job.get('data_dir') else cycle_matches)
+        if key.startswith('minute_'):
+            from .intraday import engine_hash as minute_hash
+            minute=store.meta('intraday_research') or {}
+            current=job.get('asof')==asof and minute.get('asof')==asof and minute.get('engine_sha256')==minute_hash()
         steps.append({'key':key,'label':label,'status':job.get('status') if current else 'pending',
             'finished_at':job.get('finished_at') if current else None,
             'last_asof':job.get('asof'),'reason':job.get('reason') or ('当前数据版本尚未完成此步骤；旧记录不作为新版本完成证据。' if not current and job.get('asof')==asof else '本日尚未执行；上次记录 '+job['asof'] if not current and job.get('asof') else None)})
     latest=[r for r in rows if r['current_version']]
     return {'asof':asof,'data_sha256':data_hash,'pending':research_pending(store,asof),'steps':steps,'artifact_errors':artifact_errors,
+        'coexisting_timeframes':bool(store.meta('intraday_enabled',False)),
+        'daily_cycle_completed':store.meta('daily_research_cycle:'+asof)==daily_cycle_version(store),
         'trials':rows,'factor_count':sum(r['is_factor'] for r in rows),'current_trials':len(latest),
         'current_factors':sum(r['is_factor'] for r in latest),'current_rejected':sum(r['stage']=='rejected' for r in latest),
         'queued':len([r for r in queue if r['status'] in ('ready','waiting')]),'promotion_policy':store.meta('promotion_policy',{}),
@@ -93,10 +126,17 @@ def append_research_review(store,asof):
             lines.append(f"回顾收益 {trial['historical_return_pct']:.2f}%；最大回撤 {trial['max_drawdown_pct']:.2f}%；独立核账{'已通过' if trial['ledger_audited'] else '未验证'}。")
         if trial['failed_gates']:lines.append('淘汰门槛：'+', '.join(trial['failed_gates']))
         if trial['promotion']:
-            q=trial['promotion'];lines.append(f"同区间评分 {q['candidate_score']:.3f}，原策略 {q['incumbent_score']:.3f}；"+str(q.get('reason') or '等待空仓资金交接'))
+            q=trial['promotion']
+            if 'candidate_return_pct' in q:
+                value=q['candidate_return_pct']
+                lines.append(('统一比较回顾收益 '+f'{value:.2f}%' if value is not None else '现金候选')+'；'+str(q.get('reason') or '等待资金交接'))
+            else:lines.append(f"同区间评分 {q['candidate_score']:.3f}，原策略 {q['incumbent_score']:.3f}；"+str(q.get('reason') or '等待空仓资金交接'))
         lines.append('实验材料：http://127.0.0.1:8791'+trial['evidence_url'])
         if trial['code_url']:lines.append('独立因子代码：http://127.0.0.1:8791'+trial['code_url'])
         lines.append('')
+    if store.meta('promotion_policy',{}).get('selection_mode')=='strict_common_v1':
+        c=summary['screen'].get('confirmation',{})
+        lines.append('日K/分钟K统一收益择优：挑战者连续领先 '+str(c.get('sessions',0))+' / '+str(c.get('required',3))+' 个完整交易日；亏损实验仅研究/Shadow。当前比较区间 '+ ' 至 '.join(summary['screen'].get('windows',{}).get('retrospective_test',[]))+'；单边成本 '+str(summary['screen'].get('cost_bps'))+'bps。')
     if store.meta('promotion_policy',{}).get('mode')=='account_champion':
         lines.append(f'账户优胜策略模式：候选并行观察，通过统一区间检验后收益择优；撤旧委托、退出淘汰持仓并交收后交接。股票授权本金 {store.settings.stock_budget:,.2f} 美元，期权预留 {store.settings.option_budget:,.2f} 美元。资金流不计盈利，历史选优不是未来保证。')
     else:lines.append('自动晋升只替换空仓、无未完成订单且资金已交收的槽位；保留原始规则和历史记录，股票总额度10000美元、期权1000美元独立。模拟等待期按用户授权豁免；历史筛选及因果检查不等于未来Alpha验证。')

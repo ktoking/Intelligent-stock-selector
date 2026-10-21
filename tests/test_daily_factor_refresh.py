@@ -30,3 +30,16 @@ def test_market_calendar_requires_complete_us_close():
     assert latest_completed_session("2026-09-23T19:59:00Z")=="2026-09-22"
     assert latest_completed_session("2026-09-23T20:01:00Z")=="2026-09-23"
     assert latest_completed_session("2026-07-03T23:00:00Z")=="2026-07-02"
+
+
+def test_refresh_updates_its_existing_progress_manifest_atomically(tmp_path,monkeypatch):
+    import json
+    from types import SimpleNamespace
+    from research.daily_factor_lab import refresh as module
+    source=tmp_path/'source';source.mkdir();output=tmp_path/'new'
+    (source/'universe.json').write_text(json.dumps({'symbols':['US.QQQ']}))
+    (source/'security_types.json').write_text(json.dumps({'US.QQQ':'ETF'}))
+    pd.DataFrame(rows()[:1]).to_pickle(source/'QQQ.pkl')
+    monkeypatch.setattr(module,'load_panel',lambda *a,**k:SimpleNamespace(metadata={'input_sha256':'fixture'}))
+    value=module.refresh(source,output,'2026-09-22',fetch=lambda *a:{'ret_code':0,'data':{'kline_list':rows()}},sleep=lambda _:None)
+    assert value['status']=='complete' and json.loads((output/'refresh_report.json').read_text())['status']=='complete'

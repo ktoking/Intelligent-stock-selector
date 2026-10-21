@@ -1,0 +1,52 @@
+{
+  "history": [
+    {
+      "name": "残差动量 · 账户优胜策略",
+      "timeframe": "1d",
+      "window": [
+        "2026-05-04",
+        "2026-10-12"
+      ],
+      "strategy_return_pct": 23.211900045709832,
+      "benchmark_return_pct": 9.959589114171186,
+      "strategy_points": 112,
+      "benchmark_points": 112
+    },
+    {
+      "name": "opening range 5m · 观察 10/20 · 96d6",
+      "timeframe": "5m",
+      "window": [
+        "2026-09-21",
+        "2026-10-19"
+      ],
+      "strategy_return_pct": -7.031800028249946,
+      "benchmark_return_pct": -1.9005199631812353,
+      "strategy_points": 1638,
+      "benchmark_points": 1638
+    },
+    {
+      "name": "残差动量 · 模拟 A · 归档",
+      "timeframe": "1d",
+      "window": [
+        "2026-05-04",
+        "2026-10-12"
+      ],
+      "strategy_return_pct": 19.09079736384993,
+      "benchmark_return_pct": 9.959589114171186,
+      "strategy_points": 112,
+      "benchmark_points": 112
+    }
+  ],
+  "frozen_charts_and_engine_unchanged": true,
+  "orders_and_positions_unchanged": true,
+  "unit_tests": "23 passed",
+  "visual_browser_review": "unavailable: browser connector absent; native app observation timed out",
+  "dom_smoke": {
+    "render": "ok",
+    "daily_and_minute_version_switch": true,
+    "archived_strategy_access": true,
+    "selection_survives_polling": true,
+    "daily_and_minute_qqq_lines": true,
+    "forecast_unavailable_reason_verified": true
+  }
+}

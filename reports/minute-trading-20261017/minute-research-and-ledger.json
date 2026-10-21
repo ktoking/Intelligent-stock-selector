@@ -1,0 +1,349 @@
+{
+  "observed_at": "2026-10-17T01:25:47.781700+00:00",
+  "source": "Futunn AppKey REST history-kline; ktype=6; autype=0; regular session; close timestamps",
+  "timeframe": "5m",
+  "symbols": [
+    "US.QQQ",
+    "US.SPY",
+    "US.NVDA",
+    "US.CRM",
+    "US.MSFT",
+    "US.PLTR",
+    "US.SONY",
+    "US.XOM"
+  ],
+  "common_sessions": 84,
+  "coverage": {
+    "US.CRM": {
+      "complete_sessions": 84,
+      "incomplete_sessions": [],
+      "raw_bars": 6552
+    },
+    "US.MSFT": {
+      "complete_sessions": 84,
+      "incomplete_sessions": [],
+      "raw_bars": 6552
+    },
+    "US.NVDA": {
+      "complete_sessions": 84,
+      "incomplete_sessions": [],
+      "raw_bars": 6552
+    },
+    "US.PLTR": {
+      "complete_sessions": 84,
+      "incomplete_sessions": [],
+      "raw_bars": 6552
+    },
+    "US.QQQ": {
+      "complete_sessions": 84,
+      "incomplete_sessions": [],
+      "raw_bars": 6552
+    },
+    "US.SONY": {
+      "complete_sessions": 84,
+      "incomplete_sessions": [],
+      "raw_bars": 6552
+    },
+    "US.SPY": {
+      "complete_sessions": 84,
+      "incomplete_sessions": [],
+      "raw_bars": 6552
+    },
+    "US.XOM": {
+      "complete_sessions": 84,
+      "incomplete_sessions": [],
+      "raw_bars": 6552
+    }
+  },
+  "windows": {
+    "retrospective_test": [
+      "2026-09-18",
+      "2026-10-16"
+    ],
+    "train": [
+      "2026-06-18",
+      "2026-08-18"
+    ],
+    "validation": [
+      "2026-08-19",
+      "2026-09-17"
+    ]
+  },
+  "cost_bps": 30,
+  "data_sha256": "660da036737a9f3c6fef862d9b1a57d98e37de125fd9e699d08b4a7f1eb679ad",
+  "engine_sha256": "651f96087b9f768fabeb3a0d4bf03b4be55ba34d5e837249fe6de4a4ea81d2f3",
+  "trial_metrics": [
+    {
+      "benchmark": {
+        "return_pct": -1.8477820625182662,
+        "source": "Futunn unadjusted QQQ minute bars; buy and hold same test dates"
+      },
+      "delayed": {
+        "retrospective_test": {
+          "max_drawdown_pct": 7.106760731999806,
+          "orders": 136,
+          "return_pct": -7.106760731999806,
+          "sharpe": 0.0,
+          "trading_days": 21
+        },
+        "validation": {
+          "max_drawdown_pct": 7.128453938068279,
+          "orders": 128,
+          "return_pct": -6.75093820799979,
+          "sharpe": 0.0,
+          "trading_days": 21
+        }
+      },
+      "eligible": false,
+      "failed_gates": [
+        "validation_and_test_profit",
+        "high_cost_profit",
+        "delayed_profit",
+        "qqq_excess"
+      ],
+      "family": "opening_range",
+      "gates": {
+        "delayed_profit": false,
+        "drawdown": true,
+        "high_cost_profit": false,
+        "qqq_excess": false,
+        "test_activity": true,
+        "test_sample": true,
+        "validation_and_test_profit": false
+      },
+      "independent_ledger": {
+        "retrospective_test": true,
+        "train": true,
+        "validation": true
+      },
+      "stats": {
+        "retrospective_test": {
+          "max_drawdown_pct": 7.385848003249917,
+          "orders": 138,
+          "return_pct": -7.385848003249917,
+          "sharpe": 0.0,
+          "trading_days": 21
+        },
+        "train": {
+          "max_drawdown_pct": 13.008766002999806,
+          "orders": 274,
+          "return_pct": -13.008766002999806,
+          "sharpe": 0.0,
+          "trading_days": 42
+        },
+        "validation": {
+          "max_drawdown_pct": 7.199535842238225,
+          "orders": 132,
+          "return_pct": -6.794903731999913,
+          "sharpe": 0.0,
+          "trading_days": 21
+        }
+      },
+      "stress": {
+        "retrospective_test": {
+          "max_drawdown_pct": 11.929759338749868,
+          "orders": 138,
+          "return_pct": -11.929759338749868,
+          "sharpe": 0.0,
+          "trading_days": 21
+        },
+        "validation": {
+          "max_drawdown_pct": 11.446678293648493,
+          "orders": 132,
+          "return_pct": -11.1457010499999,
+          "sharpe": 0.0,
+          "trading_days": 21
+        }
+      },
+      "timeframe": "5m"
+    },
+    {
+      "benchmark": {
+        "return_pct": -1.8477820625182662,
+        "source": "Futunn unadjusted QQQ minute bars; buy and hold same test dates"
+      },
+      "delayed": {
+        "retrospective_test": {
+          "max_drawdown_pct": 8.759938212576879,
+          "orders": 176,
+          "return_pct": -8.731540850999886,
+          "sharpe": 0.0,
+          "trading_days": 21
+        },
+        "validation": {
+          "max_drawdown_pct": 9.363845638379864,
+          "orders": 214,
+          "return_pct": -9.338846638379849,
+          "sharpe": 0.0,
+          "trading_days": 21
+        }
+      },
+      "eligible": false,
+      "failed_gates": [
+        "drawdown",
+        "validation_and_test_profit",
+        "high_cost_profit",
+        "delayed_profit",
+        "qqq_excess"
+      ],
+      "family": "vwap_pullback",
+      "gates": {
+        "delayed_profit": false,
+        "drawdown": false,
+        "high_cost_profit": false,
+        "qqq_excess": false,
+        "test_activity": true,
+        "test_sample": true,
+        "validation_and_test_profit": false
+      },
+      "independent_ledger": {
+        "retrospective_test": true,
+        "train": true,
+        "validation": true
+      },
+      "stats": {
+        "retrospective_test": {
+          "max_drawdown_pct": 8.599028364237327,
+          "orders": 182,
+          "return_pct": -8.519179299999834,
+          "sharpe": 0.0,
+          "trading_days": 21
+        },
+        "train": {
+          "max_drawdown_pct": 17.821504162586997,
+          "orders": 380,
+          "return_pct": -17.732958065999604,
+          "sharpe": 0.0,
+          "trading_days": 42
+        },
+        "validation": {
+          "max_drawdown_pct": 9.59882101819165,
+          "orders": 216,
+          "return_pct": -9.588531555999925,
+          "sharpe": 0.0,
+          "trading_days": 21
+        }
+      },
+      "stress": {
+        "retrospective_test": {
+          "max_drawdown_pct": 14.195499679999923,
+          "orders": 180,
+          "return_pct": -14.195499679999923,
+          "sharpe": 0.0,
+          "trading_days": 21
+        },
+        "validation": {
+          "max_drawdown_pct": 16.043601329999802,
+          "orders": 216,
+          "return_pct": -16.043601329999802,
+          "sharpe": 0.0,
+          "trading_days": 21
+        }
+      },
+      "timeframe": "5m"
+    },
+    {
+      "benchmark": {
+        "return_pct": -1.8477820625182662,
+        "source": "Futunn unadjusted QQQ minute bars; buy and hold same test dates"
+      },
+      "delayed": {
+        "retrospective_test": {
+          "max_drawdown_pct": 8.209574901877502,
+          "orders": 174,
+          "return_pct": -8.20937770299983,
+          "sharpe": 0.0,
+          "trading_days": 21
+        },
+        "validation": {
+          "max_drawdown_pct": 9.273660721769916,
+          "orders": 198,
+          "return_pct": -9.273660721769916,
+          "sharpe": 0.0,
+          "trading_days": 21
+        }
+      },
+      "eligible": false,
+      "failed_gates": [
+        "drawdown",
+        "validation_and_test_profit",
+        "high_cost_profit",
+        "delayed_profit",
+        "qqq_excess"
+      ],
+      "family": "trend_follow",
+      "gates": {
+        "delayed_profit": false,
+        "drawdown": false,
+        "high_cost_profit": false,
+        "qqq_excess": false,
+        "test_activity": true,
+        "test_sample": true,
+        "validation_and_test_profit": false
+      },
+      "independent_ledger": {
+        "retrospective_test": true,
+        "train": true,
+        "validation": true
+      },
+      "stats": {
+        "retrospective_test": {
+          "max_drawdown_pct": 8.489795471359773,
+          "orders": 180,
+          "return_pct": -8.489795471359773,
+          "sharpe": 0.0,
+          "trading_days": 21
+        },
+        "train": {
+          "max_drawdown_pct": 19.17763500899956,
+          "orders": 410,
+          "return_pct": -19.17763500899956,
+          "sharpe": 0.0,
+          "trading_days": 42
+        },
+        "validation": {
+          "max_drawdown_pct": 9.498096089109854,
+          "orders": 200,
+          "return_pct": -9.485518872999831,
+          "sharpe": 0.0,
+          "trading_days": 21
+        }
+      },
+      "stress": {
+        "retrospective_test": {
+          "max_drawdown_pct": 14.178058935599857,
+          "orders": 180,
+          "return_pct": -14.178058935599857,
+          "sharpe": 0.0,
+          "trading_days": 21
+        },
+        "validation": {
+          "max_drawdown_pct": 15.410161429999803,
+          "orders": 198,
+          "return_pct": -15.410161429999803,
+          "sharpe": 0.0,
+          "trading_days": 21
+        }
+      },
+      "timeframe": "5m"
+    }
+  ],
+  "qualified": 0,
+  "positions_reconciled": true,
+  "order_counts": 17,
+  "active_orders": 0,
+  "pause_preserved": true,
+  "pause_policy": {
+    "category": "risk",
+    "classification_migrated": true,
+    "created_at": "2026-10-17T01:10:02.060191+00:00",
+    "orders": [],
+    "recoverable": false
+  },
+  "rotation": {
+    "status": "blocked",
+    "target": "__cash__",
+    "reason": "执行暂停，等待核账"
+  },
+  "external_orders_sent_by_this_task": 0
+}

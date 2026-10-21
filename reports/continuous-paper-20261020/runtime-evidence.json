@@ -1,0 +1,242 @@
+{
+  "observed_at": "2026-10-20T03:56:00.357265+00:00",
+  "health": {
+    "execution_status": "rotating",
+    "mode": "startup_reconcile",
+    "status": "ok",
+    "time": "2026-10-20T03:55:32.380262+00:00"
+  },
+  "paused": false,
+  "continuous_paper": true,
+  "stock_market_fallback": true,
+  "orders_count": 17,
+  "orders_unchanged": true,
+  "positions_qty_and_basis_unchanged": true,
+  "budget_hash_unchanged": true,
+  "risk_peaks_not_reset": true,
+  "research_asof": "2026-10-19",
+  "research_pending": false,
+  "daily_completed": true,
+  "engine_matches": true,
+  "factor": {
+    "artifact": "/Users/kaiyi.wang/.local/share/stock-agent/quant-agent/artifacts/minute-factor-6d927365354c5a7c700e.json",
+    "asof": "2026-10-19",
+    "base_family": "relative_trend",
+    "causal_checks": {
+      "arbitrary_code_execution": false,
+      "finite_coverage": 0.9615384615384616,
+      "future_perturbation": true,
+      "prefix_invariance": true
+    },
+    "code_path": "/Users/kaiyi.wang/PycharmProjects/stock-agent/research/evolved_minute_factors/factor_6d927365354c5a7c.py",
+    "created_at": "2026-10-20T03:49:04.446230+00:00",
+    "data_sha256": "d1db21e966b9e42f116af9d767df440af4198bf81ff981ff5784212f050f8eff",
+    "engine_sha256": "9f5c0c0578ecda6fc6a7e49d60f01c1110d28116852ee1297bcc4cc050162020",
+    "expression": {
+      "nodes": [
+        {
+          "a": null,
+          "b": null,
+          "field": "returns",
+          "op": "field",
+          "window": null,
+          "x": null
+        },
+        {
+          "a": null,
+          "b": null,
+          "field": null,
+          "op": "mean",
+          "window": 3,
+          "x": 0
+        },
+        {
+          "a": null,
+          "b": null,
+          "field": null,
+          "op": "abs",
+          "window": null,
+          "x": 0
+        },
+        {
+          "a": null,
+          "b": null,
+          "field": null,
+          "op": "mean",
+          "window": 3,
+          "x": 2
+        },
+        {
+          "a": 1,
+          "b": 3,
+          "field": null,
+          "op": "div",
+          "window": null,
+          "x": null
+        },
+        {
+          "a": null,
+          "b": null,
+          "field": "close_pressure",
+          "op": "field",
+          "window": null,
+          "x": null
+        },
+        {
+          "a": null,
+          "b": null,
+          "field": null,
+          "op": "mean",
+          "window": 3,
+          "x": 5
+        },
+        {
+          "a": 4,
+          "b": 6,
+          "field": null,
+          "op": "sub",
+          "window": null,
+          "x": null
+        }
+      ],
+      "root": 7
+    },
+    "failed_gates": [
+      "drawdown",
+      "validation_and_test_profit",
+      "high_cost_profit",
+      "delayed_profit",
+      "qqq_excess",
+      "incremental_value"
+    ],
+    "falsification": "固定3根窗口及零阈值，不搜索参数。全部窗口严格向过去、每日重置，仅使用完整正常交易时段5分钟K；不足3根、绝对收益均值为零或输入无效时不评分，不补零。基线15分钟确认仅使用已完成的15分钟区间。保持仓位、退出、T+1及其他交易风险规则不变，对relative_trend基线与加入因子的版本做配对回顾比较，并报告仅用收益路径效率的消融结果。原42/21/21日分段全部已看过，不能作为未见样本。分别核算30bps、50bps成本，以及总滞后1根和2根5分钟K，独立核对时间戳、成交、费用、现金和收益。若扣费收益未改善、最大回撤扩大或QQQ超额未改善，则不支持相应增量价值；任一验证段或回顾测试段在标准成本、压力成本或额外延迟下亏损，须明确记录相应盈利门槛失败。报告交易次数和收益集中度；无交易不能视为通过。未来证据另行登记。",
+    "hypothesis": "历史三个基线均未通过盈利、成本、延迟及QQQ超额检验，提示短暂上涨可能不足以覆盖交易摩擦。新假设：在完整15分钟向上且价格位于当日VWAP上方时，最近3根完整5分钟K的上涨路径越少反复、收盘越接近各根高点，随后走势可能越有持续性。分数=mean(returns,3)/mean(abs(returns),3)-mean(close_pressure,3)，前项是收益路径效率代理，后项惩罚上影回落；正值表示上涨效率超过收盘回落压力，并具有连续区分度。仅在固定基线成立且分数>0时允许入场。该机制不能解释为真实资金流，旧日线收盘压力结果也不构成本分钟因子的证据。输入未提供截至2026-10-19的具体当天行情或新闻，因此不推断当日市场状态；本候选仅供回顾研究，尚无有效性或盈利证据。",
+    "name": "return_path_close_quality",
+    "source_sha256": "64ff1ae6ed6c0261df8aad49bd2ce70e4f7262626b509cefc8014f40f3e3c9ef",
+    "stats": {
+      "retrospective_test": {
+        "max_drawdown_pct": 9.082679706999864,
+        "orders": 182,
+        "return_pct": -9.082679706999864,
+        "sharpe": 0.0,
+        "trading_days": 21
+      },
+      "train": {
+        "max_drawdown_pct": 16.76487412999975,
+        "orders": 364,
+        "return_pct": -16.364979529999747,
+        "sharpe": 0.0,
+        "trading_days": 42
+      },
+      "validation": {
+        "max_drawdown_pct": 9.348333815999899,
+        "orders": 188,
+        "return_pct": -9.348333815999899,
+        "sharpe": 0.0,
+        "trading_days": 21
+      }
+    },
+    "status": "rejected_profitability",
+    "version": "6d927365354c5a7c700e5fa1f4fdfb4aa88ea159448188d1e5f5039aff9b9a34"
+  },
+  "factor_validation": {
+    "stress": {
+      "retrospective_test": {
+        "max_drawdown_pct": 14.668622074999838,
+        "orders": 182,
+        "return_pct": -14.668622074999838,
+        "sharpe": 0.0,
+        "trading_days": 21
+      },
+      "validation": {
+        "max_drawdown_pct": 15.38077204999987,
+        "orders": 190,
+        "return_pct": -15.38077204999987,
+        "sharpe": 0.0,
+        "trading_days": 21
+      }
+    },
+    "delayed": {
+      "retrospective_test": {
+        "max_drawdown_pct": 9.647152162999884,
+        "orders": 180,
+        "return_pct": -9.647152162999884,
+        "sharpe": 0.0,
+        "trading_days": 21
+      },
+      "validation": {
+        "max_drawdown_pct": 8.711378136879922,
+        "orders": 184,
+        "return_pct": -8.711378136879922,
+        "sharpe": 0.0,
+        "trading_days": 21
+      }
+    },
+    "matched_control": {
+      "retrospective_test": {
+        "max_drawdown_pct": 8.38254120999985,
+        "orders": 174,
+        "return_pct": -8.38254120999985,
+        "sharpe": 0.0,
+        "trading_days": 21
+      },
+      "validation": {
+        "max_drawdown_pct": 9.055876754999904,
+        "orders": 184,
+        "return_pct": -9.055876754999904,
+        "sharpe": 0.0,
+        "trading_days": 21
+      }
+    },
+    "incremental_value": false,
+    "cost_diagnostics": {
+      "retrospective_test": {
+        "before_recorded_fees_pct": 0.04421300000013595,
+        "estimated_fees": 912.6892707000001,
+        "scope": "same realized historical trade path, adding back recorded fees; not a separate zero-cost strategy"
+      },
+      "train": {
+        "before_recorded_fees_pct": 1.1017720000002562,
+        "estimated_fees": 1746.6751530000001,
+        "scope": "same realized historical trade path, adding back recorded fees; not a separate zero-cost strategy"
+      },
+      "validation": {
+        "before_recorded_fees_pct": 0.14138400000010165,
+        "estimated_fees": 948.9717816,
+        "scope": "same realized historical trade path, adding back recorded fees; not a separate zero-cost strategy"
+      }
+    },
+    "independent_ledger": {
+      "retrospective_test": true,
+      "train": true,
+      "validation": true
+    },
+    "additional_textual_falsification": "NOT_RUN: additional narrative ablations require an explicitly registered executable test; fixed gates and no-factor matched control are executed"
+  },
+  "unique_new_formulas": 1,
+  "rotation": {
+    "status": "queued",
+    "reason": "等待正常交易时段；不使用盘前报价清仓",
+    "selected_family": "opening_range",
+    "selected_strategy": "96d6fe867e716cec453c19c6a7d265f23093102b2f1322d3dc8f96a2006bae15",
+    "paper_experiment": true,
+    "historical_profitability_passed": false
+  },
+  "market_order_capacity_read_only_verified": true,
+  "external_new_trade_orders_submitted": 0,
+  "live_enabled": false,
+  "verification_boundary": "Closed market: no real post-deployment market-order fills observed. Local fault tests and read-only capacity probes are distinct.",
+  "tests_passed": 255,
+  "final_code_hashes": {
+    "runner.py": "d05aad1f122f220292244bc0053c9c90c35ffd0df662f873c842265be0ccfd4f",
+    "broker.py": "b6665c34df56aae8470f3f5311fc8248e662940a5f3aa287d68e3660d6b4c9fc",
+    "store.py": "467bbc5713d30c7aebc8d7f312fa6305e9831039d4340caac37dc2dbd7f06b45",
+    "minute_factors.py": "6c858ac03422eb2d460e2965e11ac684425bf704753fa3add866c6d6bc9a67f6",
+    "simulation_policy.py": "ad88a64e45fddec34d3c89468c0304f489c83e22b35b7552eb73fcc3af1429fb"
+  },
+  "service_started": {
+    "time": "2026-10-20T03:55:28.084184+00:00",
+    "pid": 8613,
+    "mode": "simulated_only"
+  }
+}

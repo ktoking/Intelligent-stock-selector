@@ -50,8 +50,14 @@ class Settings:
     auto_refresh: bool = False
     daily_research: bool = False
     max_trials: int = 30
+    continuous_paper: bool = False
+    stock_market_fallback: bool = False
 
     def __post_init__(self):
+        if any(type(x) is not bool for x in (self.continuous_paper,self.stock_market_fallback)):
+            raise ValueError('Invalid simulated experiment settings')
+        if (self.continuous_paper or self.stock_market_fallback) and not self.paper_enabled:
+            raise ValueError('Continuous experiments require simulated execution authorization')
         for name in ("stock_budget", "max_drawdown_pct", "daily_loss_limit_pct"):
             if not math.isfinite(getattr(self, name)) or getattr(self, name) <= 0:
                 raise ValueError(f"Invalid {name}")

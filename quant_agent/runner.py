@@ -36,13 +36,44 @@ def error_evidence(exc):
     return safe_evidence(exc)
 
 
+def research_step_version(store,job):
+    directory=store.meta('current_data_dir',store.settings.data_dir)
+    version=digest([directory,load_panel(directory).metadata['input_sha256']])
+    if job=='promotion':
+        from .account_selection import strict,version as selector_version
+        if strict(store):version=digest([version,selector_version()])
+    if store.meta('intraday_enabled',False):
+        if job=='minute_research':
+            from .intraday import engine_hash as minute_hash
+            version=digest([version,'minute-research-wrapper-v1',minute_hash()])
+        elif job not in ('discovery','backtest','evolution','factor_validation'):
+            minute=store.meta('intraday_research') or {}
+            version=digest([version,'5m',minute.get('data_sha256'),minute.get('engine_sha256')])
+    return version
+
+
+def frozen_review_input(store,asof,packet):
+    """Retry the same evidence; live heartbeat timestamps cannot reset backoff."""
+    key=digest(['review-input-v2',asof,research_step_version(store,'review'),store.settings.sha256])
+    path=store.home/'artifacts'/('review-input-'+key+'.json')
+    if not path.exists():artifact(store,'review-input-'+key,{'asof':asof,'packet':packet})
+    return json.loads(path.read_text())['packet']
+
+
 @contextmanager
 def job_trace(store,job,asof):
+    from .checkpoints import StepDeferred
     start=time.monotonic()
     directory=store.meta('current_data_dir',store.settings.data_dir)
+    previous=store.meta('task:'+job,{})
     store.set_meta("task:"+job,{"status":"running","asof":asof,"data_dir":directory,"started_at":utcnow()})
     try:
         yield
+    except StepDeferred as exc:
+        saved=getattr(exc,'checkpoint_state',previous)
+        store.set_meta('task:'+job,{**saved,'status':'waiting','asof':asof,'data_dir':directory,
+            'reason':str(exc),'waiting_since':saved.get('waiting_since',utcnow())})
+        raise
     except Exception as exc:
         store.set_meta("task:"+job,{"status":"failed","asof":asof,"data_dir":directory,"finished_at":utcnow(),
                                   "duration_seconds":round(time.monotonic()-start,2),**error_evidence(exc)})
@@ -80,6 +111,7 @@ def integer_quantity(value):
 
 
 def reconcile(store, broker):
+    if hasattr(broker,'on_definite_rejection'):broker.on_definite_rejection=store.submission_failed
     remote = broker.verify() if not broker.verified else broker.state()
     bound = store.meta("bound_account")
     identity = digest([store.settings.stock_account,store.settings.stock_market])
@@ -132,6 +164,8 @@ def reconcile(store, broker):
         raise AccountIntegrityError("Broker positions differ from allocated ledger; do not adopt external positions")
     from .capital import update_broker_capital
     update_broker_capital(store,remote)
+    from .simulation_policy import resume_drawdown_pause
+    resume_drawdown_pause(store,remote)
     return remote
 
 
@@ -149,16 +183,19 @@ def mark_portfolio(store, quotes, remote):
     nav=p["cash"]+sum(v["qty"]*v["mark"] for v in p["positions"].values())
     peak=max(store.meta("peak_nav",store.settings.stock_budget),nav)
     store.set_meta("peak_nav",peak)
-    session=latest_completed_session()
+    session=session_now() or latest_completed_session()
     previous=store.meta("daily_nav",{"session":session,"nav":store.settings.stock_budget})
+    if session!=previous['session']:
+        previous={'session':session,'nav':store.meta('last_mark_stock_nav',previous['nav'])}
+        store.set_meta('daily_nav',previous)
     dd=(1-nav/peak)*100
     loss=(1-nav/previous["nav"])*100
     if dd>=store.settings.max_drawdown_pct or loss>=store.settings.daily_loss_limit_pct:
-        store.pause(f"Risk breach: drawdown={dd:.2f}%, daily_loss={loss:.2f}%")
-    if session!=previous["session"]:
-        store.set_meta("daily_nav",{"session":session,"nav":nav})
+        from .simulation_policy import risk_breach
+        risk_breach(store,f"Risk breach: drawdown={dd:.2f}%, daily_loss={loss:.2f}%")
+    store.set_meta('last_mark_stock_nav',nav)
     if float(remote["cash"]["balance"]) < 0:
-        store.pause("Broker cash negative; no margin allowed")
+        store.pause("Broker cash negative; no margin allowed",category='integrity')
     account_risk={}
     if store.settings.option_funding_mode=='shared_ratio':
         options=store.portfolio('option')
@@ -166,12 +203,16 @@ def mark_portfolio(store, quotes, remote):
         total_budget=store.settings.stock_budget+store.settings.option_budget
         account_peak=max(store.meta('account_peak_nav',total_budget),total_nav)
         account_day=store.meta('account_daily_nav',{'session':session,'nav':total_budget})
+        if session!=account_day['session']:
+            account_day={'session':session,'nav':store.meta('last_mark_account_nav',account_day['nav'])}
+            store.set_meta('account_daily_nav',account_day)
         account_dd=(1-total_nav/account_peak)*100
         account_loss=(1-total_nav/account_day['nav'])*100
         store.set_meta('account_peak_nav',account_peak)
-        if session!=account_day['session']:store.set_meta('account_daily_nav',{'session':session,'nav':total_nav})
+        store.set_meta('last_mark_account_nav',total_nav)
         if account_dd>=store.settings.max_drawdown_pct or account_loss>=store.settings.daily_loss_limit_pct:
-            store.pause(f"Shared-account risk breach: drawdown={account_dd:.2f}%, daily_loss={account_loss:.2f}%")
+            from .simulation_policy import risk_breach
+            risk_breach(store,f"Shared-account risk breach: drawdown={account_dd:.2f}%, daily_loss={account_loss:.2f}%")
         account_risk={'account_nav':total_nav,'account_drawdown_pct':account_dd,'account_daily_loss_pct':account_loss}
     with store.transaction() as db:
         accounting=store.attributed_portfolio('stock',db)
@@ -226,6 +267,9 @@ def execution_view(store,record,source_panel):
 
 
 def checked_panel(store,record,source_panel=None):
+    if record['spec'].get('execution_timeframe')=='5m':
+        from .intraday import verify
+        return verify(record)
     data_dir=store.meta("execution_data_dir",store.meta("current_data_dir",store.settings.data_dir))
     panel=execution_view(store,record,source_panel if source_panel is not None else load_panel(data_dir))
     evidence=record["evidence"]
@@ -345,6 +389,9 @@ def shadow_tick(store,record,quotes,session,source_panel=None):
 def paper_tick(store,broker,record,quotes,session,source_panel=None):
     if not session or store.meta("paused") or not store.settings.paper_enabled:
         return
+    from .account_selection import strict as strict_selection
+    if store.meta('intraday_enabled',False) and not strict_selection(store) and record['spec'].get('execution_timeframe')!='5m':
+        return {'status':'legacy_hold','reason':'日线版本停止新增调仓；持仓按账户换仓流程交接，未重写历史规则。'}
     from .champion import enabled,pending
     if enabled(store) and (pending(store) or store.meta('account_champion')!=record['id']):
         return {'status':'rotating','reason':'账户换仓或策略尚未获得账户交易权限'}
@@ -448,7 +495,7 @@ def paper_tick(store,broker,record,quotes,session,source_panel=None):
 def expire_orders(store,broker,session):
     calendar=us_calendar()
     for row in store.orders(active=True):
-        deadline=(pd.Timestamp(row['created'])+pd.Timedelta(minutes=2) if row['bucket']=='option' or store.meta('rotation_order:'+row['id'])
+        deadline=(pd.Timestamp(row['created'])+pd.Timedelta(minutes=2) if row['bucket']=='option' or store.meta('rotation_order:'+row['id']) or store.meta('minute_order:'+row['id'])
                   else calendar.session_open(row["session"])+pd.Timedelta(minutes=5))
         if pd.Timestamp.now(tz="UTC")<=deadline:
             continue
@@ -483,10 +530,10 @@ def daily_jobs(store,quotes):
 
 
 def _daily_jobs(store,quotes):
-    from .checkpoints import run_step,recover_factor_result
-    def step(job,action):
-        directory=store.meta('current_data_dir',store.settings.data_dir)
-        version=digest([directory,load_panel(directory).metadata['input_sha256']])
+    from .checkpoints import run_step,recover_factor_result,StepDeferred
+    def step(job,action,context=None):
+        version=research_step_version(store,job)
+        if context is not None:version=digest([version,context])
         return run_step(store,job,asof,version,action)
     asof=latest_completed_session()
     from .research_evidence import research_pending
@@ -502,15 +549,21 @@ def _daily_jobs(store,quotes):
         try:
             from .market_data import refresh_cache
             with job_trace(store,"refresh",asof):
-                if finalize:refresh_cache(store,recheck=True)
-                else:refresh_cache(store)
+                source=store.meta('current_data_dir',store.settings.data_dir)
+                refresh_version=digest(['refresh-v2',asof,source,finalize,load_panel(source).metadata['input_sha256']])
+                run_step(store,'refresh',asof,refresh_version,lambda:refresh_cache(store,recheck=finalize))
+            from .recovery import recovered
+            recovered(store,'daily_refresh')
         except Exception as exc:
             jobs_ok=False
+            from .recovery import failed
+            failed(store,'daily_refresh',exc)
             store.event("refresh_failed",{**error_evidence(exc),"asof":asof})
     if not jobs_ok:
         store.set_meta('task:review',{'status':'blocked','asof':asof,'reason':'历史数据未通过校验，等待刷新重试；尚未调用AI。'})
         store.set_meta('daily_completed:'+asof,False)
-        store.set_meta('daily_retry_after:'+asof,(pd.Timestamp.now(tz='UTC')+pd.Timedelta(hours=1)).isoformat())
+        state=store.meta('task:refresh',{})
+        store.set_meta('daily_retry_after:'+asof,state.get('retry_after') or (pd.Timestamp.now(tz='UTC')+pd.Timedelta(minutes=1)).isoformat())
         return
     if jobs_ok and not store.meta("universe_scanned:"+asof):
         try:
@@ -530,6 +583,17 @@ def _daily_jobs(store,quotes):
             store.set_meta('news_completed:'+asof,True)
         except Exception as exc:
             jobs_ok=False;store.event('news_failed',error_evidence(exc))
+    minute_mode=store.meta('intraday_enabled',False)
+    daily_lane_ok=True
+    if minute_mode:
+        try:
+            from .intraday import research as minute_research
+            with job_trace(store,'minute_research',asof):step('minute_research',lambda:minute_research(store,locked=True))
+        except StepDeferred:
+            jobs_ok=False
+        except Exception as exc:
+            jobs_ok=False
+            store.event('minute_research_failed',error_evidence(exc))
     if store.settings.daily_research:
         data_hash=load_panel(store.meta("current_data_dir",store.settings.data_dir)).metadata["input_sha256"]
         if not store.meta("research_completed:"+data_hash) or not store.meta('discovery_completed:'+data_hash):
@@ -546,8 +610,10 @@ def _daily_jobs(store,quotes):
                         if sum(r['spec'].get('research_data_sha256')==data_hash for r in store.strategies())<store.settings.max_trials:
                             step('discovery',lambda:propose(store,ai=True))
                         store.set_meta('discovery_completed:'+data_hash,True)
+                except StepDeferred:
+                    jobs_ok=False;daily_lane_ok=False
                 except Exception as exc:
-                    jobs_ok=False
+                    jobs_ok=False;daily_lane_ok=False
                     store.event("research_failed",{"error_type":type(exc).__name__})
             # Versioned, fixed control strategies are rechecked on revised data
             # even when AI makes no new proposal or is temporarily unavailable.
@@ -555,11 +621,22 @@ def _daily_jobs(store,quotes):
                 with job_trace(store,"backtest",asof):
                     step('backtest',lambda:evaluate(store))
                 store.set_meta("research_completed:"+data_hash,True)
+            except StepDeferred:
+                jobs_ok=False;daily_lane_ok=False
             except Exception as exc:
-                jobs_ok=False
+                jobs_ok=False;daily_lane_ok=False
                 store.event("validation_failed",{"error_type":type(exc).__name__})
     from .briefing import review_packet, REVIEW_SCHEMA, REVIEW_SYSTEM, validate_brief, persist_brief
     packet=review_packet(store,quotes,panel=load_panel(store.meta("current_data_dir",store.settings.data_dir)))
+    if minute_mode:
+        from .intraday import view as minute_view
+        packet['minute_research']=minute_view(store)
+        packet['research_timeframes']=['1d','5m']
+        packet['protocol_gates']={'timeframe':'5m','cost_bps':store.settings.fee_reserve_bps,'stress_bps':50,
+            'baseline_signal_lag_bars':1,'stress_signal_lag_bars':2,'max_drawdown_pct':store.settings.max_drawdown_pct,
+            'min_test_sessions':20,'min_test_orders':10,'benchmark':'QQQ on identical test dates',
+            'note':'日线与分钟研究同时运行，各用独立数据、规则和验证。日线指标以交易日计，分钟指标以完整5分钟K计；不得混用收益、信号或因果证据。账户交接仍由统一执行流程管理。'}
+    packet=frozen_review_input(store,asof,packet)
     response=None
     # Observation metadata must not make identical evidence miss its cache.
     name="daily-"+asof+"-"+digest({k:v for k,v in packet.items() if k!="created"})[:12]
@@ -575,11 +652,13 @@ def _daily_jobs(store,quotes):
                 validate_brief(value,packet)
                 return {'response':value,'packet':packet}
             with job_trace(store,"review",asof):
-                completed_review=step('review',review_action)
+                completed_review=step('review',review_action,'stable-evidence-v2')
                 response=completed_review['response'];packet=completed_review['packet']
                 validate_brief(response,packet)
             store.event("ai_review",response)
             store.set_meta('ai_runtime',{'model':response['model'],'reasoning_effort':response.get('reasoning_effort'),'observed_at':utcnow()})
+        except StepDeferred:
+            response=None
         except Exception as exc:
             response=None
             store.event("ai_unavailable",{"job":"daily_review",**error_evidence(exc)})
@@ -620,12 +699,40 @@ def _daily_jobs(store,quotes):
             record=next(r for r in store.strategies() if r['id']==result['strategy'])
             code_state='已生成独立代码并验证。' if result.get('code_path') else '候选被结构或因果检查拦截。'
             atomic_write(path,path.read_text()+'\n\n## 新因子代码与验证\n'+result['name']+'：'+record['stage']+'。'+code_state+'\n'+result['hypothesis'])
+        except StepDeferred:
+            jobs_ok=False;daily_lane_ok=False
         except Exception as exc:
-            jobs_ok=False
+            jobs_ok=False;daily_lane_ok=False
             store.event('evolution_failed',{'error_type':type(exc).__name__})
     elif store.settings.evolution_enabled and cycle_trials>=store.settings.max_trials:
         store.set_meta('task:evolution',{'status':'blocked','asof':asof,'reason':'当前数据版本达到试验上限；保留既有候选，不新增公式。'})
-    if jobs_ok and store.settings.daily_research:
+    if (store.settings.daily_research or store.settings.evolution_enabled) and daily_lane_ok:
+        from .research_evidence import daily_cycle_version
+        store.set_meta('daily_research_cycle:'+asof,daily_cycle_version(store))
+    if store.settings.evolution_enabled and minute_mode:
+        try:
+            from .minute_factors import evolve as minute_evolve
+            with job_trace(store,'minute_factor_research',asof):
+                factor=step('minute_evolution',lambda:minute_evolve(store,response['result']['factor_ideas'] if response else []))
+            atomic_write(path,path.read_text()+'\n\n## 新分钟因子：代码与独立验证\n'+factor['name']+'：'+factor['status']+'。\n'+factor['hypothesis']+'\n\n'+canonical(factor.get('stats',{})))
+        except StepDeferred:
+            jobs_ok=False
+        except Exception as exc:
+            jobs_ok=False
+            store.event('minute_evolution_failed',error_evidence(exc))
+    from .account_selection import strict as strict_selection
+    if strict_selection(store) and daily_lane_ok:
+        try:
+            from .champion import screen
+            with job_trace(store,'promotion',asof):
+                step('promotion',lambda:screen(store,load_panel(store.meta('current_data_dir',store.settings.data_dir))),
+                    ['strict-common-v1',store.meta('promotion_policy')])
+        except StepDeferred:
+            jobs_ok=False
+        except Exception as exc:
+            jobs_ok=False
+            store.event('unified_selection_failed',error_evidence(exc))
+    elif jobs_ok and store.settings.daily_research and not minute_mode:
         from .promotion import plan_promotions
         with job_trace(store,'promotion',asof):
             step('promotion',lambda:plan_promotions(store,load_panel(store.meta('current_data_dir',store.settings.data_dir))))
@@ -635,8 +742,12 @@ def _daily_jobs(store,quotes):
         append_research_review(store,asof)
     store.set_meta("daily_completed:"+asof,jobs_ok)
     if not jobs_ok:
-        with store.read() as db:
-            retries=[r[0] for r in db.execute("SELECT retry_after FROM checkpoints WHERE asof=? AND status='failed' AND retry_after IS NOT NULL",(asof,)) if r[0]>utcnow()]
+        # Superseded review checkpoints stay in the audit trail. Only the
+        # current task states may schedule another attempt.
+        states=[store.meta('task:'+job,{}) for job in ('refresh','discovery','backtest','review','evolution',
+            'factor_validation','minute_research','minute_evolution','minute_factor_proposal','minute_factor_validation','promotion')]
+        retries=[r['retry_after'] for r in states if r.get('asof')==asof and r.get('status') in ('failed','waiting')
+            and r.get('retry_after') and r['retry_after']>utcnow()]
         store.set_meta("daily_retry_after:"+asof,min(retries) if retries else (pd.Timestamp.now(tz="UTC")+pd.Timedelta(minutes=1)).isoformat())
     else:store.set_meta("daily_retry_after:"+asof,None)
 
@@ -648,7 +759,12 @@ def tick(store,broker,run_daily=True):
     expire_orders(store,broker,session)
     symbols={"US.NVDA","US.QQQ","US.SPY"}|set(store.portfolio()["positions"])|set(store.portfolio('option')['positions'])
     records=store.strategies(["shadow","paper"])
-    source_panel=load_panel(store.meta("execution_data_dir",store.meta("current_data_dir",store.settings.data_dir)))
+    try:source_panel=load_panel(store.meta("execution_data_dir",store.meta("current_data_dir",store.settings.data_dir)))
+    except (ValueError,OSError,EOFError) as exc:
+        if not store.settings.continuous_paper and not any(r['stage']=='paper' and r['spec'].get('execution_timeframe')=='5m' for r in records):raise
+        source_panel=None
+        from .recovery import failed
+        failed(store,'legacy_daily_data',exc,scope='daily')
     option_panel=source_panel
     if store.settings.option_paper_enabled:
         try:
@@ -660,12 +776,18 @@ def tick(store,broker,run_daily=True):
             failed(store,'option_data',exc,scope='option')
     preparation_errors={}
     for r in records:
+        if r['spec'].get('execution_timeframe')=='5m':
+            symbols.update(r['evidence']['symbols'])
+            continue
+        if store.meta('intraday_enabled',False) and r['stage']=='shadow' and not store.meta('shadow_pending:'+r['id']):
+            continue
         state=store.meta("shadow_state:"+r["id"],empty())
         pending=store.meta("shadow_pending:"+r["id"])
         symbols.update(state["holdings"])
         if pending:
             symbols.update(pending["state"]["holdings"])
         try:
+            if source_panel is None:raise SignalUnavailable('Daily cache unavailable; new daily plans blocked, account exits remain independent')
             panel=execution_view(store,r,source_panel)
             panel,policy=compile_spec(panel,r["spec"])
             symbols.update(panel.symbols[j] for j in rank(panel,len(panel.dates)-1,policy)[:r["spec"]["policy"]["rank_buffer"]])
@@ -703,7 +825,10 @@ def tick(store,broker,run_daily=True):
         # A stale stock mark blocks account-wide additions, but it must not
         # prevent an already-held option's valid, authorized exit monitoring.
         _held_option_exit_during_quote_gap(store,broker,option_panel,quotes,session)
-        raise held_error
+        if not store.settings.continuous_paper:raise held_error
+        store.set_meta('held_quote_quality',{'status':'degraded','observed_at':utcnow(),**error_evidence(held_error),
+            'action':'account reconciliation succeeded; individual orders use quote or authorized stock market fallback'})
+    else:store.set_meta('held_quote_quality',{'status':'ok','observed_at':utcnow()})
     risk=mark_portfolio(store,quotes,remote)
     from .recovery import resume_confirmed_acknowledgement
     resume_confirmed_acknowledgement(store)
@@ -717,7 +842,10 @@ def tick(store,broker,run_daily=True):
             strategy_checks.append({'id':r['id'][:12],'stage':r['stage'],'status':'blocked',**preparation_errors[r['id']]})
             continue
         try:
-            if r["stage"]=="shadow":
+            if r['spec'].get('execution_timeframe')=='5m':
+                from .intraday import execute
+                outcome=execute(store,broker,r,quotes,session) if r['stage']=='paper' else {'status':'observing','timeframe':'5m'}
+            elif r["stage"]=="shadow":
                 outcome=shadow_tick(store,r,quotes,session,source_panel)
             elif r["stage"]=="paper":
                 outcome=paper_tick(store,broker,r,quotes,session,source_panel)
@@ -759,8 +887,9 @@ def tick(store,broker,run_daily=True):
         blockers.append(store.meta('pause_reason') or 'Execution paused')
     if not session:
         blockers.append("US regular market closed")
-    if source_panel.metadata["end"]!=latest_completed_session():
-        blockers.append("Signal cache stale: "+source_panel.metadata["end"])
+    daily_owners=any(r['stage']=='paper' and r['spec'].get('execution_timeframe')!='5m' for r in records)
+    if daily_owners and (source_panel is None or source_panel.metadata['end']!=latest_completed_session()):
+        blockers.append('Daily strategy signal cache stale')
     if not store.strategies(["paper"]):
         blockers.append("No strategy authorized for paper execution")
     blockers.extend(r.get('reason') or r.get('error_type','Execution conditions unmet') for r in strategy_checks if r['status']=='blocked')
@@ -776,8 +905,8 @@ def tick(store,broker,run_daily=True):
             readiness=execution_readiness(store,remote)
             store.set_meta('execution_readiness',readiness)
     store.set_meta("last_tick",{"time":utcnow(),"session":session,"risk":risk,"account_tail":store.settings.stock_account[-4:],
-        "signal_cache_asof":source_panel.metadata["end"],"execution_blockers":blockers,'strategy_checks':strategy_checks,
-        "broker_positions":len(remote["positions"]),"broker_orders":len(remote["orders"]),
+        "signal_cache_asof":source_panel.metadata["end"] if source_panel is not None else None,"execution_blockers":blockers,'strategy_checks':strategy_checks,
+        "broker_positions":sum(float(p['qty'])!=0 for p in remote["positions"]),"broker_position_rows":len(remote["positions"]),"broker_orders":len(remote["orders"]),
         "quotes":{s:{"price":q["last_price"],"data_date":q.get("data_date"),"update_time":q.get("update_time")} for s,q in quotes.items()}})
     if run_daily and not session:
         daily_jobs(store,quotes)
@@ -811,6 +940,8 @@ def serve(store,stop=None):
     boot=True
     radar=None
     news_worker_thread=None
+    premarket_worker_thread=None
+    minute_worker_thread=None
     local_stop=stop or threading.Event()
     if store.settings.quote_push_enabled:
         from .push import run as push_run
@@ -831,7 +962,23 @@ def serve(store,stop=None):
         except Exception as exc:
             failed(store,'news',exc);store.event('news_failed',error_evidence(exc))
             store.set_meta('news_retry_after',(pd.Timestamp.now(tz='UTC')+pd.Timedelta(minutes=5)).isoformat())
+    def premarket_worker(session,phase):
+        try:
+            from .premarket import run
+            result=run(store,session,phase)
+            if result.get('status')=='completed':recovered(store,'premarket')
+        except Exception as exc:
+            failed(store,'premarket',exc,scope='information')
+            store.event('premarket_failed',error_evidence(exc))
+    def minute_worker():
+        try:
+            from .intraday import observe
+            observe(store);recovered(store,'minute_data')
+        except Exception as exc:
+            failed(store,'minute_data',exc,scope='minute')
+            store.event('minute_observation_failed',error_evidence(exc))
     def daily_worker(quotes):
+        from .checkpoints import StepDeferred
         try:
             # Optional research reads belong to this worker, never the account
             # reconciliation loop. Research can use dated evidence without it.
@@ -840,7 +987,9 @@ def serve(store,stop=None):
                 except Exception as exc:
                     store.event('research_quotes_unavailable',error_evidence(exc))
             daily_jobs(store,quotes)
-            recovered(store,'research')
+            if store.meta('daily_completed:'+latest_completed_session()):recovered(store,'research')
+        except StepDeferred:
+            pass  # Another process owns the durable workflow; no new failure.
         except Exception as exc:
             store.event("daily_job_failed",error_evidence(exc));failed(store,'research',exc)
             store.set_meta("daily_retry_after:"+latest_completed_session(),
@@ -854,6 +1003,16 @@ def serve(store,stop=None):
             update_tracking(store)
         except Exception as exc:
             store.event('forecast_tracking_failed',{'error_type':type(exc).__name__})
+    def execution_failed(exc):
+        uncertain=any(o['status'] in ('unknown','submitting') for o in store.orders(active=True))
+        retryable=isinstance(exc,(ReadUnavailable,QuoteUnavailable,SignalUnavailable)) and not uncertain
+        if not retryable and (not uncertain or isinstance(exc,(AccountIntegrityError,ValueError))) and (not store.meta('paused') or store.meta('pause_policy',{}).get('recoverable')):
+            store.pause("Supervisor failure: "+type(exc).__name__,category='integrity')
+        failed(store,'execution_reads',exc,scope='execution')
+        store.event('supervisor_deferred' if retryable else 'supervisor_failed',error_evidence(exc))
+        store.set_meta("health",{"time":utcnow(),"status":"degraded" if retryable else "error",
+            'mode':(store.meta('schedule') or {}).get('mode'),
+            'execution_status':'paused' if store.meta('paused') else 'blocked',**error_evidence(exc)})
     threading.Thread(target=forecast_worker,daemon=True,name='forecast-check').start()
     with executor_lock(store):
         while stop is None or not stop.is_set():
@@ -861,16 +1020,24 @@ def serve(store,stop=None):
             try:
                 scheduled_state=activity(store,boot=boot)
                 store.set_meta("schedule",scheduled_state)
+                execution_error=False
                 if scheduled_state["mode"]!="idle" and (scheduled_state["mode"]!="daily_research" or worker is None or not worker.is_alive()):
-                    remote=tick(store,broker,run_daily=False)
-                    recovered(store,'execution_reads')
-                    boot=False
-                    if scheduled_state["mode"]=="pre_open":
-                        from .readiness import execution_readiness
-                        readiness=execution_readiness(store,remote)
-                        store.set_meta('execution_readiness',readiness)
-                        store.event('preflight_ready' if readiness['ready'] else 'preflight_blocked',readiness)
-                        if readiness['ready']:store.set_meta("preflight_session",scheduled_state["next_session"])
+                    try:
+                        remote=tick(store,broker,run_daily=False)
+                        recovered(store,'execution_reads')
+                        boot=False
+                        if scheduled_state["mode"]=="pre_open":
+                            from .readiness import execution_readiness
+                            readiness=execution_readiness(store,remote)
+                            store.set_meta('execution_readiness',readiness)
+                            store.event('preflight_ready' if readiness['ready'] else 'preflight_blocked',readiness)
+                            if readiness['ready']:store.set_meta("preflight_session",scheduled_state["next_session"])
+                    except Exception as exc:
+                        # Account/quote failures still fence orders. Read-only
+                        # workers and post-close research must keep their own
+                        # schedule, even during a persistent stale held quote.
+                        execution_error=True
+                        execution_failed(exc)
                 latest=store.meta('last_tick') or {}
                 active_checks=[r for r in latest.get('strategy_checks',[]) if r['stage']=='paper'] if scheduled_state.get('session')==latest.get('session') and latest.get('session') else []
                 blocked_count=sum(r['status']=='blocked' or r['status']=='missed_window' and not (r.get('outcome') or {}).get('submitted_orders') for r in active_checks)
@@ -878,8 +1045,13 @@ def serve(store,stop=None):
                 execution_status='blocked' if active_checks and blocked_count==len(active_checks) else 'degraded' if blocked_count or degraded_count else 'ready'
                 from .champion import enabled as champion_enabled,pending as pending_rotation
                 if champion_enabled(store) and pending_rotation(store):execution_status='rotating'
-                store.set_meta("health",{"time":utcnow(),"status":"ok","mode":scheduled_state["mode"],
-                    'execution_status':'paused' if store.meta('paused') else execution_status})
+                if not execution_error:
+                    previous=store.meta('component:execution_reads',{})
+                    unresolved=previous.get('status')=='degraded'
+                    health=store.meta('health',{}) if unresolved else {}
+                    quote_degraded=store.meta('held_quote_quality',{}).get('status')=='degraded' and bool(scheduled_state.get('session'))
+                    store.set_meta("health",{**health,"time":utcnow(),"status":health.get('status','degraded') if unresolved else 'degraded' if quote_degraded else "ok","mode":scheduled_state["mode"],
+                        'execution_status':'paused' if store.meta('paused') else execution_status})
                 last=store.meta('universe_scan',{}).get('created_at')
                 retry=store.meta('radar_retry_after')
                 now=pd.Timestamp.now(tz='UTC')
@@ -888,6 +1060,18 @@ def serve(store,stop=None):
                 last_news=store.meta('news_packet',{}).get('observed_at');news_retry=store.meta('news_retry_after')
                 if scheduled_state.get('session') and (news_worker_thread is None or not news_worker_thread.is_alive()) and (not news_retry or now>=pd.Timestamp(news_retry)) and (not last_news or (now-pd.Timestamp(last_news)).total_seconds()>=store.settings.news_scan_seconds):
                     news_worker_thread=threading.Thread(target=news_worker,daemon=True,name='market-news');news_worker_thread.start()
+                if scheduled_state.get('session') and store.meta('intraday_enabled',False) and (minute_worker_thread is None or not minute_worker_thread.is_alive()):
+                    minute_worker_thread=threading.Thread(target=minute_worker,daemon=True,name='minute-data');minute_worker_thread.start()
+                # Optional pre-open intelligence has its own worker and failures.
+                try:
+                    from .premarket import due as premarket_due
+                    preopen=premarket_due(store,now)
+                    if preopen and (premarket_worker_thread is None or not premarket_worker_thread.is_alive()):
+                        premarket_worker_thread=threading.Thread(target=premarket_worker,
+                            args=(preopen['session'],preopen['phase']),daemon=True,name='premarket-intelligence')
+                        premarket_worker_thread.start()
+                except Exception as exc:
+                    failed(store,'premarket_scheduler',exc,scope='information')
                 # AI/research/history downloads cannot block order reconciliation.
                 try:
                     due=daily_due(store);recovered(store,'research_scheduler')
@@ -898,14 +1082,7 @@ def serve(store,stop=None):
                     failed(store,'research_scheduler',exc)
                     store.event('research_schedule_failed',error_evidence(exc))
             except Exception as exc:
-                uncertain=any(o['status'] in ('unknown','submitting') for o in store.orders(active=True))
-                retryable=isinstance(exc,(ReadUnavailable,QuoteUnavailable,SignalUnavailable)) and not uncertain
-                if not retryable and (not uncertain or isinstance(exc,(AccountIntegrityError,ValueError))) and (not store.meta('paused') or store.meta('pause_policy',{}).get('recoverable')):
-                    store.pause("Supervisor failure: "+type(exc).__name__,category='integrity')
-                failed(store,'execution_reads',exc,scope='execution')
-                store.event('supervisor_deferred' if retryable else 'supervisor_failed',error_evidence(exc))
-                store.set_meta("health",{"time":utcnow(),"status":"degraded" if retryable else "error",
-                    'execution_status':'paused' if store.meta('paused') else 'blocked',**error_evidence(exc)})
+                execution_failed(exc)
             wait=max(1,store.settings.poll_seconds-(time.monotonic()-started))
             if stop:
                 stop.wait(wait)

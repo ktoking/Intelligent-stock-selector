@@ -10,6 +10,8 @@ from .schedule import calendar_state
 from .config import ROOT
 from .presentation import session_timeline, strategy_logic, focus_quote_view
 from .activity import strategy_activity
+from .account_selection import strict as strict_selection
+from .premarket import view as premarket_view
 
 STATIC = Path(__file__).with_name('static')
 
@@ -44,6 +46,7 @@ def public_status(store):
     for group in holdings.get('strategies',[]):
         if group['id'] in identities:group.update(identities[group['id']])
     strategies=[]
+    from .charts import chart_window
     for r in records:
         evidence=r['evidence']; stats=evidence.get('stats',{})
         allocation=store.meta('paper_allocations',{}).get('stock',{}).get(r['id'])
@@ -54,12 +57,15 @@ def public_status(store):
             paper_return,_=strategy_performance(store,r['id'],owner)
         strategies.append({'id':r['id'][:12],'full_id':r['id'],'name':r['spec'].get('factor_name',r['spec']['policy']['name']),'stage':r['stage'],**identities[r['id']],
             'origin':r['spec'].get('origin'),'hypothesis':r['spec'].get('hypothesis'),'policy':r['spec']['policy'],
+            'paper_experiment':bool(evidence.get('paper_experiment')),'validation_passed':evidence.get('passed',False),
             'factor_expression':r['spec'].get('factor_expression'),'falsification':r['spec'].get('falsification'),
             'factor_weights':r['spec'].get('factor_weights'),'logic':strategy_logic(r['spec']),
             'forward_return_pct':(shadow_latest[r['id']]['nav']/10000-1)*100 if r['id'] in shadow_latest else None,
             'paper_return_pct':paper_return if (owner or paper_owners==[r['id']]) and r['id'] in paper_filled else None,
             'paper_allocation':allocation,'paper_authorization':evidence.get('paper_authorization'),
             'data_hash':r['spec'].get('research_data_sha256'),'created':r['created'],
+            'execution_timeframe':r['spec'].get('execution_timeframe','1d'),
+            'history_window':chart_window(store.home/'artifacts'/('chart-'+r['id']+'.json')),
             'stats':stats,'gates':evidence.get('gates',{}),'stress':evidence.get('stress',{}),'delayed':evidence.get('delayed',{}),
             'benchmark':evidence.get('benchmark'),'shadow_sessions':shadow_counts.get(r['id'],0),
             'chart_available':(store.home/'artifacts'/('chart-'+r['id']+'.json')).exists(),
@@ -70,15 +76,26 @@ def public_status(store):
     jobs=[{'key':'refresh','name':'历史数据更新','trigger':'收盘 15 分钟后，每个交易日一次','command':'refresh'},
           {'key':'scan','name':'指数、自选与异动入池','trigger':'收盘刷新成分股；每次最多补 3 只新异动标的历史','command':'scan --enrich'},
           {'key':'news','name':'资讯证据更新','trigger':'收盘一次；盘中每 30 分钟更新重点标的标题','command':'news'},
-          {'key':'discovery','name':'Codex 假设与因子组合','trigger':'每个数据版本最多 30 个试验，累计记录保留','command':'discover --ai'},
-          {'key':'backtest','name':'回测 · 压力测试 · 核账','trigger':'候选注册后，冻结规则并验证','command':'research'},
+          {'key':'discovery','name':'日线 Codex 假设与因子组合','trigger':'每个数据版本最多 30 个试验，累计记录保留','command':'discover --ai'},
+          {'key':'backtest','name':'日线回测 · 压力测试 · 核账','trigger':'候选注册后，冻结规则并验证','command':'research'},
           {'key':'review','name':'Codex 每日操作复盘','trigger':'研究结束后触发；失败步骤退避重试，已完成结果从检查点复用','command':'tick --daily'},
-          {'key':'evolution','name':'新因子代码与独立验证','trigger':'每个新数据版本最多 1 个表达式；因果检查后回测','command':'evolve'}]
+          {'key':'evolution','name':'Codex 新日线因子代码','trigger':'每个日线数据版本最多 1 个表达式；因果检查后回测','command':'evolve'},
+          {'key':'factor_validation','name':'日线因子独立验证','trigger':'新表达式通过因果检查后，执行时间切分、成本、延迟和核账','command':'research'}]
+    jobs.append({'key':'premarket','name':'盘前市场与催化简报','trigger':'开盘前10分钟采集并Codex解读，前2分钟刷新事实；失败独立重试','command':None})
     jobs.append({'key':'promotion','name':'优秀策略模拟晋升','trigger':'同区间择优；账户模式自动撤单、退出旧持仓，交收后交接；旧槽位模式仅交接空仓资金','command':'自动比较与排队'})
+    if store.meta('intraday_enabled',False):
+        jobs += [{'key':'minute_download','name':'分钟历史与数据覆盖','trigger':'Futunn 5分钟K；分窗口检查点续拉','command':'minute-research'},
+                 {'key':'minute_backtest','name':'分钟候选回测与独立核账','trigger':'时间切分；成本与延迟压力；合格后同区间比较','command':'minute-research'},
+                 {'key':'minute_factor_proposal','name':'Codex 分钟因子假设','trigger':'收盘复盘后，每个分钟数据版本最多1个新公式','command':None},
+                 {'key':'minute_factor_validation','name':'分钟因子代码与独立验证','trigger':'完整K线、因果性、成本、延迟、独立核账；保留淘汰证据','command':None}]
     completed=store.meta('daily_completed:'+asof,False)
     for job in jobs:
         job['state']=store.meta('task:'+job['key']) or {'status':'recorded' if completed else 'pending','asof':asof}
-        job['enabled']={'refresh':store.settings.auto_refresh,'discovery':store.settings.daily_research,'evolution':store.settings.evolution_enabled,'promotion':store.meta('promotion_policy',{}).get('enabled',False)}.get(job['key'],True)
+        job['enabled']={'refresh':store.settings.auto_refresh,'discovery':store.settings.daily_research,'backtest':store.settings.daily_research,'evolution':store.settings.evolution_enabled,'factor_validation':store.settings.evolution_enabled,'promotion':store.meta('promotion_policy',{}).get('enabled',False)}.get(job['key'],True)
+        if job['key']=='premarket':
+            job['state']=store.meta('premarket_job:'+(calendar['session'] or calendar['next_session'])+':brief') or {'status':'pending','asof':calendar['next_session']}
+        if store.meta('intraday_enabled',False) and job['key']=='promotion' and not strict_selection(store):
+            job['enabled']=False
     evolutions=[];artifact_errors=[]
     for path in sorted((store.home/'artifacts').glob('evolution-*.json')):
         try:value=json.loads(path.read_text())
@@ -89,13 +106,18 @@ def public_status(store):
         code_path=ROOT/'research/evolved_factors'/('factor_'+value['strategy'][:12]+'.py')
         evolutions.append({k:v for k,v in value.items() if k!='code_path'}|{'stage':record['stage'] if record else 'proposed',
             'code_url':'/api/factor/'+value['strategy'] if code_path.is_file() else None,'failed_gates':record['failed_gates'] if record else []})
+    for value in store.meta('minute_factor_registry',[]):
+        evolutions.append({k:v for k,v in value.items() if k not in ('code_path','artifact')}|{
+            'name':'5分钟 · '+value['name']+' · '+value['version'][:6],'stage':'validated' if value['status']=='validated' else 'rejected',
+            'checks':value.get('causal_checks',{}),'code_url':'/api/minute-factor/'+value['version'] if value.get('code_path') else None})
     orders=[{k:v for k,v in o.items() if k not in ('broker_id',)} for o in snapshot['orders'][-100:]]
     from .dashboard import dashboard_summary
     dashboard=dashboard_summary(store,calendar,snapshot,strategies,paper_activity,jobs)
     from .research_evidence import research_summary
     from .readiness import readiness_view
     from . import recovery,checkpoints,observability
-    return {'recovery':{'components':recovery.summary(store),'checkpoints':checkpoints.summary(store),
+    from .intraday import view as minute_view
+    return {'intraday':minute_view(store),'recovery':{'components':recovery.summary(store),'checkpoints':checkpoints.summary(store),
                        'pause_policy':store.meta('pause_policy'),'logging':observability.status(),
                        'data_gate':store.meta('execution_data_blocked'),'option_data_gate':store.meta('option_data_blocked'),'artifact_errors':artifact_errors},
         'dashboard':dashboard,'research_evidence':research_summary(store,asof),'forecast_tracking':store.meta('forecast_tracking'),
@@ -122,6 +144,7 @@ def public_status(store):
         'strategy_references':store.meta('strategy_references',[]),'calendar':calendar,'timeline':session_timeline(calendar),'schedule':store.meta('schedule'),
         'tasks':jobs,'daily_completed':completed,'daily_asof':asof,'review_markdown':review,
         'daily_brief':store.meta('daily_brief'),
+        'premarket':premarket_view(store,calendar),
         'max_trials':store.settings.max_trials,'min_shadow_sessions':store.settings.min_shadow_sessions,
         'options_status':('共用美股模拟账户，期权上限为最新净资产10%；仅买入Call/Put与已有多头平仓，最多1张，历史期权回测未验证。' if store.settings.option_funding_mode=='shared_ratio' else
             '美股期权独立账户待绑定；资金待核实，执行关闭。' if store.settings.option_funding_mode=='independent_pending' else
@@ -145,7 +168,9 @@ def chart_data(store,strategy,mode):
             'cash':json.loads(r['state'])['cash']} for r in rows],'benchmark_curve':[],
             'source':'未来实际观察报价；假设成交，非券商成交','cost_bps':25}
     path=store.home/'artifacts'/('chart-'+strategy+'.json')
-    return json.loads(path.read_text()) if path.exists() else {'kind':'retrospective_test','curve':[],'benchmark_curve':[]}
+    chart=json.loads(path.read_text()) if path.exists() else {'kind':'retrospective_test','curve':[],'benchmark_curve':[]}
+    from .charts import with_minute_benchmark
+    return with_minute_benchmark(record,chart)
 
 
 def start_web(store,port=8791):
@@ -220,6 +245,12 @@ def start_web(store,port=8791):
                 path=ROOT/'research/evolved_factors'/('factor_'+key[:12]+'.py')
                 if record is None or not path.is_file() or path.is_symlink():
                     self.send_error(404);return
+                body,mime=path.read_bytes(),'text/plain; charset=utf-8'
+            elif re.fullmatch(r'/api/minute-factor/[a-f0-9]{64}',parsed.path):
+                key=parsed.path.rsplit('/',1)[1]
+                item=next((x for x in store.meta('minute_factor_registry',[]) if x['version']==key),None)
+                path=ROOT/'research/evolved_minute_factors'/('factor_'+key[:16]+'.py')
+                if not item or not path.is_file() or path.is_symlink():self.send_error(404);return
                 body,mime=path.read_bytes(),'text/plain; charset=utf-8'
             elif re.fullmatch(r'/api/research-evidence/[a-f0-9]{64}',parsed.path):
                 from .research_evidence import trial_evidence

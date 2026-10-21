@@ -1,0 +1,27 @@
+{
+  "observed_at": "2026-10-20T03:15:24.748540+00:00",
+  "service_started": {
+    "time": "2026-10-20T03:14:54.424479+00:00",
+    "pid": 91436,
+    "mode": "simulated_only"
+  },
+  "http_status": 200,
+  "health": {
+    "execution_status": "paused",
+    "mode": "startup_reconcile",
+    "status": "ok",
+    "time": "2026-10-20T03:15:00.473041+00:00"
+  },
+  "orders_unchanged": true,
+  "positions_qty_basis_unchanged": true,
+  "risk_pause_unchanged": true,
+  "orders_count": 17,
+  "paused": true,
+  "pause_reason": "Shared-account risk breach: drawdown=2.02%, daily_loss=2.02%",
+  "tests": {
+    "passed": 70,
+    "seconds": 15.6,
+    "kind": "offline fixtures and signed loopback HTTP"
+  },
+  "verification_boundary": "Post-restart readback outside US regular session; no live market continuity assertion."
+}

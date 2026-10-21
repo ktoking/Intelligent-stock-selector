@@ -29,7 +29,7 @@ def readiness_view(store,snapshot):
     paths += [store.meta('execution_cache:'+r['id']) for r in active]
     key=digest([snapshot['paused'],snapshot['pause_reason'],store.settings.sha256,
         latest_completed_session(),paths,[(r['id'],r['stage']) for r in active],
-        store.meta('paper_allocations'),[(o['id'],o['status'],o['filled']) for o in snapshot['orders']],
+        store.meta('paper_allocations'),store.meta('promotion_policy'),(store.meta('promotion_screen') or {}).get('selection_proof'),[(o['id'],o['status'],o['filled']) for o in snapshot['orders']],
         store.meta('last_tick',{}).get('time')])
     with _DISPLAY_LOCK:
         cached=_DISPLAY_CACHE.get(str(store.home))
@@ -49,6 +49,10 @@ def execution_readiness(store,remote=None):
     blockers=[];checks={};panel=None;warnings=[]
     if store.meta('paused'):blockers.append('执行暂停：'+str(store.meta('pause_reason')))
     if not store.settings.paper_enabled:blockers.append('股票模拟执行未启用')
+    from .account_selection import strict,authorized_screen
+    if strict(store):
+        checks['strict_account_selection']=authorized_screen(store,store.meta('promotion_screen',{}))
+        if not checks['strict_account_selection']:blockers.append('日K/分钟K统一比较尚未通过或已过期；禁止新增股票买入，研究与退出监控继续')
     if any(o['status'] in ('submitting','unknown') for o in store.orders(active=True)):blockers.append('存在未核对的订单提交结果')
     expected=digest([store.settings.stock_account,store.settings.stock_market])
     checks['bound_simulated_account']=bool(store.settings.stock_account) and store.meta('bound_account')==expected

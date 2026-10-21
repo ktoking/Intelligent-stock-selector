@@ -42,6 +42,7 @@ async function until(test,label){for(let i=0;i<800;i++){if(test())return;await n
  if(vm.runInContext('loading',context))throw Error('Render did not finish');
  const runtime=await (await fetch('http://127.0.0.1:8791/api/status')).json();
  if(!runtime.recovery?.logging?.file_enabled)throw Error('Runtime file logging unavailable');
+ if(runtime.intraday?.enabled&&nodes.get('minute-trials').children.length!==Math.max(1,runtime.intraday.trials.length))throw Error('Minute trial evidence missing');
  if(!nodes.get('recovery-summary').textContent.includes('恢复与检查点'))throw Error('Recovery panel missing');
  if(nodes.get('checkpoint-list').children.length!==Math.min(12,runtime.recovery.checkpoints.length))throw Error('Checkpoint rows missing');
  if(runtime.capital_mode==='broker_equity'){
@@ -51,9 +52,15 @@ async function until(test,label){for(let i=0;i<800;i++){if(test())return;await n
   if(!nodes.get('account-rotation').textContent.includes(runtime.champion_rotation?.reason||'等待'))throw Error('Rotation state missing');
  }
 
+ if(!runtime.timeline.milestones.some(n=>n.key==='premarket'))throw Error('Pre-open timeline missing');
+ if(!nodes.get('premarket-timing').textContent.includes('开盘前10分钟'))throw Error('Pre-open schedule missing');
+ if(runtime.premarket?.quotes?.rows?.length&&nodes.get('premarket-quotes').children.length!==runtime.premarket.quotes.rows.length)throw Error('Pre-open session quotes missing');
+ if(runtime.premarket?.preview&&!nodes.get('premarket-status').textContent.includes('预演'))throw Error('Pre-open preview mislabeled');
  if(runtime.research_evidence){
   const lab=runtime.research_evidence,rows=lab.trials.filter(r=>r.is_factor||r.current_version);
-  if(nodes.get('factor-evidence-table').children.length!==rows.length||nodes.get('factor-lab-steps').children.length!==5)throw Error('Factor evidence pipeline missing');
+  if(nodes.get('factor-evidence-table').children.length!==Math.max(1,rows.length)||nodes.get('factor-lab-steps').children.length!==lab.steps.length)throw Error('Factor evidence pipeline missing');
+  if(runtime.intraday?.enabled&&!['minute_factor_proposal','minute_factor_validation'].every(k=>lab.steps.some(s=>s.key===k)))throw Error('Minute factor generation/validation steps missing');
+  if(lab.coexisting_timeframes&&!['backtest','evolution','factor_validation'].every(k=>lab.steps.some(s=>s.key===k)))throw Error('Daily research hidden by minute mode');
   const factor=rows.find(r=>r.is_factor);if(factor){
    const material=await (await fetch('http://127.0.0.1:8791'+factor.evidence_url)).json();
    if(material.strategy!==factor.full_id||!material.spec.factor_expression)throw Error('Factor evidence link mismatch');
@@ -72,13 +79,22 @@ async function until(test,label){for(let i=0;i<800;i++){if(test())return;await n
  nav.find(n=>n.href==='#overview').listeners.click({preventDefault(){}});
  if(!nodes.get('research-archive').open)throw Error('Navigation reset expanded details');
  const activeNames=runtime.strategies.filter(r=>['paper','shadow','live_review'].includes(r.stage)).map(r=>r.display_name);if(activeNames.some(n=>!n)||new Set(activeNames).size!==activeNames.length)throw Error('Active strategy identities are ambiguous');if(!nodes.get('timeline-title').textContent.includes('美股交易日'))throw Error('Timeline missing');
- if(nodes.get('timeline-nodes').children.length!==5)throw Error('Timeline phases missing');
+ if(nodes.get('timeline-nodes').children.length!==runtime.timeline.milestones.length)throw Error('Timeline phases missing');
  if(!nodes.get('news-scope').children.length)throw Error('News scope missing');
  const ranked=vm.runInContext('sortedReturns(scopedStrategies()).map(r=>returnFor(r)).filter(Number.isFinite)',context);
  if(ranked.some((n,i)=>i&&n>ranked[i-1]))throw Error('Historical sorting incorrect');
  if(vm.runInContext('highlights.size',context)!==0)throw Error('Initial events falsely marked new');
  if(!nodes.get('strategy-detail').children.some(n=>n.className==='logic-grid'))throw Error('Strategy logic missing');
- const expected=vm.runInContext('state.strategies.filter(r=>r.data_hash===state.focus_data_hash&&r.stage!=="rejected").length',context);if(nodes.get('strategy-table').children.length!==expected)throw Error('Current-version table incorrect');
+ const expected=vm.runInContext('scopedStrategies().filter(r=>document.getElementById("include-rejected").checked||r.stage!=="rejected").length',context);if(nodes.get('strategy-table').children.length!==expected)throw Error('Selected-version table incorrect');
+ if(vm.runInContext('historyScope',context)!=='all'||nodes.get('history-version').value!=='all')throw Error('Historical returns hidden by default dataset scope');
+ const preservedReturns=runtime.strategies.filter(r=>r.chart_available&&Number.isFinite(r.stats?.retrospective_test?.return_pct));
+ if(preservedReturns.some(r=>!nodes.get('strategy-select').options.some(o=>o.value===r.full_id)))throw Error('Valid historical return disappeared from selector');
+ const sortedOptions=vm.runInContext('document.getElementById("strategy-select").options.map(o=>returnFor(state.strategies.find(r=>r.full_id===o.value))).filter(Number.isFinite)',context);
+ if(sortedOptions.some((v,i)=>i&&v>sortedOptions[i-1]))throw Error('All historical strategy returns not descending');
+ if(!content(nodes.get('ranking-note')).includes('区间不同'))throw Error('Cross-window return ranking lacks evidence label');
+ const defaultStrategy=runtime.strategies.find(r=>r.full_id===runtime.account_champion&&r.chart_available)||runtime.strategies.find(r=>r.stage==='paper');
+ if(defaultStrategy&&vm.runInContext('selected',context)!==defaultStrategy.full_id)throw Error('Minute focus hid funded historical strategy');
+ if(!nodes.get('history-version').children.some(n=>n.textContent.includes('日线')))throw Error('Historical daily version selector missing');
  if(runtime.paper_activity.fill_count){if(!descendants(nodes.get('paper-chart')).some(n=>n.tag==='svg'))throw Error('Actual paper equity chart missing');}else if(!nodes.get('paper-chart').children.some(n=>n.className==='empty-chart'))throw Error('Paper empty state missing');
  if(!nodes.get('news-list').children.length)throw Error('News missing');
  if(!nodes.get('evolution-list').children.length)throw Error('Evolution history missing');
@@ -146,6 +162,22 @@ async function until(test,label){for(let i=0;i<800;i++){if(test())return;await n
  nodes.get('show-forecast').checked=false;await vm.runInContext('renderChart()',context);
  if(descendants(nodes.get('equity-chart')).some(n=>n.attrs?.class==='forecast-divider')||!nodes.get('forecast-summary').hidden)throw Error('Forecast toggle did not hide projections');
  nodes.get('show-forecast').checked=true;await vm.runInContext('renderChart()',context);
+ // A minute research dataset must not erase daily history or its QQQ line.
+ const savedHistory=vm.runInContext('selected',context),minute=runtime.strategies.find(r=>r.execution_timeframe==='5m'&&r.chart_available);
+ if(minute){
+  context.minuteVersion=minute.full_id;
+  const group=vm.runInContext('historyGroup(state.strategies.find(r=>r.full_id===minuteVersion))',context);
+  nodes.get('history-version').listeners.change({target:{value:group}});
+  await until(()=>vm.runInContext('graphRenderedKey!==null&&state.strategies.find(r=>r.full_id===selected)?.execution_timeframe==="5m"',context),'Minute history did not load');
+  if(!descendants(nodes.get('equity-chart')).some(n=>n.tag==='path'&&n.attrs.stroke==='var(--benchmark)'))throw Error('Minute QQQ benchmark missing');
+  if(!content(nodes.get('forecast-note')).includes('分钟版本'))throw Error('Minute forecast lacks timeframe boundary');
+  const minuteSelected=vm.runInContext('selected',context);await vm.runInContext('refresh()',context);
+  if(vm.runInContext('selected',context)!==minuteSelected)throw Error('Refresh lost historical version selection');
+  context.savedHistory=savedHistory;await vm.runInContext('openStrategy(savedHistory,"history")',context);
+  if(!descendants(nodes.get('equity-chart')).some(n=>n.tag==='path'&&n.attrs.stroke==='var(--benchmark)'))throw Error('Daily QQQ benchmark missing after returning from minute history');
+  const archived=runtime.strategies.find(r=>r.stage==='retired'&&r.chart_available);
+  if(archived){context.archivedHistory=archived.full_id;await vm.runInContext('openStrategy(archivedHistory,"history")',context);if(vm.runInContext('selected',context)!==archived.full_id)throw Error('Archived returns inaccessible');await vm.runInContext('openStrategy(savedHistory,"history")',context);}
+ }
  modes.find(b=>b.dataset.mode==='forward').listeners.click();await until(()=>vm.runInContext('activityData?.kind',context)==='forward_shadow','Forward journal did not load');
  if(!nodes.get('equity-chart').children.some(n=>n.className==='empty-chart'))throw Error('Forward empty state missing');
  if(vm.runInContext('activityData.trades.length',context)!==0)throw Error('Unsealed Shadow trades shown as results');
@@ -197,9 +229,9 @@ async function until(test,label){for(let i=0;i<800;i++){if(test())return;await n
  vm.runInContext('state.focus_quotes={[state.universe_scan.hits[0].symbol]:overlay};renderMarket()',context);
  if(!nodes.get('mover-table').children[0].children[1].textContent.includes((basePrice+2).toFixed(2)))throw Error('Fresh focus price not displayed');
  if(!nodes.get('mover-table').children[0].children[1].children[0].textContent.includes('推送'))throw Error('Quote source not displayed');
- const first=vm.runInContext('scopedStrategies().find(r=>r.chart_available||r.stage==="shadow"||r.stage==="paper").full_id',context);
+ const first=vm.runInContext('state.strategies.find(r=>historyGroup(r)===historyGroup(state.strategies.find(s=>s.full_id===selected))&&(r.chart_available||r.stage==="shadow"||r.stage==="paper")).full_id',context);
  context.firstRenderable=first;
- vm.runInContext('chartMode="forward";state.strategies.find(r=>r.full_id===firstRenderable).forward_return_pct=1.5;renderRanking()',context);
+ vm.runInContext('chartMode="forward";state.strategies.find(r=>r.full_id===firstRenderable).forward_return_pct=Math.max(0,...state.strategies.map(r=>r.forward_return_pct||0))+1.5;renderRanking()',context);
  if(nodes.get('strategy-select').options[0].value!==first)throw Error('Forward sorting used historical returns');
  await vm.runInContext('chartMode="history";renderRanking();renderChart()',context);
  if(!['up','down','flat'].includes(nodes.get('return-value').className))throw Error('Return sign not styled');
@@ -209,5 +241,5 @@ async function until(test,label){for(let i=0;i<800;i++){if(test())return;await n
  vm.runInContext('lineChart(document.getElementById("equity-chart"),[{date:"2026-10-12",equity:1000},{date:"2026-10-13",equity:1100}],[],false,[],null,1000)',context);
  nodes.get('equity-chart').children.find(n=>n.tag==='svg').listeners.pointermove({clientX:780,clientY:220});
  if(!content(tooltip).includes('+10.00%'))throw Error('Allocated capital return denominator is wrong');
- console.log(JSON.stringify({render:'ok',holdingsCostLines:true,holdingsOwnerSelection:true,holdingsStaleLabels:true,themeToggleAndPersistence:true,viewportTooltip:true,noNativeTooltip:true,forecastLines:forecastNodes.filter(n=>n.attrs?.class?.startsWith("forecast-line")).length,forecastBands:forecastNodes.filter(n=>n.attrs?.class?.startsWith("forecast-band")).length,todayDivider:Boolean(divider),forecastHover:divider?true:"not available",forecastUnavailableReasonVerified:!divider,forecastToggle:true,timeline:true,returnSorting:true,quoteOverlay:true,incrementalHighlights:true,currentStrategies:nodes.get('strategy-table').children.length,historicalSVG:true,tradeMarkers:expectedMarkers,tradeTooltip:true,dateAndSideFilters:true,pagination:true,forwardEmpty:true,paperEmpty:!runtime.paper_activity.fill_count,paperActualFills:runtime.paper_activity.fill_count,structuredBriefSections:8,highlightedConditions:true,sourceLinks:true,newsItems:nodes.get('news-list').children.length,evolvedFactors:nodes.get('evolution-list').children.length}));
+ console.log(JSON.stringify({render:'ok',holdingsCostLines:true,holdingsOwnerSelection:true,holdingsStaleLabels:true,themeToggleAndPersistence:true,viewportTooltip:true,noNativeTooltip:true,forecastLines:forecastNodes.filter(n=>n.attrs?.class?.startsWith("forecast-line")).length,forecastBands:forecastNodes.filter(n=>n.attrs?.class?.startsWith("forecast-band")).length,todayDivider:Boolean(divider),forecastHover:divider?true:"not available",forecastUnavailableReasonVerified:!divider,forecastToggle:true,timeline:true,premarket:true,returnSorting:true,quoteOverlay:true,incrementalHighlights:true,currentStrategies:nodes.get('strategy-table').children.length,historicalSVG:true,tradeMarkers:expectedMarkers,tradeTooltip:true,dateAndSideFilters:true,pagination:true,forwardEmpty:true,paperEmpty:!runtime.paper_activity.fill_count,paperActualFills:runtime.paper_activity.fill_count,structuredBriefSections:8,highlightedConditions:true,sourceLinks:true,newsItems:nodes.get('news-list').children.length,evolvedFactors:nodes.get('evolution-list').children.length}));
 })().catch(e=>{console.error(e);process.exit(1);});

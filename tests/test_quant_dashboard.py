@@ -21,7 +21,7 @@ from quant_agent.web import public_status
 def test_timeline_uses_displayed_session_not_calendar_next_open(now, session, opening, closing):
     t = session_timeline(calendar_state(now))
     assert (t['session'], t['open'], t['close']) == (session, opening, closing)
-    assert [n['key'] for n in t['milestones']] == ['preflight', 'open', 'monitor', 'close', 'review']
+    assert [n['key'] for n in t['milestones']] == ['premarket', 'preflight', 'open', 'monitor', 'close', 'review']
     if session == '2026-11-27':
         assert t['milestones'][-1]['at'] == '2026-11-27T18:15:00+00:00'
 

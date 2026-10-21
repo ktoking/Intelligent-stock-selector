@@ -94,6 +94,7 @@ def backfill_activity(store):
         panels[panel.metadata['input_sha256']] = panel
     outputs, skipped = [], []
     for r in store.strategies():
+        if r['spec'].get('execution_timeframe')=='5m':continue
         if (store.home/'artifacts'/('activity-'+r['id']+'.json')).exists():
             continue
         expected = r['evidence'].get('stats', {}).get('retrospective_test')

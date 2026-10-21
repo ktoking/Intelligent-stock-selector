@@ -1,0 +1,80 @@
+{
+  "session": "2026-10-19",
+  "timezone": "Asia/Shanghai",
+  "session_local": [
+    "2026-10-19T21:30+08:00",
+    "2026-10-20T04:00+08:00"
+  ],
+  "observed_at": "2026-10-20T03:14:40.532828+00:00",
+  "event_counts": {
+    "universe_scanned": 54,
+    "price_anomaly": 86,
+    "news_refreshed": 12,
+    "minute_observed": 65,
+    "supervisor_deferred": 112,
+    "component_recovered": 27
+  },
+  "orders_created": 0,
+  "minute_observed": {
+    "count": 65,
+    "first": "2026-10-19T13:35:09.671904+00:00",
+    "last": "2026-10-19T19:47:24.183892+00:00",
+    "max_gap_seconds": 2098.541016
+  },
+  "universe_scanned": {
+    "count": 54,
+    "first": "2026-10-19T13:30:17.602146+00:00",
+    "last": "2026-10-19T19:47:25.533899+00:00",
+    "max_gap_seconds": 2101.36178
+  },
+  "news_refreshed": {
+    "count": 12,
+    "first": "2026-10-19T13:30:17.703053+00:00",
+    "last": "2026-10-19T19:21:26.844553+00:00",
+    "max_gap_seconds": 2460.989739
+  },
+  "execution_errors": {
+    "ReadUnavailable": 1,
+    "QuoteUnavailable": 111
+  },
+  "daily_completed:2026-10-19": true,
+  "task:review": {
+    "asof": "2026-10-19",
+    "attempt": 1,
+    "checkpoint": "10fec99519b7f1c3fa69a5428f5ce782e755ddcbd31c118181044a8b8eeda46f",
+    "data_dir": "/Users/kaiyi.wang/.local/share/stock-agent/quant-agent/market-data/2026-10-19-1792443628",
+    "duration_seconds": 142.27,
+    "finished_at": "2026-10-19T21:12:32.382381+00:00",
+    "input_version": "9d0b0cf56a7cb52f9f09057d8eac08aedbd972d64d17a97c98a6e37a51a7c63d",
+    "recovered_interruption": false,
+    "started_at": "2026-10-19T21:10:10.107547+00:00",
+    "status": "completed"
+  },
+  "task:refresh": {
+    "asof": "2026-10-19",
+    "attempt": 1,
+    "checkpoint": "4dbe2c123c92e1830a432e3f9840812f6475f410c290799082703020a838d639",
+    "data_dir": "/Users/kaiyi.wang/.local/share/stock-agent/quant-agent/market-data/2026-10-19-universe-31f22d555de2",
+    "duration_seconds": 582.64,
+    "finished_at": "2026-10-19T21:10:09.839735+00:00",
+    "input_version": "be07f121305e7799c274b42866a831eb8fe95632f5506e9206449860257e6ade",
+    "recovered_interruption": false,
+    "started_at": "2026-10-19T21:00:27.183904+00:00",
+    "status": "completed"
+  },
+  "task:minute_research": {
+    "asof": "2026-10-19",
+    "data_dir": "/Users/kaiyi.wang/.local/share/stock-agent/quant-agent/market-data/2026-10-19-1792443628",
+    "duration_seconds": 0.16,
+    "finished_at": "2026-10-19T21:10:10.005050+00:00",
+    "status": "completed"
+  },
+  "pause_reason": "Shared-account risk breach: drawdown=2.02%, daily_loss=2.02%",
+  "pause_policy": {
+    "category": "risk",
+    "classification_migrated": true,
+    "created_at": "2026-10-17T01:10:02.060191+00:00",
+    "orders": [],
+    "recoverable": false
+  }
+}

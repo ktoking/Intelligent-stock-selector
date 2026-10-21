@@ -86,6 +86,8 @@ def _cached(payload, origin, today):
 def forecast_data(store, strategy, calendar):
     if not any(r['id']==strategy for r in store.strategies()):
         return None
+    if any(r['id']==strategy and r['spec'].get('execution_timeframe')=='5m' for r in store.strategies()):
+        return {'available':False,'reason':'分钟版本不套用旧日线收益预测模型。'}
     path = store.home/'artifacts'/('chart-'+strategy+'.json')
     if not path.exists():
         return {'available':False, 'reason':'该策略暂无可核验历史曲线，无法生成收益预测。'}

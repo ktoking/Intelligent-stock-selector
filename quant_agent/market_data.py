@@ -112,6 +112,7 @@ def _refresh_cache(store,*,recheck=False):
         repaired=[]
         from .files import atomic_write
         for index,failure in enumerate(report["failures"]):
+            time.sleep(2.)
             symbol=failure["symbol"]
             original=pd.read_pickle(source/(symbol[3:]+".pkl"))
             frame,repair_mode=repair_symbol(broker,symbol,original,asof,failure['reason'])
@@ -146,9 +147,16 @@ def _refresh_cache(store,*,recheck=False):
             batch=broker.request('GET','/api/v1.0/quote/'+symbol+'/history-kline',
                 {'start':str(start),'end':asof,'ktype':2,'num':370,'autype':1})['data']['kline_list']
             from research.daily_factor_lab.refresh import merge_daily
-            # Overlap revisions still require the full-reload/version gate.
-            frame=merge_daily(original,batch,asof)
-            frame.to_pickle(output/(symbol[3:]+'.pkl'))
+            # This unpublished research version may use a verified vendor
+            # correction. Frozen execution history still has its own gate.
+            try:
+                frame=merge_daily(original,batch,asof,allow_flow_revisions=True,allow_close_corrections=True)
+            except ValueError as exc:
+                if 'Historical values revised' not in str(exc):raise
+                frame=full_symbol(broker,symbol,str(pd.to_datetime(str(int(original.date.min())),format='%Y%m%d').date()),asof)
+            from .files import atomic_write
+            import pickle
+            atomic_write(output/(symbol[3:]+'.pkl'),pickle.dumps(frame,protocol=pickle.HIGHEST_PROTOCOL))
             repairs.append({'symbol':symbol,'reason':'Invalid OHLCV response; re-fetched from Futunn','observed_at':pd.Timestamp.now(tz='UTC').isoformat()})
         report={**report,'quality_repairs':repairs}
         (output/'refresh_report.json').write_text(canonical(report))
@@ -184,6 +192,7 @@ def retire_provisional_shadows(store,research_dir):
     from research.daily_factor_lab.paper import data_prefix_hash
     panel=load_panel(research_dir)
     for record in store.strategies(['shadow']):
+        if record['spec'].get('execution_timeframe')=='5m':continue
         evidence=record['evidence'];identity=record['id']
         if evidence['seed_asof']!=panel.metadata['end']:continue
         state=store.meta('shadow_state:'+identity,{})
@@ -207,6 +216,7 @@ def synchronize_execution_cache(store,research_dir,*,source_candidates=()):
     from .panel_cache import load_panel as cached_panel
     groups={};errors=[]
     for record in store.strategies(['paper','shadow']):
+        if record['spec'].get('execution_timeframe')=='5m':continue
         candidates=[store.meta('execution_cache:'+record['id']),store.meta('execution_data_dir'),
                     *source_candidates,store.meta('current_data_dir'),str(research_dir)]
         for candidate in dict.fromkeys(c for c in candidates if c):

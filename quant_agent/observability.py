@@ -22,7 +22,7 @@ def error_evidence(exc):
         value['reason']=str(exc)[:240]
     elif str(exc).startswith(('Invalid OHLCV:','New cache','AI evidence packet too large')):
         value['reason']=str(exc)[:240]
-    for key in ('request_id','http_status','request_method','request_route','read_failure_kind','ret_code','retry_after','exit_code','diagnostic_code','prompt_chars'):
+    for key in ('request_id','http_status','request_method','request_route','read_failure_kind','ret_code','retry_after','exit_code','diagnostic_code','prompt_chars','stderr_sha256'):
         if hasattr(exc,key):value[key]=getattr(exc,key)
     return value
 

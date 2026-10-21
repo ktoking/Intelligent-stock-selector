@@ -177,6 +177,8 @@ def review_packet(store, quotes=None, panel=None):
     packet['orders']=[{k:v for k,v in o.items() if k!='broker_id'} for o in packet['orders'][-100:]]
     packet['quotes']={s:{k:q.get(k) for k in ('data_date','last_price','prev_close_price')} for s,q in (quotes or {}).items()}
     packet['news']=evidence_at(store)
+    from .premarket import research_context
+    packet['premarket_context']=research_context(store)
     panel=panel or load_panel(store.meta('current_data_dir',store.settings.data_dir))
     packet['data']=panel.metadata
     packet['universe_scan']=store.meta('universe_scan');packet['strategy_references']=store.meta('strategy_references',[])
@@ -214,6 +216,10 @@ def review_packet(store, quotes=None, panel=None):
         context['headlines']=[{'id':'news:'+r['id']} for r in context.get('headlines',[])]
         technical=context.get('technical_scan',{})
         technical['candidates']=[{'symbol':r['symbol'],'evidence_id':r['id']} for r in technical.get('candidates',[])]
+    preopen=packet.get('premarket_context')
+    if preopen:
+        context['evidence']=list({r['id']:r for r in context.get('evidence',[])+preopen['evidence']}.values())
+        packet['premarket_context']={**{k:v for k,v in preopen.items() if k!='evidence'},'evidence_ids':[r['id'] for r in preopen['evidence']]}
     packet['brief_context']=context;packet['review_version']=REVIEW_VERSION
     packet['execution_diagnostics']={
         'health':store.meta('health'), 'last_tick':{k:v for k,v in (store.meta('last_tick') or {}).items() if k!='quotes'},
@@ -245,6 +251,7 @@ def validate_brief(response, packet):
     symbols={r['symbol'] for r in packet['brief_context'].get('technical_scan',{}).get('candidates',[])}
     symbols.update(r['symbol'] for r in (packet.get('universe_scan') or {}).get('hits',[]))
     symbols.update(r['symbol'] for r in packet['news'] if r['symbol'].startswith('US.'))
+    symbols.update(r['symbol'] for r in packet['brief_context'].get('evidence',[]) if r.get('id','').startswith('quote:') and r.get('symbol','').startswith('US.'))
     def walk(value):
         if isinstance(value,dict):
             if 'evidence_ids' in value and any(i not in allowed for i in value['evidence_ids']):raise ValueError('Unsupported brief evidence')
